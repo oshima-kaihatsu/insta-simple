@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 
+// 動的レンダリングを強制
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // セッション確認
