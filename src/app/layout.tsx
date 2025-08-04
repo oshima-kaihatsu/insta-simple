@@ -1,5 +1,5 @@
-
 import './globals.css'
+import { Providers } from './providers'
 
 export const metadata = {
   title: 'InstaSimple Analytics',
@@ -14,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        {children}
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   )
