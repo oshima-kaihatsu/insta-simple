@@ -1,0 +1,44 @@
+{
+    "functions": {
+      "src/app/api/cron/trial-notifications/route.js": {
+        "maxDuration": 60
+      }
+    },
+    "crons": [
+      {
+        "path": "/api/cron/trial-notifications",
+        "schedule": "0 9 * * *"
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/api/auth/(.*)",
+        "destination": "/insta-simple/api/auth/$1"
+      },
+      {
+        "source": "/api/instagram/(.*)",
+        "destination": "/insta-simple/api/instagram/$1"
+      },
+      {
+        "source": "/api/stripe/(.*)",
+        "destination": "/insta-simple/api/stripe/$1"
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/api/auth/(.*)",
+        "destination": "/insta-simple/api/auth/$1",
+        "permanent": false
+      },
+      {
+        "source": "/api/instagram/(.*)",
+        "destination": "/insta-simple/api/instagram/$1",
+        "permanent": false
+      },
+      {
+        "source": "/api/stripe/(.*)",
+        "destination": "/insta-simple/api/stripe/$1",
+        "permanent": false
+      }
+    ]
+  }

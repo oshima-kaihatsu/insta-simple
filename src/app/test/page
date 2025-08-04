@@ -1,0 +1,8 @@
+export default function TestPage() {
+  return (
+    <div style={{ padding: '50px', textAlign: 'center' }}>
+      <h1>テストページ</h1>
+      <p>これが表示されれば Next.js は動作しています</p>
+    </div>
+  );
+}
