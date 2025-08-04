@@ -20,6 +20,21 @@ const handler = NextAuth({
     signIn: '/',
     error: '/',
   },
+  callbacks: {
+    async session({ session, token }) {
+      return session
+    },
+    async jwt({ token, user }) {
+      return token
+    },
+    async redirect({ url, baseUrl }) {
+      // ログイン後はサンプルダッシュボードへ
+      if (url.startsWith('/') || url.startsWith(baseUrl)) {
+        return `${baseUrl}/dashboard`
+      }
+      return baseUrl
+    },
+  },
   // NextAuth設定を最小構成に
   trustHost: true,
 })
