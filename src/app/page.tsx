@@ -4,7 +4,7 @@ export default function HomePage() {
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 50%, #fcfbf8 100%)',
       color: '#282828',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans CJK JP", sans-serif',        
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -59,7 +59,7 @@ export default function HomePage() {
             }} />
           </div>
         </div>
-        
+
         <h1 style={{
           fontSize: '56px',
           fontWeight: '900',
@@ -73,7 +73,7 @@ export default function HomePage() {
         }}>
           InstaSimple Analytics
         </h1>
-        
+
         <p style={{
           fontSize: '28px',
           color: '#666',
@@ -83,7 +83,7 @@ export default function HomePage() {
         }}>
           Instagram分析を<br />シンプルに、効果的に
         </p>
-        
+
         <div style={{
           background: 'linear-gradient(135deg, rgba(199, 154, 66, 0.15) 0%, rgba(199, 154, 66, 0.08) 100%)',
           padding: '32px',
@@ -91,20 +91,20 @@ export default function HomePage() {
           border: '1px solid rgba(199, 154, 66, 0.3)',
           marginBottom: '48px'
         }}>
-          <h2 style={{ 
-            fontSize: '24px', 
-            fontWeight: '700', 
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '700',
             color: '#c79a42',
             marginBottom: '16px'
           }}>
-            🚀 サイト復旧完了！
+            🚧 サイト構築中...
           </h2>
           <p style={{ fontSize: '18px', color: '#666', margin: 0, lineHeight: '1.6' }}>
             InstaSimple Analyticsが正常に動作しています。<br />
             認証機能とダッシュボード機能は現在調整中です。
           </p>
         </div>
-        
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -122,13 +122,13 @@ export default function HomePage() {
           }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>📊</div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#282828', marginBottom: '8px' }}>
-              保存率分析
+              投稿分析
             </h3>
             <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-              目標3.0%以上で<br />優良コンテンツを判定
+              精度99.0%以上で<br />最適なコンテンツを判定
             </p>
           </div>
-          
+
           <div style={{
             background: 'linear-gradient(135deg, rgba(252, 251, 248, 0.95) 0%, rgba(231, 230, 228, 0.85) 100%)',
             padding: '32px',
@@ -138,15 +138,15 @@ export default function HomePage() {
             backdropFilter: 'blur(10px)',
             boxShadow: '0 8px 20px rgba(199, 154, 66, 0.1)'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👁️</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏰</div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#282828', marginBottom: '8px' }}>
-              ホーム率分析
+              最適投稿時間
             </h3>
             <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-              目標50.0%以上で<br />アクティブなフォロワー
+              精度90.0%以上で<br />アクティブなフォロワー
             </p>
           </div>
-          
+
           <div style={{
             background: 'linear-gradient(135deg, rgba(252, 251, 248, 0.95) 0%, rgba(231, 230, 228, 0.85) 100%)',
             padding: '32px',
@@ -156,29 +156,29 @@ export default function HomePage() {
             backdropFilter: 'blur(10px)',
             boxShadow: '0 8px 20px rgba(199, 154, 66, 0.1)'
           }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👥</div>
+            <div style={{ fontSize: '48px', marginBottom: '16px' }}>📈</div>
             <h3 style={{ fontSize: '20px', fontWeight: '700', color: '#282828', marginBottom: '8px' }}>
-              フォロワー転換率
+              フォロワー変遷分析
             </h3>
             <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-              目標8.0%以上で<br />確実な成長を実現
+              精度95.0%以上で<br />確実な成長を実現
             </p>
           </div>
         </div>
-        
+
         <div style={{
           background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(34, 197, 94, 0.08) 100%)',
           padding: '24px 32px',
           borderRadius: '16px',
           border: '1px solid rgba(34, 197, 94, 0.3)'
         }}>
-          <p style={{ 
-            fontSize: '18px', 
-            color: '#22c55e', 
+          <p style={{
+            fontSize: '18px',
+            color: '#22c55e',
             margin: 0,
             fontWeight: '600'
           }}>
-            ✅ Vercelデプロイ成功 | Next.js 15.4.1 | 本番環境稼働中
+            ✅ Vercelデプロイ成功 | Next.js 14.2.5 | 本番環境運用中
           </p>
         </div>
       </div>
