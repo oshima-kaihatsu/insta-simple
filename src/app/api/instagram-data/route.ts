@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/utils/rateLimiter';
 import { getClientIP } from '@/utils/getClientIP';
 import { checkAccountLimits, saveInstagramConnection, getOrCreateUserAccount } from '@/lib/accountManager';
+import { RealDataManager } from '@/lib/dataHistory'; // ← 追加
 
 // Dynamic routeに設定
 export const dynamic = 'force-dynamic';
@@ -87,7 +88,6 @@ export async function GET(request: NextRequest) {
         errorMessage: accountCheck.canConnect ? null : accountCheck.errorMessage
       };
 
-      // 重複チェックで接続がブロックされた場合は警告ログのみ
       if (!accountCheck.canConnect) {
         console.warn('⚠️ Account connection would be blocked:', accountCheck.errorMessage);
         console.warn('⚠️ Continuing with API call for debugging purposes...');
@@ -116,6 +116,19 @@ export async function GET(request: NextRequest) {
 
     console.log('User info:', userInfo);
 
+    // 🚨 実データ記録（初回連携時）
+    try {
+      console.log('📊 Recording real data...');
+      await RealDataManager.recordInitialData(instagramUserId, {
+        followers_count: userInfo.followers_count,
+        media_count: userInfo.media_count
+      });
+      console.log('✅ Real data recording completed');
+    } catch (recordError) {
+      console.error('⚠️ Failed to record real data:', recordError);
+      // データ記録エラーでもAPIは続行
+    }
+
     // 🚨 Instagram接続をデータベースに保存（重複チェック結果に関係なく実行）
     try {
       console.log('💾 Saving Instagram connection to database...');
@@ -134,6 +147,13 @@ export async function GET(request: NextRequest) {
       console.error('⚠️ Failed to save Instagram connection:', dbError);
       console.error('⚠️ DB Error stack:', dbError instanceof Error ? dbError.stack : 'No stack');
     }
+
+    // 🎯 実データのフォロワー履歴を取得
+    const followerHistoryResult = await RealDataManager.getFollowerHistory(instagramUserId);
+    const dataStatus = await RealDataManager.getDataCollectionStatus(instagramUserId);
+
+    console.log('📈 Follower history result:', followerHistoryResult);
+    console.log('📊 Data collection status:', dataStatus);
 
     // 2. 投稿を取得（期間制限を一時的に無効化 - デバッグ用）
     console.log('📄 Fetching Instagram posts (DEBUG MODE - NO DATE FILTER)...');
@@ -212,7 +232,20 @@ export async function GET(request: NextRequest) {
           account_type: 'BUSINESS'
         },
         posts: [],
-        follower_history: generateFollowerHistory(userInfo.followers_count || 3),
+        // 🎯 実データのフォロワー履歴
+        follower_history: {
+          hasRealData: followerHistoryResult.hasData,
+          data: followerHistoryResult.data || [],
+          dataPoints: followerHistoryResult.dataPoints || 0,
+          startDate: followerHistoryResult.startDate || null,
+          endDate: followerHistoryResult.endDate || null,
+          collectionStatus: {
+            isCollecting: dataStatus.isCollecting,
+            lastRecorded: dataStatus.lastRecorded,
+            daysCollected: dataStatus.daysCollected,
+            currentFollowers: userInfo.followers_count
+          }
+        },
         summary: {
           total_posts: 0,
           date_range: {
@@ -340,9 +373,6 @@ export async function GET(request: NextRequest) {
     // 4. ランキングを計算
     const postsWithRankings = calculateRankings(postsWithInsights);
 
-    // 5. フォロワー推移データを生成
-    const followerHistory = generateFollowerHistory(userInfo.followers_count || 3);
-
     // 6. レスポンスデータを構築
     const responseData = {
       connected: true,
@@ -354,7 +384,20 @@ export async function GET(request: NextRequest) {
         account_type: 'BUSINESS'
       },
       posts: postsWithRankings,
-      follower_history: followerHistory,
+      // 🎯 実データのフォロワー履歴
+      follower_history: {
+        hasRealData: followerHistoryResult.hasData,
+        data: followerHistoryResult.data || [],
+        dataPoints: followerHistoryResult.dataPoints || 0,
+        startDate: followerHistoryResult.startDate || null,
+        endDate: followerHistoryResult.endDate || null,
+        collectionStatus: {
+          isCollecting: dataStatus.isCollecting,
+          lastRecorded: dataStatus.lastRecorded,
+          daysCollected: dataStatus.daysCollected,
+          currentFollowers: userInfo.followers_count
+        }
+      },
       summary: {
         total_posts: postsWithRankings.length,
         date_range: {
@@ -425,55 +468,4 @@ function calculateRankings(posts: any[]) {
       follower_conversion_rate: followerSorted.findIndex(p => p.id === post.id) + 1
     }
   }));
-}
-
-// フォロワー推移データ生成
-function generateFollowerHistory(currentFollowers: number) {
-  const history = [];
-  const today = new Date();
-  
-  // 現実的な増減パターンを生成
-  // 小さなアカウント（100人以下）と大きなアカウントで異なる増加パターン
-  const isSmallAccount = currentFollowers < 100;
-  
-  for (let i = 4; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - (i * 7));
-    
-    let followersAtDate;
-    
-    if (isSmallAccount) {
-      // 小さなアカウント：過去28日間で最大でも±5人程度の変動
-      const maxVariation = Math.min(5, Math.floor(currentFollowers * 0.5));
-      const variation = Math.floor(Math.random() * maxVariation * 2) - maxVariation;
-      followersAtDate = Math.max(0, currentFollowers + variation - (4 - i));
-    } else {
-      // 大きなアカウント：月間1-3%程度の成長
-      const monthlyGrowthRate = 0.01 + Math.random() * 0.02; // 1-3%
-      const daysAgo = i * 7;
-      const growthFactor = Math.pow(1 + monthlyGrowthRate, -daysAgo / 30);
-      followersAtDate = Math.floor(currentFollowers * growthFactor);
-    }
-    
-    history.push({
-      date: date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
-      followers: Math.max(0, followersAtDate)
-    });
-  }
-  
-  // 最後のデータポイントを現在のフォロワー数に設定
-  history[history.length - 1].followers = currentFollowers;
-  
-  // データが単調増加になるように調整（小さなアカウントの場合は変動を許可）
-  if (!isSmallAccount) {
-    for (let i = 1; i < history.length; i++) {
-      if (history[i].followers < history[i - 1].followers) {
-        history[i].followers = history[i - 1].followers + Math.floor(Math.random() * 3);
-      }
-    }
-    // 最終調整
-    history[history.length - 1].followers = currentFollowers;
-  }
-  
-  return history;
 }

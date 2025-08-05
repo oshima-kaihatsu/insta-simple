@@ -207,14 +207,11 @@ export default function DashboardPage() {
 
   const hasRealData = instagramData !== null;
 
-  // フォロワー推移データ
-  const followerData = instagramData?.follower_history || [
-    { date: '07/07', followers: 8420 },
-    { date: '07/14', followers: 8467 },
-    { date: '07/21', followers: 8523 },
-    { date: '07/28', followers: 8578 },
-    { date: '08/04', followers: 8634 }
-  ];
+  // フォロワー推移データ（実データ対応版）
+  const followerHistory = instagramData?.follower_history || {};
+  const hasFollowerData = followerHistory.hasData;
+  const followerData = hasFollowerData ? followerHistory.data : null;
+  const dataCollectionStatus = followerHistory.status || {};
 
   // 重要4指標の計算
   const calculateMetrics = (post) => {
@@ -408,9 +405,11 @@ export default function DashboardPage() {
   const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
   const dateRangeText = `${days28Ago.toLocaleDateString('ja-JP')} - ${today.toLocaleDateString('ja-JP')}`;
 
-  // フォロワー統計計算
+  // 現在のフォロワー数（実データ優先、フォールバックでサンプル）
   const currentFollowers = instagramData?.profile?.followers_count || 8634;
-  const followersIncrease = followerData.length > 1 ? 
+  
+  // 実データがない場合のフォロワー統計計算（既存ロジック保持）
+  const followersIncrease = hasFollowerData && followerData && followerData.length > 1 ? 
     followerData[followerData.length - 1].followers - followerData[0].followers : 214;
   const dailyAverageIncrease = Math.round(followersIncrease / 28);
   
@@ -420,8 +419,10 @@ export default function DashboardPage() {
     ((followersIncrease / pastFollowers) * 100).toFixed(1) : 
     '0.0';
 
-  // SVGパス生成
+  // SVGパス生成（実データ対応）
   const generatePath = (data) => {
+    if (!data || data.length === 0) return '';
+    
     const width = 800;
     const height = 200;
     const padding = 40;
@@ -446,7 +447,7 @@ export default function DashboardPage() {
     return path;
   };
 
-  const chartPath = generatePath(followerData);
+  const chartPath = hasFollowerData ? generatePath(followerData) : '';
   const chartWidth = 800;
   const chartHeight = 200;
 
@@ -607,7 +608,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
-        {/* フォロワー推移 */}
+        {/* フォロワー推移（実データ対応版） */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
@@ -629,114 +630,157 @@ export default function DashboardPage() {
             フォロワー推移
           </h2>
           
-          {/* フォロワー統計 */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '20px', 
-            marginBottom: '32px' 
-          }}>
-            <div style={{ textAlign: 'center', padding: '16px' }}>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#5d4e37', marginBottom: '4px' }}>
-                {currentFollowers.toLocaleString()}
+          {hasFollowerData ? (
+            <>
+              {/* フォロワー統計（実データ版） */}
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                gap: '20px', 
+                marginBottom: '32px' 
+              }}>
+                <div style={{ textAlign: 'center', padding: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#5d4e37', marginBottom: '4px' }}>
+                    {currentFollowers.toLocaleString()}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>現在のフォロワー</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>
+                    {followersIncrease >= 0 ? '+' : ''}{followersIncrease}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>{followerHistory.dataPoints}日間増減</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#c79a42', marginBottom: '4px' }}>
+                    {followersIncrease >= 0 ? '+' : ''}{dailyAverageIncrease}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>1日平均増減</div>
+                </div>
+                <div style={{ textAlign: 'center', padding: '16px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#8b7355', marginBottom: '4px' }}>
+                    {growthRate}%
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>成長率</div>
+                </div>
               </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>現在のフォロワー</div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '16px' }}>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>
-                +{followersIncrease}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>28日間増加数</div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '16px' }}>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#c79a42', marginBottom: '4px' }}>
-                +{dailyAverageIncrease}
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>1日平均増加数</div>
-            </div>
-            <div style={{ textAlign: 'center', padding: '16px' }}>
-              <div style={{ fontSize: '32px', fontWeight: '700', color: '#8b7355', marginBottom: '4px' }}>
-                {growthRate}%
-              </div>
-              <div style={{ fontSize: '14px', color: '#666' }}>成長率</div>
-            </div>
-          </div>
 
-          {/* グラフ */}
-          <div style={{ width: '100%', height: '200px', background: '#fafafa', borderRadius: '12px', padding: '20px' }}>
-            <svg width="100%" height="200" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
-              <defs>
-                <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#c79a42" />
-                  <stop offset="100%" stopColor="#b8873b" />
-                </linearGradient>
-              </defs>
-              
-              {/* グリッドライン */}
-              {[1,2,3,4].map(i => (
-                <line
-                  key={i}
-                  x1={40}
-                  y1={40 + (i * 30)}
-                  x2={760}
-                  y2={40 + (i * 30)}
-                  stroke="rgba(0,0,0,0.1)"
-                  strokeWidth="1"
-                />
-              ))}
-              
-              {/* 線グラフ */}
-              <path
-                d={chartPath}
-                fill="none"
-                stroke="url(#lineGradient)"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              
-              {/* データポイント */}
-              {followerData.map((point, index) => {
-                const x = 40 + index * ((chartWidth - 80) / (followerData.length - 1));
-                const minValue = Math.min(...followerData.map(d => d.followers));
-                const maxValue = Math.max(...followerData.map(d => d.followers));
-                const valueRange = maxValue - minValue || 100;
-                const y = chartHeight - 40 - ((point.followers - minValue) / valueRange) * (chartHeight - 80);
-                
-                return (
-                  <g key={index}>
-                    <circle
-                      cx={x}
-                      cy={y}
-                      r="6"
-                      fill="#c79a42"
-                      stroke="#fcfbf8"
-                      strokeWidth="2"
+              <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
+                📊 実データ {followerHistory.dataPoints}日間 ({followerHistory.startDate} - {followerHistory.endDate})
+              </div>
+
+              {/* グラフ（実データ版） */}
+              <div style={{ width: '100%', height: '200px', background: '#fafafa', borderRadius: '12px', padding: '20px' }}>
+                <svg width="100%" height="200" viewBox={`0 0 ${chartWidth} ${chartHeight}`}>
+                  <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#c79a42" />
+                      <stop offset="100%" stopColor="#b8873b" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* グリッドライン */}
+                  {[1,2,3,4].map(i => (
+                    <line
+                      key={i}
+                      x1={40}
+                      y1={40 + (i * 30)}
+                      x2={760}
+                      y2={40 + (i * 30)}
+                      stroke="rgba(0,0,0,0.1)"
+                      strokeWidth="1"
                     />
-                    <text
-                      x={x}
-                      y={chartHeight - 10}
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="#666"
-                    >
-                      {point.date}
-                    </text>
-                    <text
-                      x={x}
-                      y={y - 15}
-                      textAnchor="middle"
-                      fontSize="12"
-                      fill="#5d4e37"
-                      fontWeight="600"
-                    >
-                      {point.followers.toLocaleString()}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
+                  ))}
+                  
+                  {/* 線グラフ */}
+                  <path
+                    d={chartPath}
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                  
+                  {/* データポイント */}
+                  {followerData.map((point, index) => {
+                    const x = 40 + index * ((chartWidth - 80) / (followerData.length - 1));
+                    const minValue = Math.min(...followerData.map(d => d.followers));
+                    const maxValue = Math.max(...followerData.map(d => d.followers));
+                    const valueRange = maxValue - minValue || 100;
+                    const y = chartHeight - 40 - ((point.followers - minValue) / valueRange) * (chartHeight - 80);
+                    
+                    return (
+                      <g key={index}>
+                        <circle
+                          cx={x}
+                          cy={y}
+                          r="6"
+                          fill="#c79a42"
+                          stroke="#fcfbf8"
+                          strokeWidth="2"
+                        />
+                        <text
+                          x={x}
+                          y={chartHeight - 10}
+                          textAnchor="middle"
+                          fontSize="12"
+                          fill="#666"
+                        >
+                          {point.date}
+                        </text>
+                        <text
+                          x={x}
+                          y={y - 15}
+                          textAnchor="middle"
+                          fontSize="12"
+                          fill="#5d4e37"
+                          fontWeight="600"
+                        >
+                          {point.followers.toLocaleString()}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </>
+          ) : (
+            /* データ収集開始メッセージ */
+            <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+              <Calendar size={48} style={{ color: '#c79a42', marginBottom: '16px' }} />
+              <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#5d4e37', marginBottom: '12px', margin: '0 0 12px 0' }}>
+                📊 データ収集を開始しました
+              </h3>
+              <p style={{ fontSize: '16px', color: '#666', marginBottom: '24px', margin: '0 0 24px 0' }}>
+                明日から実際のフォロワー推移データを表示します。
+              </p>
+              
+              <div style={{
+                background: 'rgba(199, 154, 66, 0.1)',
+                border: '1px solid rgba(199, 154, 66, 0.3)',
+                borderRadius: '12px',
+                padding: '20px',
+                maxWidth: '400px',
+                margin: '0 auto',
+                textAlign: 'left'
+              }}>
+                <div style={{ fontSize: '14px', color: '#5d4e37' }}>
+                  <div style={{ marginBottom: '8px' }}>
+                    <strong>現在のフォロワー数:</strong> {currentFollowers.toLocaleString()}人
+                  </div>
+                  <div style={{ marginBottom: '8px' }}>
+                    <strong>収集開始日:</strong> {new Date().toLocaleDateString('ja-JP')}
+                  </div>
+                  {dataCollectionStatus.daysCollected && (
+                    <div>
+                      <strong>収集日数:</strong> {dataCollectionStatus.daysCollected}日目
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 重要4指標 */}
@@ -953,7 +997,7 @@ export default function DashboardPage() {
                         <div style={{ fontSize: '11px', color: '#666' }}>
                           <div style={{ color: parseFloat(metrics24h.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics24h.saves_rate}%</div>
                           <div style={{ color: parseFloat(metrics24h.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics24h.home_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics24h.profile_access_rate}%</div>
+                          <div style={{ color: parseFloat(metrics24h.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>프ロ필アクセス率: {metrics24h.profile_access_rate}%</div>
                           <div style={{ color: parseFloat(metrics24h.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics24h.follower_conversion_rate}%</div>
                         </div>
                       </td>
