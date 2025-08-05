@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/utils/rateLimiter';
 import { getClientIP } from '@/utils/getClientIP';
+import { checkAccountLimits, saveInstagramConnection, getOrCreateUserAccount } from '@/lib/accountManager';
 
 // Dynamic routeに設定
 export const dynamic = 'force-dynamic';
@@ -56,6 +57,43 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
+    // 🚨 アカウント重複チェック
+    // TODO: 実際のGoogle認証情報を取得（Next-Authから）
+    const googleUserId = `google_${clientIP}_${Date.now()}`; // 一時的なID生成
+    const googleEmail = `user_${clientIP}@example.com`; // 一時的なメール
+    const googleName = 'Demo User'; // 一時的な名前
+
+    console.log('🔍 Checking account limits...');
+    const accountCheck = await checkAccountLimits(
+      googleUserId,
+      instagramUserId,
+      googleEmail,
+      googleName
+    );
+
+    if (!accountCheck.canConnect) {
+      console.error('❌ Account limit check failed:', accountCheck.errorMessage);
+      return NextResponse.json(
+        { 
+          error: 'Account connection not allowed',
+          message: accountCheck.errorMessage,
+          details: {
+            currentConnections: accountCheck.currentConnections,
+            maxConnections: accountCheck.maxConnections,
+            planType: accountCheck.planType
+          },
+          connected: false 
+        },
+        { status: 403, headers }
+      );
+    }
+
+    console.log('✅ Account limits OK:', {
+      currentConnections: accountCheck.currentConnections,
+      maxConnections: accountCheck.maxConnections,
+      planType: accountCheck.planType
+    });
+
     // 1. Instagram Business Account情報を取得
     const userResponse = await fetch(
       `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,media_count,followers_count&access_token=${accessToken}`
@@ -71,6 +109,24 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('User info:', userInfo);
+
+    // 🚨 Instagram接続をデータベースに保存
+    try {
+      const userAccount = await getOrCreateUserAccount(googleUserId, googleEmail, googleName);
+      await saveInstagramConnection(
+        userAccount.id,
+        instagramUserId,
+        userInfo.username || 'Unknown',
+        accessToken,
+        userInfo.followers_count || 0,
+        userInfo.media_count || 0,
+        'BUSINESS'
+      );
+      console.log('✅ Instagram connection saved to database');
+    } catch (dbError) {
+      console.error('⚠️ Failed to save Instagram connection:', dbError);
+      // データベースエラーでもAPIは続行（ログのみ）
+    }
 
     // 2. 過去28日間の投稿を取得
     const today = new Date();
@@ -216,6 +272,12 @@ export async function GET(request: NextRequest) {
           from: days28Ago.toLocaleDateString('ja-JP'),
           to: today.toLocaleDateString('ja-JP')
         }
+      },
+      // 🚨 アカウント情報を追加
+      accountInfo: {
+        planType: accountCheck.planType,
+        currentConnections: accountCheck.currentConnections,
+        maxConnections: accountCheck.maxConnections
       }
     };
 
