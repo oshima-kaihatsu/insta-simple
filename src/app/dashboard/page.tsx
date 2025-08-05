@@ -17,10 +17,13 @@ import {
   MessageSquare,
   RefreshCw
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [instagramData, setInstagramData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [aiComments, setAiComments] = useState({});
 
   useEffect(() => {
@@ -59,20 +62,15 @@ export default function DashboardPage() {
             const errorText = await response.text();
             console.error('❌ Failed to fetch Instagram data - Status:', response.status);
             console.error('❌ Error response body:', errorText);
-            
-            try {
-              const errorData = JSON.parse(errorText);
-              console.error('❌ Parsed error data:', errorData);
-            } catch (e) {
-              console.error('❌ Raw error text:', errorText);
-            }
+            setError('Instagram データの取得に失敗しました');
           }
         } else {
-          console.log('📊 Using sample data - Instagram not connected');
-          console.log('📋 Missing params:', { accessToken: !!accessToken, instagramUserId: !!instagramUserId, success: !!success });
+          console.log('📊 No Instagram connection - redirecting to home');
+          setError('Instagram 連携が必要です');
         }
       } catch (error) {
-        console.error('📊 Using sample data due to error:', error);
+        console.error('📊 Error fetching Instagram data:', error);
+        setError('データの取得中にエラーが発生しました');
       } finally {
         setLoading(false);
       }
@@ -81,151 +79,56 @@ export default function DashboardPage() {
     fetchInstagramData();
   }, []);
 
-  // サンプルデータ（実データがない場合の表示用）
-  const postsData = instagramData?.posts || [
-    {
-      id: '1',
-      title: '保育園での楽しい一日',
-      date: '2025-08-04',
-      data_24h: { reach: 1250, likes: 89, saves: 67, profile_views: 34, follows: 12 },
-      data_7d: { reach: 1480, likes: 112, saves: 89, profile_views: 45, follows: 18 },
-      rankings: { saves_rate: 1, home_rate: 2, profile_access_rate: 1, follower_conversion_rate: 1 }
-    },
-    {
-      id: '2',
-      title: 'AIで保育をもっと楽しく',
-      date: '2025-08-03',
-      data_24h: { reach: 980, likes: 78, saves: 34, profile_views: 28, follows: 8 },
-      data_7d: { reach: 1250, likes: 98, saves: 45, profile_views: 35, follows: 12 },
-      rankings: { saves_rate: 5, home_rate: 4, profile_access_rate: 3, follower_conversion_rate: 4 }
-    },
-    {
-      id: '3',
-      title: '夏の水遊び大会開催中',
-      date: '2025-08-02',
-      data_24h: { reach: 1580, likes: 124, saves: 89, profile_views: 45, follows: 15 },
-      data_7d: { reach: 1890, likes: 156, saves: 112, profile_views: 67, follows: 21 },
-      rankings: { saves_rate: 2, home_rate: 1, profile_access_rate: 2, follower_conversion_rate: 2 }
-    },
-    {
-      id: '4',
-      title: '子どもたちの成長記録',
-      date: '2025-08-01',
-      data_24h: { reach: 890, likes: 67, saves: 23, profile_views: 18, follows: 4 },
-      data_7d: { reach: 1120, likes: 89, saves: 34, profile_views: 28, follows: 7 },
-      rankings: { saves_rate: 8, home_rate: 6, profile_access_rate: 5, follower_conversion_rate: 8 }
-    },
-    {
-      id: '5',
-      title: '保育士の一日密着',
-      date: '2025-07-31',
-      data_24h: { reach: 1340, likes: 98, saves: 56, profile_views: 34, follows: 11 },
-      data_7d: { reach: 1680, likes: 134, saves: 78, profile_views: 45, follows: 16 },
-      rankings: { saves_rate: 3, home_rate: 3, profile_access_rate: 4, follower_conversion_rate: 3 }
-    },
-    {
-      id: '6',
-      title: '手作りおもちゃの作り方',
-      date: '2025-07-30',
-      data_24h: { reach: 750, likes: 45, saves: 18, profile_views: 12, follows: 2 },
-      data_7d: { reach: 980, likes: 67, saves: 28, profile_views: 18, follows: 4 },
-      rankings: { saves_rate: 12, home_rate: 11, profile_access_rate: 9, follower_conversion_rate: 12 }
-    },
-    {
-      id: '7',
-      title: '季節の制作活動',
-      date: '2025-07-29',
-      data_24h: { reach: 1180, likes: 78, saves: 45, profile_views: 25, follows: 7 },
-      data_7d: { reach: 1450, likes: 102, saves: 67, profile_views: 34, follows: 11 },
-      rankings: { saves_rate: 6, home_rate: 7, profile_access_rate: 6, follower_conversion_rate: 6 }
-    },
-    {
-      id: '8',
-      title: '給食の時間の様子',
-      date: '2025-07-28',
-      data_24h: { reach: 920, likes: 56, saves: 23, profile_views: 15, follows: 3 },
-      data_7d: { reach: 1200, likes: 78, saves: 34, profile_views: 22, follows: 6 },
-      rankings: { saves_rate: 9, home_rate: 9, profile_access_rate: 8, follower_conversion_rate: 9 }
-    },
-    {
-      id: '9',
-      title: '園庭での外遊び',
-      date: '2025-07-27',
-      data_24h: { reach: 1450, likes: 89, saves: 56, profile_views: 32, follows: 9 },
-      data_7d: { reach: 1780, likes: 124, saves: 78, profile_views: 42, follows: 14 },
-      rankings: { saves_rate: 7, home_rate: 5, profile_access_rate: 7, follower_conversion_rate: 5 }
-    },
-    {
-      id: '10',
-      title: '親子参観日の準備',
-      date: '2025-07-26',
-      data_24h: { reach: 1250, likes: 78, saves: 34, profile_views: 23, follows: 6 },
-      data_7d: { reach: 1520, likes: 103, saves: 45, profile_views: 31, follows: 9 },
-      rankings: { saves_rate: 10, home_rate: 8, profile_access_rate: 10, follower_conversion_rate: 7 }
-    },
-    {
-      id: '11',
-      title: '読み聞かせの時間',
-      date: '2025-07-25',
-      data_24h: { reach: 890, likes: 56, saves: 18, profile_views: 14, follows: 2 },
-      data_7d: { reach: 1150, likes: 78, saves: 28, profile_views: 19, follows: 5 },
-      rankings: { saves_rate: 13, home_rate: 12, profile_access_rate: 11, follower_conversion_rate: 11 }
-    },
-    {
-      id: '12',
-      title: '避難訓練の実施',
-      date: '2025-07-24',
-      data_24h: { reach: 1080, likes: 67, saves: 23, profile_views: 18, follows: 4 },
-      data_7d: { reach: 1350, likes: 89, saves: 34, profile_views: 25, follows: 8 },
-      rankings: { saves_rate: 11, home_rate: 10, profile_access_rate: 12, follower_conversion_rate: 10 }
-    },
-    {
-      id: '13',
-      title: '保護者との懇談会',
-      date: '2025-07-23',
-      data_24h: { reach: 780, likes: 45, saves: 12, profile_views: 9, follows: 1 },
-      data_7d: { reach: 1020, likes: 67, saves: 18, profile_views: 14, follows: 3 },
-      rankings: { saves_rate: 14, home_rate: 13, profile_access_rate: 13, follower_conversion_rate: 13 }
-    },
-    {
-      id: '14',
-      title: '新しい遊具の紹介',
-      date: '2025-07-22',
-      data_24h: { reach: 980, likes: 67, saves: 28, profile_views: 16, follows: 3 },
-      data_7d: { reach: 1250, likes: 89, saves: 38, profile_views: 23, follows: 6 },
-      rankings: { saves_rate: 15, home_rate: 14, profile_access_rate: 14, follower_conversion_rate: 14 }
-    },
-    {
-      id: '15',
-      title: '七夕まつりの準備',
-      date: '2025-07-21',
-      data_24h: { reach: 680, likes: 34, saves: 15, profile_views: 8, follows: 1 },
-      data_7d: { reach: 890, likes: 56, saves: 23, profile_views: 12, follows: 2 },
-      rankings: { saves_rate: 4, home_rate: 15, profile_access_rate: 15, follower_conversion_rate: 15 }
-    }
-  ];
+  const handleBack = () => {
+    router.push('/');
+  };
 
+  // 実データのみ使用（サンプルデータは連携前のみ）
+  const postsData = instagramData?.posts || [];
   const hasRealData = instagramData !== null;
 
-  // フォロワー推移データ（実データ対応版）
+  // フォロワー推移データ（実データのみ）
   const followerHistory = instagramData?.follower_history || {};
   const hasFollowerData = followerHistory.hasData;
   const followerData = hasFollowerData ? followerHistory.data : null;
   const dataCollectionStatus = followerHistory.status || {};
 
-  // 重要4指標の計算
+  // 重要4指標の計算（実データ対応）
   const calculateMetrics = (post) => {
-    const data = post.data_7d;
-    const saves_rate = ((data.saves / data.reach) * 100).toFixed(1);
-    const home_rate = Math.min(((data.reach * 0.7) / 8634 * 100), 100).toFixed(1); // フォロワー数で割る
-    const profile_access_rate = ((data.profile_views / data.reach) * 100).toFixed(1);
-    const follower_conversion_rate = ((data.follows / data.profile_views) * 100).toFixed(1);
+    if (!post || !post.insights) {
+      return { 
+        saves_rate: '0.0', 
+        home_rate: '0.0', 
+        profile_access_rate: '0.0', 
+        follower_conversion_rate: '0.0' 
+      };
+    }
+    
+    const reach = post.insights.reach || 0;
+    const saves = post.insights.saves || 0;
+    const profile_views = post.insights.profile_views || 0;
+    const website_clicks = post.insights.website_clicks || 0;
+    const currentFollowers = instagramData?.profile?.followers_count || 1;
+    
+    const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
+    const home_rate = Math.min(((reach * 0.7) / currentFollowers * 100), 100).toFixed(1);
+    const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
+    const follower_conversion_rate = profile_views > 0 ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
     
     return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
   };
 
-  // 平均値計算
+  // 平均値計算（実データ対応）
   const calculateAverages = (posts) => {
+    if (!posts || posts.length === 0) {
+      return { 
+        saves_rate: '0.0', 
+        home_rate: '0.0', 
+        profile_access_rate: '0.0', 
+        follower_conversion_rate: '0.0' 
+      };
+    }
+
     const totals = posts.reduce((acc, post) => {
       const metrics = calculateMetrics(post);
       acc.saves_rate += parseFloat(metrics.saves_rate);
@@ -245,7 +148,7 @@ export default function DashboardPage() {
 
   const averages = calculateAverages(postsData);
 
-  // AIコメント生成システム
+  // AIコメント生成システム（実データベース）
   const calculateGrade = (averages) => {
     let score = 0;
     let achievements = 0;
@@ -289,8 +192,10 @@ export default function DashboardPage() {
     return { grade, score, achievements };
   };
 
-  // 最高パフォーマンス投稿選定
+  // 最高パフォーマンス投稿選定（実データベース）
   const findBestPost = (posts) => {
+    if (!posts || posts.length === 0) return null;
+    
     return posts.reduce((best, current) => {
       const currentMetrics = calculateMetrics(current);
       const bestMetrics = calculateMetrics(best);
@@ -304,7 +209,7 @@ export default function DashboardPage() {
     });
   };
 
-  // 改善提案生成
+  // 改善提案生成（実データベース）
   const generateImprovementSuggestions = (averages) => {
     const suggestions = [];
     
@@ -318,13 +223,13 @@ export default function DashboardPage() {
       suggestions.push("プロフィールアクセス率を高めるため、キャプションでプロフィールリンクへの誘導を強化しましょう");
     }
     if (parseFloat(averages.follower_conversion_rate) < 8) {
-      suggestions.push("プロフィールページの魅力度向上とフォロー価値の明確化に取り組みましょう");
+      suggestions.push("ウェブサイトクリック率向上のため、プロフィールページの魅力度向上に取り組みましょう");
     }
 
     return suggestions;
   };
 
-  // 総合コメント生成
+  // 総合コメント生成（実データベース）
   const generateOverallComment = (averages, gradeInfo, bestPost) => {
     const templates = {
       "A+": [
@@ -364,14 +269,30 @@ export default function DashboardPage() {
     const baseTemplate = templates[gradeInfo.grade] || templates["C"];
     const selectedTemplate = baseTemplate[Math.floor(Math.random() * baseTemplate.length)];
 
-    const bestMetrics = calculateMetrics(bestPost);
-    const performanceDetails = ` 特に「${bestPost.title}」が最高のパフォーマンスを記録し、保存率${bestMetrics.saves_rate}%を達成しています。`;
+    if (bestPost) {
+      const bestMetrics = calculateMetrics(bestPost);
+      const bestPostTitle = bestPost.caption ? bestPost.caption.substring(0, 30) + '...' : '投稿';
+      const performanceDetails = ` 特に「${bestPostTitle}」が最高のパフォーマンスを記録し、保存率${bestMetrics.saves_rate}%を達成しています。`;
+      return selectedTemplate + performanceDetails;
+    }
     
-    return selectedTemplate + performanceDetails;
+    return selectedTemplate;
   };
 
-  // AIコメント生成
+  // AIコメント生成（実データベース）
   const generateAIComments = () => {
+    if (postsData.length === 0) {
+      setAiComments({
+        grade: 'N/A',
+        score: 0,
+        achievements: 0,
+        bestPost: null,
+        overallComment: '投稿データが不足しているため、総合評価を生成できません。投稿を増やしてから再度分析してください。',
+        suggestions: ['まずは定期的な投稿を開始し、コンテンツの蓄積を行いましょう']
+      });
+      return;
+    }
+
     const gradeInfo = calculateGrade(averages);
     const bestPost = findBestPost(postsData);
     const suggestions = generateImprovementSuggestions(averages);
@@ -388,13 +309,13 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (postsData.length > 0) {
+    if (instagramData) {
       generateAIComments();
     }
-  }, []); // 依存配列を空にして初回のみ実行
+  }, [instagramData, postsData]);
 
   const getGradeColor = (grade) => {
-    if (!grade) return '#c79a42';
+    if (!grade || grade === 'N/A') return '#c79a42';
     if (grade.startsWith('A')) return '#22c55e';
     if (grade.startsWith('B')) return '#3b82f6';
     return '#f59e0b';
@@ -405,21 +326,21 @@ export default function DashboardPage() {
   const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
   const dateRangeText = `${days28Ago.toLocaleDateString('ja-JP')} - ${today.toLocaleDateString('ja-JP')}`;
 
-  // 現在のフォロワー数（実データ優先、フォールバックでサンプル）
-  const currentFollowers = instagramData?.profile?.followers_count || 8634;
+  // 現在のフォロワー数（実データのみ）
+  const currentFollowers = instagramData?.profile?.followers_count || 0;
   
-  // 実データがない場合のフォロワー統計計算（既存ロジック保持）
+  // フォロワー統計計算（実データのみ）
   const followersIncrease = hasFollowerData && followerData && followerData.length > 1 ? 
-    followerData[followerData.length - 1].followers - followerData[0].followers : 214;
-  const dailyAverageIncrease = Math.round(followersIncrease / 28);
+    followerData[followerData.length - 1].followers - followerData[0].followers : 0;
+  const dailyAverageIncrease = followersIncrease !== 0 ? Math.round(followersIncrease / (followerHistory.dataPoints || 28)) : 0;
   
-  // 成長率計算を修正（分母がマイナスになる場合の対処）
+  // 成長率計算
   const pastFollowers = currentFollowers - followersIncrease;
   const growthRate = pastFollowers > 0 ? 
     ((followersIncrease / pastFollowers) * 100).toFixed(1) : 
     '0.0';
 
-  // SVGパス生成（実データ対応）
+  // SVGパス生成（実データのみ）
   const generatePath = (data) => {
     if (!data || data.length === 0) return '';
     
@@ -451,31 +372,67 @@ export default function DashboardPage() {
   const chartWidth = 800;
   const chartHeight = 200;
 
-  // CSV出力関数
+  // ランキング計算（実データ用）
+  const calculateRankings = (posts) => {
+    if (!posts || posts.length === 0) return posts;
+
+    const postsWithMetrics = posts.map(post => ({
+      ...post,
+      metrics: calculateMetrics(post)
+    }));
+
+    // 各指標でソート
+    const savesSorted = [...postsWithMetrics].sort((a, b) => parseFloat(b.metrics.saves_rate) - parseFloat(a.metrics.saves_rate));
+    const homeSorted = [...postsWithMetrics].sort((a, b) => parseFloat(b.metrics.home_rate) - parseFloat(a.metrics.home_rate));
+    const profileSorted = [...postsWithMetrics].sort((a, b) => parseFloat(b.metrics.profile_access_rate) - parseFloat(a.metrics.profile_access_rate));
+    const conversionSorted = [...postsWithMetrics].sort((a, b) => parseFloat(b.metrics.follower_conversion_rate) - parseFloat(a.metrics.follower_conversion_rate));
+
+    // ランキングを付与
+    return postsWithMetrics.map(post => ({
+      ...post,
+      rankings: {
+        saves_rate: savesSorted.findIndex(p => p.id === post.id) + 1,
+        home_rate: homeSorted.findIndex(p => p.id === post.id) + 1,
+        profile_access_rate: profileSorted.findIndex(p => p.id === post.id) + 1,
+        follower_conversion_rate: conversionSorted.findIndex(p => p.id === post.id) + 1
+      }
+    }));
+  };
+
+  const rankedPosts = calculateRankings(postsData);
+
+  // CSV出力関数（実データ用）
   const downloadCSV = () => {
+    if (!postsData || postsData.length === 0) {
+      alert('出力するデータがありません');
+      return;
+    }
+
     const headers = [
-      'タイトル', '日付',
-      '24h後_リーチ数', '24h後_いいね数', '24h後_保存数', '24h後_プロフィール表示数', '24h後_フォロー数',
-      '24h後_保存率', '24h後_プロフィールアクセス率', '24h後_フォロワー転換率', '24h後_ホーム率',
-      '1週間後_リーチ数', '1週間後_いいね数', '1週間後_保存数', '1週間後_プロフィール表示数', '1週間後_フォロー数',
-      '1週間後_保存率', '1週間後_プロフィールアクセス率', '1週間後_フォロワー転換率', '1週間後_ホーム率',
+      'キャプション', '投稿日', 'リーチ数', 'いいね数', '保存数', 'プロフィール表示数', 'ウェブサイトクリック数',
+      '保存率', 'ホーム率', 'プロフィールアクセス率', 'フォロワー転換率',
       '保存率ランキング', 'ホーム率ランキング', 'プロフィールアクセス率ランキング', 'フォロワー転換率ランキング'
     ].join(',');
 
-    const rows = postsData.map(post => {
-      const metrics24h = calculateMetrics({ data_7d: post.data_24h });
-      const metrics7d = calculateMetrics(post);
+    const rows = rankedPosts.map(post => {
+      const metrics = calculateMetrics(post);
       
       return [
-        `"${post.title}"`, post.date,
-        post.data_24h.reach, post.data_24h.likes, post.data_24h.saves, post.data_24h.profile_views, post.data_24h.follows,
-        metrics24h.saves_rate, metrics24h.profile_access_rate, metrics24h.follower_conversion_rate, metrics24h.home_rate,
-        post.data_7d.reach, post.data_7d.likes, post.data_7d.saves, post.data_7d.profile_views, post.data_7d.follows,
-        metrics7d.saves_rate, metrics7d.profile_access_rate, metrics7d.follower_conversion_rate, metrics7d.home_rate,
-        `${post.rankings.saves_rate}位/${postsData.length}投稿`,
-        `${post.rankings.home_rate}位/${postsData.length}投稿`,
-        `${post.rankings.profile_access_rate}位/${postsData.length}投稿`,
-        `${post.rankings.follower_conversion_rate}位/${postsData.length}投稿`
+        `"${(post.caption || '').replace(/"/g, '""')}"`,
+        new Date(post.timestamp).toLocaleDateString('ja-JP'),
+        post.insights?.reach || 0,
+        post.like_count || 0,
+        post.insights?.saves || 0,
+        post.insights?.profile_views || 0,
+        post.insights?.website_clicks || 0,
+        metrics.saves_rate,
+        metrics.home_rate,
+        metrics.profile_access_rate,
+        metrics.follower_conversion_rate,
+        `${post.rankings?.saves_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.home_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.profile_access_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.follower_conversion_rate || 0}位/${postsData.length}投稿`
       ].join(',');
     });
 
@@ -487,35 +444,42 @@ export default function DashboardPage() {
     link.click();
   };
 
-  // Excel出力関数
+  // Excel出力関数（実データ用）
   const downloadExcel = () => {
+    if (!postsData || postsData.length === 0) {
+      alert('出力するデータがありません');
+      return;
+    }
+
     const headers = [
-      'タイトル', '日付',
-      '24h後_リーチ数', '24h後_いいね数', '24h後_保存数', '24h後_プロフィール表示数', '24h後_フォロー数',
-      '24h後_保存率', '24h後_プロフィールアクセス率', '24h後_フォロワー転換率', '24h後_ホーム率',
-      '1週間後_リーチ数', '1週間後_いいね数', '1週間後_保存数', '1週間後_プロフィール表示数', '1週間後_フォロー数',
-      '1週間後_保存率', '1週間後_プロフィールアクセス率', '1週間後_フォロワー転換率', '1週間後_ホーム率',
+      'キャプション', '投稿日', 'リーチ数', 'いいね数', '保存数', 'プロフィール表示数', 'ウェブサイトクリック数',
+      '保存率', 'ホーム率', 'プロフィールアクセス率', 'フォロワー転換率',
       '保存率ランキング', 'ホーム率ランキング', 'プロフィールアクセス率ランキング', 'フォロワー転換率ランキング'
     ];
 
-    const data = postsData.map(post => {
-      const metrics24h = calculateMetrics({ data_7d: post.data_24h });
-      const metrics7d = calculateMetrics(post);
+    const data = rankedPosts.map(post => {
+      const metrics = calculateMetrics(post);
       
       return [
-        post.title, post.date,
-        post.data_24h.reach, post.data_24h.likes, post.data_24h.saves, post.data_24h.profile_views, post.data_24h.follows,
-        parseFloat(metrics24h.saves_rate), parseFloat(metrics24h.profile_access_rate), parseFloat(metrics24h.follower_conversion_rate), parseFloat(metrics24h.home_rate),
-        post.data_7d.reach, post.data_7d.likes, post.data_7d.saves, post.data_7d.profile_views, post.data_7d.follows,
-        parseFloat(metrics7d.saves_rate), parseFloat(metrics7d.profile_access_rate), parseFloat(metrics7d.follower_conversion_rate), parseFloat(metrics7d.home_rate),
-        `${post.rankings.saves_rate}位/${postsData.length}投稿`,
-        `${post.rankings.home_rate}位/${postsData.length}投稿`,
-        `${post.rankings.profile_access_rate}位/${postsData.length}投稿`,
-        `${post.rankings.follower_conversion_rate}位/${postsData.length}投稿`
+        (post.caption || '').replace(/\t/g, ' '),
+        new Date(post.timestamp).toLocaleDateString('ja-JP'),
+        post.insights?.reach || 0,
+        post.like_count || 0,
+        post.insights?.saves || 0,
+        post.insights?.profile_views || 0,
+        post.insights?.website_clicks || 0,
+        parseFloat(metrics.saves_rate),
+        parseFloat(metrics.home_rate),
+        parseFloat(metrics.profile_access_rate),
+        parseFloat(metrics.follower_conversion_rate),
+        `${post.rankings?.saves_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.home_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.profile_access_rate || 0}位/${postsData.length}投稿`,
+        `${post.rankings?.follower_conversion_rate || 0}位/${postsData.length}投稿`
       ];
     });
 
-    // Simple Excel format (Tab-separated values with .xls extension)
+    // Excel format (Tab-separated values with .xls extension)
     const excelContent = [headers.join('\t'), ...data.map(row => row.join('\t'))].join('\n');
     const blob = new Blob([excelContent], { type: 'application/vnd.ms-excel' });
     const link = document.createElement('a');
@@ -525,6 +489,57 @@ export default function DashboardPage() {
     link.click();
     document.body.removeChild(link);
   };
+
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 50%, #fcfbf8 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <RefreshCw size={24} style={{ color: '#c79a42', animation: 'spin 1s linear infinite' }} />
+          <span style={{ fontSize: '18px', color: '#5d4e37' }}>データを読み込み中...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !instagramData) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 50%, #fcfbf8 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div style={{ fontSize: '18px', color: '#ef4444', marginBottom: '16px' }}>
+            {error || 'Instagram データが見つかりません'}
+          </div>
+          <button
+            onClick={handleBack}
+            style={{
+              background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+              color: '#fcfbf8',
+              padding: '12px 24px',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            ホームに戻る
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -545,19 +560,22 @@ export default function DashboardPage() {
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-            <button style={{
-              background: 'none',
-              border: 'none',
-              color: '#5d4e37',
-              cursor: 'pointer',
-              padding: '8px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              fontSize: '16px',
-              transition: 'background-color 0.2s'
-            }}>
+            <button 
+              onClick={handleBack}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#5d4e37',
+                cursor: 'pointer',
+                padding: '8px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '16px',
+                transition: 'background-color 0.2s'
+              }}
+            >
               <ArrowLeft size={20} />
               戻る
             </button>
@@ -590,15 +608,15 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-                    @{instagramData?.profile?.username || 'sample_account'} • {dateRangeText} • {postsData.length}件の投稿を分析
-                    {hasRealData && <span style={{ 
+                    @{instagramData.profile?.username} • {dateRangeText} • {postsData.length}件の投稿を分析
+                    <span style={{ 
                       color: '#22c55e', 
                       fontSize: '14px', 
                       marginLeft: '8px',
                       fontWeight: '600'
                     }}>
                       ✅ リアルデータ
-                    </span>}
+                    </span>
                   </p>
                 </div>
               </div>
@@ -608,7 +626,7 @@ export default function DashboardPage() {
       </div>
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 20px' }}>
-        {/* フォロワー推移（実データ対応版） */}
+        {/* フォロワー推移（実データのみ） */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
@@ -646,14 +664,14 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '14px', color: '#666' }}>現在のフォロワー</div>
                 </div>
                 <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#22c55e', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: followersIncrease >= 0 ? '#22c55e' : '#ef4444', marginBottom: '4px' }}>
                     {followersIncrease >= 0 ? '+' : ''}{followersIncrease}
                   </div>
                   <div style={{ fontSize: '14px', color: '#666' }}>{followerHistory.dataPoints}日間増減</div>
                 </div>
                 <div style={{ textAlign: 'center', padding: '16px' }}>
-                  <div style={{ fontSize: '32px', fontWeight: '700', color: '#c79a42', marginBottom: '4px' }}>
-                    {followersIncrease >= 0 ? '+' : ''}{dailyAverageIncrease}
+                  <div style={{ fontSize: '32px', fontWeight: '700', color: dailyAverageIncrease >= 0 ? '#c79a42' : '#ef4444', marginBottom: '4px' }}>
+                    {dailyAverageIncrease >= 0 ? '+' : ''}{dailyAverageIncrease}
                   </div>
                   <div style={{ fontSize: '14px', color: '#666' }}>1日平均増減</div>
                 </div>
@@ -783,307 +801,301 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 重要4指標 */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '32px',
-          border: '1px solid rgba(199, 154, 66, 0.2)',
-          boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
-        }}>
-          <h2 style={{ 
-            fontSize: '24px', 
-            fontWeight: '600', 
-            marginBottom: '24px', 
-            color: '#5d4e37'
+        {/* 重要4指標（実データのみ） */}
+        {postsData.length > 0 && (
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '16px',
+            padding: '32px',
+            marginBottom: '32px',
+            border: '1px solid rgba(199, 154, 66, 0.2)',
+            boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
           }}>
-            重要4指標ランキング（28日間中）
-          </h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-            {/* 保存率 */}
-            <div style={{
-              background: '#fff',
-              borderRadius: '8px',
-              padding: '20px',
-              border: '1px solid rgba(199, 154, 66, 0.2)'
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>保存率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                保存数 ÷ リーチ数
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
-                {averages.saves_rate}%
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: parseFloat(averages.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444',
-                fontWeight: '600'
-              }}>
-                目標: 3.0%以上 • {parseFloat(averages.saves_rate) >= 3.0 ? '✅ 達成' : '❌ 要改善'}
-              </div>
-            </div>
-
-            {/* ホーム率 */}
-            <div style={{
-              background: '#fff',
-              borderRadius: '8px',
-              padding: '20px',
-              border: '1px solid rgba(199, 154, 66, 0.2)'
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>ホーム率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                ホーム表示 ÷ フォロワー数
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
-                {averages.home_rate}%
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: parseFloat(averages.home_rate) >= 50.0 ? '#22c55e' : '#ef4444',
-                fontWeight: '600'
-              }}>
-                目標: 50.0%以上 • {parseFloat(averages.home_rate) >= 50.0 ? '✅ 達成' : '❌ 要改善'}
-              </div>
-            </div>
-
-            {/* プロフィールアクセス率 */}
-            <div style={{
-              background: '#fff',
-              borderRadius: '8px',
-              padding: '20px',
-              border: '1px solid rgba(199, 154, 66, 0.2)'
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>プロフィールアクセス率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                プロフ表示 ÷ リーチ数
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
-                {averages.profile_access_rate}%
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: parseFloat(averages.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444',
-                fontWeight: '600'
-              }}>
-                目標: 5.0%以上 • {parseFloat(averages.profile_access_rate) >= 5.0 ? '✅ 達成' : '❌ 要改善'}
-              </div>
-            </div>
-
-            {/* フォロワー転換率 */}
-            <div style={{
-              background: '#fff',
-              borderRadius: '8px',
-              padding: '20px',
-              border: '1px solid rgba(199, 154, 66, 0.2)'
-            }}>
-              <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>フォロワー転換率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
-                フォロー増加 ÷ プロフ表示
-              </div>
-              <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
-                {averages.follower_conversion_rate}%
-              </div>
-              <div style={{ 
-                fontSize: '12px', 
-                color: parseFloat(averages.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444',
-                fontWeight: '600'
-              }}>
-                目標: 8.0%以上 • {parseFloat(averages.follower_conversion_rate) >= 8.0 ? '✅ 達成' : '❌ 要改善'}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 投稿別詳細分析 */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '16px',
-          padding: '32px',
-          marginBottom: '32px',
-          border: '1px solid rgba(199, 154, 66, 0.2)',
-          boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
             <h2 style={{ 
               fontSize: '24px', 
               fontWeight: '600', 
-              margin: 0, 
+              marginBottom: '24px', 
               color: '#5d4e37'
             }}>
-              投稿別詳細分析
+              重要4指標ランキング（28日間中）
             </h2>
             
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                onClick={downloadCSV}
-                style={{
-                  background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
-                  color: '#fcfbf8',
-                  padding: '16px 32px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
-                }}
-              >
-                <Download size={18} />
-                CSV出力
-              </button>
-              
-              <button 
-                onClick={downloadExcel}
-                style={{
-                  background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
-                  color: '#fcfbf8',
-                  padding: '16px 32px',
-                  border: 'none',
-                  borderRadius: '12px',
-                  fontSize: '16px',
-                  fontWeight: '600',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s',
-                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
-                }}
-              >
-                <Download size={18} />
-                Excel出力
-              </button>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+              {/* 保存率 */}
+              <div style={{
+                background: '#fff',
+                borderRadius: '8px',
+                padding: '20px',
+                border: '1px solid rgba(199, 154, 66, 0.2)'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>保存率</h3>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                  保存数 ÷ リーチ数
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
+                  {averages.saves_rate}%
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: parseFloat(averages.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444',
+                  fontWeight: '600'
+                }}>
+                  目標: 3.0%以上 • {parseFloat(averages.saves_rate) >= 3.0 ? '✅ 達成' : '❌ 要改善'}
+                </div>
+              </div>
+
+              {/* ホーム率 */}
+              <div style={{
+                background: '#fff',
+                borderRadius: '8px',
+                padding: '20px',
+                border: '1px solid rgba(199, 154, 66, 0.2)'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>ホーム率</h3>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                  ホーム表示 ÷ フォロワー数
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
+                  {averages.home_rate}%
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: parseFloat(averages.home_rate) >= 50.0 ? '#22c55e' : '#ef4444',
+                  fontWeight: '600'
+                }}>
+                  目標: 50.0%以上 • {parseFloat(averages.home_rate) >= 50.0 ? '✅ 達成' : '❌ 要改善'}
+                </div>
+              </div>
+
+              {/* プロフィールアクセス率 */}
+              <div style={{
+                background: '#fff',
+                borderRadius: '8px',
+                padding: '20px',
+                border: '1px solid rgba(199, 154, 66, 0.2)'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>プロフィールアクセス率</h3>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                  プロフ表示 ÷ リーチ数
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
+                  {averages.profile_access_rate}%
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: parseFloat(averages.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444',
+                  fontWeight: '600'
+                }}>
+                  目標: 5.0%以上 • {parseFloat(averages.profile_access_rate) >= 5.0 ? '✅ 達成' : '❌ 要改善'}
+                </div>
+              </div>
+
+              {/* フォロワー転換率 */}
+              <div style={{
+                background: '#fff',
+                borderRadius: '8px',
+                padding: '20px',
+                border: '1px solid rgba(199, 154, 66, 0.2)'
+              }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>フォロワー転換率</h3>
+                <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+                  ウェブクリック ÷ プロフ表示
+                </div>
+                <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
+                  {averages.follower_conversion_rate}%
+                </div>
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: parseFloat(averages.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444',
+                  fontWeight: '600'
+                }}>
+                  目標: 8.0%以上 • {parseFloat(averages.follower_conversion_rate) >= 8.0 ? '✅ 達成' : '❌ 要改善'}
+                </div>
+              </div>
             </div>
           </div>
+        )}
 
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
-              <thead>
-                <tr style={{ background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 100%)' }}>
-                  <th style={{ padding: '16px 12px', textAlign: 'left', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>投稿</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>24時間後</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>1週間後</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>重要4指標ランキング（28日間中）</th>
-                </tr>
-              </thead>
-              <tbody>
-                {postsData.map((post, index) => {
-                  const metrics24h = calculateMetrics({ data_7d: post.data_24h });
-                  const metrics7d = calculateMetrics(post);
-                  
-                  return (
-                    <tr key={post.id} style={{ 
-                      borderBottom: '1px solid rgba(199, 154, 66, 0.1)',
-                      background: index % 2 === 0 ? 'rgba(252, 251, 248, 0.3)' : 'transparent'
-                    }}>
-                      <td style={{ padding: '16px 12px' }}>
-                        <div style={{ fontWeight: '600', color: '#5d4e37', marginBottom: '4px' }}>{post.title}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>{post.date}</div>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                          <div>リーチ: {post.data_24h.reach.toLocaleString()}</div>
-                          <div>いいね: {post.data_24h.likes}</div>
-                          <div>保存: {post.data_24h.saves}</div>
-                          <div>プロフ: {post.data_24h.profile_views}</div>
-                          <div>フォロー: {post.data_24h.follows}</div>
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          <div style={{ color: parseFloat(metrics24h.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics24h.saves_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics24h.home_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>프ロ필アクセス率: {metrics24h.profile_access_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics24h.follower_conversion_rate}%</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                          <div>リーチ: {post.data_7d.reach.toLocaleString()}</div>
-                          <div>いいね: {post.data_7d.likes}</div>
-                          <div>保存: {post.data_7d.saves}</div>
-                          <div>プロフ: {post.data_7d.profile_views}</div>
-                          <div>フォロー: {post.data_7d.follows}</div>
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          <div style={{ color: parseFloat(metrics7d.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics7d.saves_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics7d.home_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics7d.profile_access_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics7d.follower_conversion_rate}%</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px' }}>
-                          <div style={{
-                            padding: '2px 8px',
-                            marginBottom: '4px',
-                            borderRadius: '12px',
-                            background: post.rankings.saves_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
-                                       post.rankings.saves_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
-                                       'rgba(199, 154, 66, 0.1)',
-                            color: post.rankings.saves_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
-                                   post.rankings.saves_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
-                                   '#b8873b',
-                            fontWeight: '600'
-                          }}>
-                            保存率: {post.rankings.saves_rate}位/{postsData.length}投稿
+        {/* 投稿別詳細分析（実データのみ） */}
+        {postsData.length > 0 && (
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '16px',
+            padding: '32px',
+            marginBottom: '32px',
+            border: '1px solid rgba(199, 154, 66, 0.2)',
+            boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+              <h2 style={{ 
+                fontSize: '24px', 
+                fontWeight: '600', 
+                margin: 0, 
+                color: '#5d4e37'
+              }}>
+                投稿別詳細分析
+              </h2>
+              
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button 
+                  onClick={downloadCSV}
+                  style={{
+                    background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+                    color: '#fcfbf8',
+                    padding: '16px 32px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
+                  }}
+                >
+                  <Download size={18} />
+                  CSV出力
+                </button>
+                
+                <button 
+                  onClick={downloadExcel}
+                  style={{
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+                    color: '#fcfbf8',
+                    padding: '16px 32px',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'all 0.2s',
+                    boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)'
+                  }}
+                >
+                  <Download size={18} />
+                  Excel出力
+                </button>
+              </div>
+            </div>
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 100%)' }}>
+                    <th style={{ padding: '16px 12px', textAlign: 'left', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>投稿</th>
+                    <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>リーチ・いいね・保存</th>
+                    <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>重要4指標</th>
+                    <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>ランキング（28日間中）</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rankedPosts.map((post, index) => {
+                    const metrics = calculateMetrics(post);
+                    
+                    return (
+                      <tr key={post.id} style={{ 
+                        borderBottom: '1px solid rgba(199, 154, 66, 0.1)',
+                        background: index % 2 === 0 ? 'rgba(252, 251, 248, 0.3)' : 'transparent'
+                      }}>
+                        <td style={{ padding: '16px 12px' }}>
+                          <div style={{ fontWeight: '600', color: '#5d4e37', marginBottom: '4px', maxWidth: '200px' }}>
+                            {post.caption ? post.caption.substring(0, 50) + '...' : '投稿'}
                           </div>
-                          <div style={{
-                            padding: '2px 8px',
-                            marginBottom: '4px',
-                            borderRadius: '12px',
-                            background: post.rankings.home_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
-                                       post.rankings.home_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
-                                       'rgba(199, 154, 66, 0.1)',
-                            color: post.rankings.home_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
-                                   post.rankings.home_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
-                                   '#b8873b',
-                            fontWeight: '600'
-                          }}>
-                            ホーム率: {post.rankings.home_rate}位/{postsData.length}投稿
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            {new Date(post.timestamp).toLocaleDateString('ja-JP')}
                           </div>
-                          <div style={{
-                            padding: '2px 8px',
-                            marginBottom: '4px',
-                            borderRadius: '12px',
-                            background: post.rankings.profile_access_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
-                                       post.rankings.profile_access_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
-                                       'rgba(199, 154, 66, 0.1)',
-                            color: post.rankings.profile_access_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
-                                   post.rankings.profile_access_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
-                                   '#b8873b',
-                            fontWeight: '600'
-                          }}>
-                            プロフ率: {post.rankings.profile_access_rate}位/{postsData.length}投稿
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '12px', marginBottom: '8px' }}>
+                            <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
+                            <div>いいね: {post.like_count?.toLocaleString() || 0}</div>
+                            <div>保存: {post.insights?.saves?.toLocaleString() || 0}</div>
+                            <div>プロフ: {post.insights?.profile_views?.toLocaleString() || 0}</div>
+                            <div>ウェブ: {post.insights?.website_clicks?.toLocaleString() || 0}</div>
                           </div>
-                          <div style={{
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            background: post.rankings.follower_conversion_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
-                                       post.rankings.follower_conversion_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
-                                       'rgba(199, 154, 66, 0.1)',
-                            color: post.rankings.follower_conversion_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
-                                   post.rankings.follower_conversion_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
-                                   '#b8873b',
-                            fontWeight: '600'
-                          }}>
-                            転換率: {post.rankings.follower_conversion_rate}位/{postsData.length}投稿
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '11px', color: '#666' }}>
+                            <div style={{ color: parseFloat(metrics.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics.saves_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics.home_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics.profile_access_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics.follower_conversion_rate}%</div>
                           </div>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        </td>
+                        <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                          <div style={{ fontSize: '12px' }}>
+                            <div style={{
+                              padding: '2px 8px',
+                              marginBottom: '4px',
+                              borderRadius: '12px',
+                              background: post.rankings?.saves_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
+                                         post.rankings?.saves_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
+                                         'rgba(199, 154, 66, 0.1)',
+                              color: post.rankings?.saves_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
+                                     post.rankings?.saves_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
+                                     '#b8873b',
+                              fontWeight: '600'
+                            }}>
+                              保存率: {post.rankings?.saves_rate || 0}位/{postsData.length}投稿
+                            </div>
+                            <div style={{
+                              padding: '2px 8px',
+                              marginBottom: '4px',
+                              borderRadius: '12px',
+                              background: post.rankings?.home_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
+                                         post.rankings?.home_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
+                                         'rgba(199, 154, 66, 0.1)',
+                              color: post.rankings?.home_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
+                                     post.rankings?.home_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
+                                     '#b8873b',
+                              fontWeight: '600'
+                            }}>
+                              ホーム率: {post.rankings?.home_rate || 0}位/{postsData.length}投稿
+                            </div>
+                            <div style={{
+                              padding: '2px 8px',
+                              marginBottom: '4px',
+                              borderRadius: '12px',
+                              background: post.rankings?.profile_access_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
+                                         post.rankings?.profile_access_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
+                                         'rgba(199, 154, 66, 0.1)',
+                              color: post.rankings?.profile_access_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
+                                     post.rankings?.profile_access_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
+                                     '#b8873b',
+                              fontWeight: '600'
+                            }}>
+                              プロフ率: {post.rankings?.profile_access_rate || 0}位/{postsData.length}投稿
+                            </div>
+                            <div style={{
+                              padding: '2px 8px',
+                              borderRadius: '12px',
+                              background: post.rankings?.follower_conversion_rate <= Math.ceil(postsData.length * 0.25) ? 'rgba(34, 197, 94, 0.2)' : 
+                                         post.rankings?.follower_conversion_rate > Math.ceil(postsData.length * 0.75) ? 'rgba(239, 68, 68, 0.2)' : 
+                                         'rgba(199, 154, 66, 0.1)',
+                              color: post.rankings?.follower_conversion_rate <= Math.ceil(postsData.length * 0.25) ? '#16a34a' : 
+                                     post.rankings?.follower_conversion_rate > Math.ceil(postsData.length * 0.75) ? '#dc2626' : 
+                                     '#b8873b',
+                              fontWeight: '600'
+                            }}>
+                              転換率: {post.rankings?.follower_conversion_rate || 0}位/{postsData.length}投稿
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* AI総合評価と改善提案 */}
+        {/* AI総合評価と改善提案（実データベース） */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
@@ -1111,12 +1123,12 @@ export default function DashboardPage() {
                   fontWeight: '700',
                   padding: '16px 24px',
                   borderRadius: '12px',
-                  border: `2px solid ${getGradeColor(aiComments.grade || 'C')}`,
-                  background: `${getGradeColor(aiComments.grade || 'C')}10`,
-                  color: getGradeColor(aiComments.grade || 'C'),
+                  border: `2px solid ${getGradeColor(aiComments.grade || 'N/A')}`,
+                  background: `${getGradeColor(aiComments.grade || 'N/A')}10`,
+                  color: getGradeColor(aiComments.grade || 'N/A'),
                   display: 'inline-block'
                 }}>
-                  {aiComments.grade || 'C'}
+                  {aiComments.grade || 'N/A'}
                 </div>
                 <div style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
                   ({aiComments.achievements || 0}/4指標達成)
@@ -1125,7 +1137,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* 最高パフォーマンス投稿 */}
+          {/* 最高パフォーマンス投稿（実データベース） */}
           {aiComments.bestPost && (
             <div style={{ 
               background: 'rgba(255, 193, 7, 0.1)', 
@@ -1139,7 +1151,7 @@ export default function DashboardPage() {
                 <h3 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#856404' }}>最高パフォーマンス投稿</h3>
               </div>
               <div style={{ color: '#856404', fontSize: '16px' }}>
-                「{aiComments.bestPost.title}」
+                「{aiComments.bestPost.caption ? aiComments.bestPost.caption.substring(0, 50) + '...' : '投稿'}」
                 <span style={{ fontSize: '14px', color: '#6c757d', marginLeft: '8px' }}>
                   (保存率: {calculateMetrics(aiComments.bestPost).saves_rate}%)
                 </span>
@@ -1167,76 +1179,3 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-          )}
-
-          {/* 改善提案 */}
-          {aiComments.suggestions && aiComments.suggestions.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#5d4e37' }}>具体的な改善提案</h3>
-              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                {aiComments.suggestions.map((suggestion, index) => (
-                  <li key={index} style={{ 
-                    display: 'flex', 
-                    alignItems: 'start', 
-                    marginBottom: '12px',
-                    fontSize: '14px',
-                    color: '#555'
-                  }}>
-                    <div style={{ 
-                      width: '6px', 
-                      height: '6px', 
-                      background: '#3b82f6', 
-                      borderRadius: '50%', 
-                      marginRight: '12px', 
-                      marginTop: '6px',
-                      flexShrink: 0
-                    }}></div>
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Instagram連携CTA（実データがない場合のみ表示） */}
-        {!hasRealData && (
-          <div style={{
-            background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
-            borderRadius: '16px',
-            padding: '32px',
-            textAlign: 'center',
-            color: '#fcfbf8',
-            boxShadow: '0 8px 32px rgba(199, 154, 66, 0.3)'
-          }}>
-            <h3 style={{ fontSize: '24px', fontWeight: '600', marginBottom: '16px', margin: 0 }}>
-              実際のデータで分析を開始しませんか？
-            </h3>
-            <p style={{ fontSize: '16px', marginBottom: '24px', opacity: 0.9 }}>
-              Instagramアカウントを連携して、リアルタイムデータでより精密な分析を体験しましょう
-            </p>
-            <button 
-              onClick={() => {
-                window.location.href = '/api/instagram/connect';
-              }}
-              style={{
-                background: '#fcfbf8',
-                color: '#5d4e37',
-                padding: '16px 32px',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-              }}
-            >
-              Instagram連携を開始
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
