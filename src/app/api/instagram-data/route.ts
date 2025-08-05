@@ -57,56 +57,18 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
-    // 🚨 アカウント重複チェック（詳細ログ付き）
-    const googleUserId = `google_${clientIP}_${Date.now()}`;
-    const googleEmail = `user_${clientIP}@example.com`;
-    const googleName = 'Demo User';
+    // 🚨 重複チェックを一時的に無効化（デバッグ用）
+    console.log('⚠️ Account duplicate check temporarily disabled for testing');
 
-    console.log('🔍 Starting account limits check...');
-    console.log('📋 Parameters:', { googleUserId, instagramUserId, googleEmail, clientIP });
+    // デフォルト値を設定（重複チェック無効化時）
+    const accountCheckResult = {
+      canConnect: true,
+      currentConnections: 0,
+      maxConnections: 1,
+      planType: 'basic'
+    };
 
-    let accountCheckResult = null;
-
-    try {
-      console.log('📞 Calling checkAccountLimits function...');
-      const accountCheck = await checkAccountLimits(
-        googleUserId,
-        instagramUserId,
-        googleEmail,
-        googleName
-      );
-
-      console.log('✅ Account check completed:', JSON.stringify(accountCheck, null, 2));
-      accountCheckResult = accountCheck;
-
-      if (!accountCheck.canConnect) {
-        console.error('❌ Connection blocked:', accountCheck.errorMessage);
-        return NextResponse.json(
-          { 
-            error: 'Account connection not allowed',
-            message: accountCheck.errorMessage,
-            details: accountCheck,
-            connected: false 
-          },
-          { status: 403, headers }
-        );
-      }
-
-      console.log('✅ Connection allowed - proceeding with Instagram API...');
-
-    } catch (checkError) {
-      console.error('💥 Account check error:', checkError);
-      console.error('💥 Error stack:', checkError instanceof Error ? checkError.stack : 'No stack');
-      console.log('⚠️ Continuing with API call despite check error...');
-      
-      // デフォルト値を設定
-      accountCheckResult = {
-        canConnect: true,
-        currentConnections: 0,
-        maxConnections: 1,
-        planType: 'basic'
-      };
-    }
+    console.log('✅ Proceeding with Instagram API (check bypassed)...');
 
     // 1. Instagram Business Account情報を取得
     console.log('📱 Fetching Instagram user info...');
@@ -125,9 +87,13 @@ export async function GET(request: NextRequest) {
 
     console.log('User info:', userInfo);
 
-    // 🚨 Instagram接続をデータベースに保存
+    // 🚨 Instagram接続をデータベースに保存（重複チェック無効化時）
     try {
-      console.log('💾 Saving Instagram connection to database...');
+      console.log('💾 Saving Instagram connection to database (bypass mode)...');
+      const googleUserId = `google_${clientIP}_${Date.now()}`;
+      const googleEmail = `user_${clientIP}@example.com`;
+      const googleName = 'Demo User';
+      
       const userAccount = await getOrCreateUserAccount(googleUserId, googleEmail, googleName);
       await saveInstagramConnection(
         userAccount.id,
@@ -292,11 +258,12 @@ export async function GET(request: NextRequest) {
         }
       },
       // 🚨 アカウント情報を追加
-      accountInfo: accountCheckResult ? {
+      accountInfo: {
         planType: accountCheckResult.planType,
         currentConnections: accountCheckResult.currentConnections,
-        maxConnections: accountCheckResult.maxConnections
-      } : null
+        maxConnections: accountCheckResult.maxConnections,
+        debugMode: true // デバッグ用フラグ
+      }
     };
 
     console.log('✅ Instagram data fetch successful');
