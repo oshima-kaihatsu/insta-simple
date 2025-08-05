@@ -85,122 +85,122 @@ export default function DashboardPage() {
   const postsData = instagramData?.posts || [
     {
       id: '1',
-      title: 'Weekend adventures in the city',
-      date: '2025-07-28',
-      data_24h: { reach: 2847, likes: 184, saves: 112, profile_views: 89, follows: 12 },
-      data_7d: { reach: 3251, likes: 203, saves: 127, profile_views: 98, follows: 15 },
+      title: '保育園での楽しい一日',
+      date: '2025-08-04',
+      data_24h: { reach: 1250, likes: 89, saves: 67, profile_views: 34, follows: 12 },
+      data_7d: { reach: 1480, likes: 112, saves: 89, profile_views: 45, follows: 18 },
       rankings: { saves_rate: 1, home_rate: 2, profile_access_rate: 1, follower_conversion_rate: 1 }
     },
     {
       id: '2',
-      title: 'Morning coffee routine',
-      date: '2025-07-27',
-      data_24h: { reach: 1892, likes: 156, saves: 45, profile_views: 67, follows: 8 },
-      data_7d: { reach: 2156, likes: 172, saves: 51, profile_views: 74, follows: 9 },
+      title: 'AIで保育をもっと楽しく',
+      date: '2025-08-03',
+      data_24h: { reach: 980, likes: 78, saves: 34, profile_views: 28, follows: 8 },
+      data_7d: { reach: 1250, likes: 98, saves: 45, profile_views: 35, follows: 12 },
       rankings: { saves_rate: 5, home_rate: 4, profile_access_rate: 3, follower_conversion_rate: 4 }
     },
     {
       id: '3',
-      title: 'New recipe experiment',
-      date: '2025-07-26',
-      data_24h: { reach: 3124, likes: 298, saves: 156, profile_views: 124, follows: 18 },
-      data_7d: { reach: 3567, likes: 321, saves: 178, profile_views: 142, follows: 21 },
+      title: '夏の水遊び大会開催中',
+      date: '2025-08-02',
+      data_24h: { reach: 1580, likes: 124, saves: 89, profile_views: 45, follows: 15 },
+      data_7d: { reach: 1890, likes: 156, saves: 112, profile_views: 67, follows: 21 },
       rankings: { saves_rate: 2, home_rate: 1, profile_access_rate: 2, follower_conversion_rate: 2 }
     },
     {
       id: '4',
-      title: 'Sunset photography tips',
-      date: '2025-07-25',
-      data_24h: { reach: 2456, likes: 189, saves: 67, profile_views: 78, follows: 6 },
-      data_7d: { reach: 2801, likes: 210, saves: 79, profile_views: 89, follows: 7 },
+      title: '子どもたちの成長記録',
+      date: '2025-08-01',
+      data_24h: { reach: 890, likes: 67, saves: 23, profile_views: 18, follows: 4 },
+      data_7d: { reach: 1120, likes: 89, saves: 34, profile_views: 28, follows: 7 },
       rankings: { saves_rate: 8, home_rate: 6, profile_access_rate: 5, follower_conversion_rate: 8 }
     },
     {
       id: '5',
-      title: 'Healthy meal prep ideas',
-      date: '2025-07-24',
-      data_24h: { reach: 2789, likes: 234, saves: 134, profile_views: 98, follows: 14 },
-      data_7d: { reach: 3198, likes: 267, saves: 156, profile_views: 112, follows: 16 },
+      title: '保育士の一日密着',
+      date: '2025-07-31',
+      data_24h: { reach: 1340, likes: 98, saves: 56, profile_views: 34, follows: 11 },
+      data_7d: { reach: 1680, likes: 134, saves: 78, profile_views: 45, follows: 16 },
       rankings: { saves_rate: 3, home_rate: 3, profile_access_rate: 4, follower_conversion_rate: 3 }
     },
     {
       id: '6',
-      title: 'Home office setup tour',
-      date: '2025-07-23',
-      data_24h: { reach: 1567, likes: 123, saves: 34, profile_views: 45, follows: 3 },
-      data_7d: { reach: 1789, likes: 141, saves: 39, profile_views: 52, follows: 4 },
+      title: '手作りおもちゃの作り方',
+      date: '2025-07-30',
+      data_24h: { reach: 750, likes: 45, saves: 18, profile_views: 12, follows: 2 },
+      data_7d: { reach: 980, likes: 67, saves: 28, profile_views: 18, follows: 4 },
       rankings: { saves_rate: 12, home_rate: 11, profile_access_rate: 9, follower_conversion_rate: 12 }
     },
     {
       id: '7',
-      title: 'Travel essentials checklist',
-      date: '2025-07-22',
-      data_24h: { reach: 2234, likes: 167, saves: 89, profile_views: 67, follows: 9 },
-      data_7d: { reach: 2567, likes: 189, saves: 102, profile_views: 78, follows: 11 },
+      title: '季節の制作活動',
+      date: '2025-07-29',
+      data_24h: { reach: 1180, likes: 78, saves: 45, profile_views: 25, follows: 7 },
+      data_7d: { reach: 1450, likes: 102, saves: 67, profile_views: 34, follows: 11 },
       rankings: { saves_rate: 6, home_rate: 7, profile_access_rate: 6, follower_conversion_rate: 6 }
     },
     {
       id: '8',
-      title: 'Book recommendations',
-      date: '2025-07-21',
-      data_24h: { reach: 1789, likes: 134, saves: 56, profile_views: 43, follows: 5 },
-      data_7d: { reach: 2034, likes: 152, saves: 64, profile_views: 49, follows: 6 },
+      title: '給食の時間の様子',
+      date: '2025-07-28',
+      data_24h: { reach: 920, likes: 56, saves: 23, profile_views: 15, follows: 3 },
+      data_7d: { reach: 1200, likes: 78, saves: 34, profile_views: 22, follows: 6 },
       rankings: { saves_rate: 9, home_rate: 9, profile_access_rate: 8, follower_conversion_rate: 9 }
     },
     {
       id: '9',
-      title: 'DIY plant care tips',
-      date: '2025-07-20',
-      data_24h: { reach: 2678, likes: 201, saves: 98, profile_views: 87, follows: 12 },
-      data_7d: { reach: 3034, likes: 223, saves: 112, profile_views: 98, follows: 14 },
+      title: '園庭での外遊び',
+      date: '2025-07-27',
+      data_24h: { reach: 1450, likes: 89, saves: 56, profile_views: 32, follows: 9 },
+      data_7d: { reach: 1780, likes: 124, saves: 78, profile_views: 42, follows: 14 },
       rankings: { saves_rate: 7, home_rate: 5, profile_access_rate: 7, follower_conversion_rate: 5 }
     },
     {
       id: '10',
-      title: 'Weekend market finds',
-      date: '2025-07-19',
-      data_24h: { reach: 2345, likes: 178, saves: 78, profile_views: 65, follows: 8 },
-      data_7d: { reach: 2687, likes: 198, saves: 89, profile_views: 74, follows: 9 },
+      title: '親子参観日の準備',
+      date: '2025-07-26',
+      data_24h: { reach: 1250, likes: 78, saves: 34, profile_views: 23, follows: 6 },
+      data_7d: { reach: 1520, likes: 103, saves: 45, profile_views: 31, follows: 9 },
       rankings: { saves_rate: 10, home_rate: 8, profile_access_rate: 10, follower_conversion_rate: 7 }
     },
     {
       id: '11',
-      title: 'Productivity hacks',
-      date: '2025-07-18',
-      data_24h: { reach: 1923, likes: 145, saves: 45, profile_views: 56, follows: 4 },
-      data_7d: { reach: 2198, likes: 165, saves: 52, profile_views: 64, follows: 5 },
+      title: '読み聞かせの時間',
+      date: '2025-07-25',
+      data_24h: { reach: 890, likes: 56, saves: 18, profile_views: 14, follows: 2 },
+      data_7d: { reach: 1150, likes: 78, saves: 28, profile_views: 19, follows: 5 },
       rankings: { saves_rate: 13, home_rate: 12, profile_access_rate: 11, follower_conversion_rate: 11 }
     },
     {
       id: '12',
-      title: 'Fashion styling tips',
-      date: '2025-07-17',
-      data_24h: { reach: 2567, likes: 192, saves: 87, profile_views: 78, follows: 10 },
-      data_7d: { reach: 2923, likes: 214, saves: 99, profile_views: 89, follows: 12 },
+      title: '避難訓練の実施',
+      date: '2025-07-24',
+      data_24h: { reach: 1080, likes: 67, saves: 23, profile_views: 18, follows: 4 },
+      data_7d: { reach: 1350, likes: 89, saves: 34, profile_views: 25, follows: 8 },
       rankings: { saves_rate: 11, home_rate: 10, profile_access_rate: 12, follower_conversion_rate: 10 }
     },
     {
       id: '13',
-      title: 'Mindfulness exercises',
-      date: '2025-07-16',
-      data_24h: { reach: 1678, likes: 123, saves: 34, profile_views: 45, follows: 3 },
-      data_7d: { reach: 1923, likes: 141, saves: 39, profile_views: 52, follows: 4 },
+      title: '保護者との懇談会',
+      date: '2025-07-23',
+      data_24h: { reach: 780, likes: 45, saves: 12, profile_views: 9, follows: 1 },
+      data_7d: { reach: 1020, likes: 67, saves: 18, profile_views: 14, follows: 3 },
       rankings: { saves_rate: 14, home_rate: 13, profile_access_rate: 13, follower_conversion_rate: 13 }
     },
     {
       id: '14',
-      title: 'Tech gadget reviews',
-      date: '2025-07-15',
-      data_24h: { reach: 2134, likes: 167, saves: 67, profile_views: 58, follows: 7 },
-      data_7d: { reach: 2456, likes: 189, saves: 78, profile_views: 67, follows: 8 },
+      title: '新しい遊具の紹介',
+      date: '2025-07-22',
+      data_24h: { reach: 980, likes: 67, saves: 28, profile_views: 16, follows: 3 },
+      data_7d: { reach: 1250, likes: 89, saves: 38, profile_views: 23, follows: 6 },
       rankings: { saves_rate: 15, home_rate: 14, profile_access_rate: 14, follower_conversion_rate: 14 }
     },
     {
       id: '15',
-      title: 'Local food discoveries',
-      date: '2025-07-14',
-      data_24h: { reach: 1456, likes: 112, saves: 28, profile_views: 34, follows: 2 },
-      data_7d: { reach: 1678, likes: 128, saves: 32, profile_views: 39, follows: 3 },
+      title: '七夕まつりの準備',
+      date: '2025-07-21',
+      data_24h: { reach: 680, likes: 34, saves: 15, profile_views: 8, follows: 1 },
+      data_7d: { reach: 890, likes: 56, saves: 23, profile_views: 12, follows: 2 },
       rankings: { saves_rate: 4, home_rate: 15, profile_access_rate: 15, follower_conversion_rate: 15 }
     }
   ];
@@ -666,7 +666,7 @@ export default function DashboardPage() {
               </div>
 
               <div style={{ marginBottom: '16px', fontSize: '14px', color: '#666' }}>
-                📊 実データ {followerHistory.dataPoints}日間 ({followerHistory.startDate} - {followerHistory.endDate})
+                実データ {followerHistory.dataPoints}日間 ({followerHistory.startDate} - {followerHistory.endDate})
               </div>
 
               {/* グラフ（実データ版） */}
@@ -750,7 +750,7 @@ export default function DashboardPage() {
             <div style={{ textAlign: 'center', padding: '60px 20px' }}>
               <Calendar size={48} style={{ color: '#c79a42', marginBottom: '16px' }} />
               <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#5d4e37', marginBottom: '12px', margin: '0 0 12px 0' }}>
-                📊 データ収集を開始しました
+                データ収集を開始しました
               </h3>
               <p style={{ fontSize: '16px', color: '#666', marginBottom: '24px', margin: '0 0 24px 0' }}>
                 明日から実際のフォロワー推移データを表示します。
