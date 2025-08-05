@@ -91,7 +91,6 @@ export async function GET(request: NextRequest) {
       if (!accountCheck.canConnect) {
         console.warn('⚠️ Account connection would be blocked:', accountCheck.errorMessage);
         console.warn('⚠️ Continuing with API call for debugging purposes...');
-        // ここでAPIを停止せず、警告のみで続行
       }
 
     } catch (checkError) {
@@ -134,20 +133,23 @@ export async function GET(request: NextRequest) {
     } catch (dbError) {
       console.error('⚠️ Failed to save Instagram connection:', dbError);
       console.error('⚠️ DB Error stack:', dbError instanceof Error ? dbError.stack : 'No stack');
-      // データベースエラーでもAPIは続行（ログのみ）
     }
 
-    // 2. 過去28日間の投稿を取得
-    console.log('📄 Fetching Instagram posts...');
-    const today = new Date();
-    const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
-    const since = Math.floor(days28Ago.getTime() / 1000);
-    const until = Math.floor(today.getTime() / 1000);
+    // 2. 投稿を取得（期間制限を一時的に無効化 - デバッグ用）
+    console.log('📄 Fetching Instagram posts (DEBUG MODE - NO DATE FILTER)...');
 
+    // デバッグ用：期間制限なしで全投稿を取得
     const mediaResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${instagramUserId}/media?fields=id,media_type,media_url,permalink,timestamp,caption,comments_count,like_count&since=${since}&until=${until}&limit=50&access_token=${accessToken}`
+      `https://graph.facebook.com/v21.0/${instagramUserId}/media?fields=id,media_type,media_url,permalink,timestamp,caption,comments_count,like_count&limit=50&access_token=${accessToken}`
     );
     const mediaData = await mediaResponse.json();
+
+    console.log('📊 Raw media API response:', {
+      hasData: !!mediaData.data,
+      dataLength: mediaData.data?.length || 0,
+      hasError: !!mediaData.error,
+      error: mediaData.error
+    });
 
     if (mediaData.error) {
       console.error('Media fetch failed:', mediaData.error);
@@ -157,11 +159,88 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`Found ${mediaData.data?.length || 0} posts in last 28 days`);
+    console.log(`📈 Found ${mediaData.data?.length || 0} total posts (all time)`);
+
+    // 期間フィルタリングを手動で実行（デバッグ情報付き）
+    const today = new Date();
+    const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
+
+    console.log('📅 Date filter debug:');
+    console.log('- Today:', today.toISOString());
+    console.log('- 28 days ago:', days28Ago.toISOString());
+
+    let filteredPosts = [];
+    let debugPostInfo = [];
+
+    if (mediaData.data && mediaData.data.length > 0) {
+      filteredPosts = mediaData.data.filter((media: any) => {
+        const postDate = new Date(media.timestamp);
+        const isWithin28Days = postDate >= days28Ago && postDate <= today;
+        
+        debugPostInfo.push({
+          id: media.id,
+          timestamp: media.timestamp,
+          postDate: postDate.toISOString(),
+          isWithin28Days: isWithin28Days,
+          caption: media.caption?.substring(0, 30) + '...'
+        });
+        
+        return isWithin28Days;
+      });
+
+      console.log('📝 All posts debug info:', debugPostInfo);
+      console.log(`📈 Filtered result: ${filteredPosts.length} posts within last 28 days`);
+    }
+
+    // 28日以内に投稿がない場合は、最新の5件を表示（デバッグ用）
+    const postsToProcess = filteredPosts.length > 0 ? filteredPosts : (mediaData.data || []).slice(0, 5);
+
+    console.log(`🔧 Processing ${postsToProcess.length} posts`);
+    console.log(`🔧 Mode: ${filteredPosts.length > 0 ? '28-day filtered posts' : 'latest posts for debugging'}`);
+
+    if (postsToProcess.length === 0) {
+      console.warn('⚠️ No posts found at all - Instagram account may have no posts or API permission issue');
+      
+      // 投稿がない場合でもダッシュボードは表示する
+      const responseData = {
+        connected: true,
+        profile: {
+          id: userInfo.id,
+          username: userInfo.username,
+          followers_count: userInfo.followers_count,
+          media_count: userInfo.media_count,
+          account_type: 'BUSINESS'
+        },
+        posts: [],
+        follower_history: generateFollowerHistory(userInfo.followers_count || 3),
+        summary: {
+          total_posts: 0,
+          date_range: {
+            from: days28Ago.toLocaleDateString('ja-JP'),
+            to: today.toLocaleDateString('ja-JP')
+          },
+          debug_info: {
+            total_posts_found: mediaData.data?.length || 0,
+            filtered_posts: filteredPosts.length,
+            api_error: mediaData.error || null
+          }
+        },
+        accountInfo: {
+          planType: accountCheckResult.planType,
+          currentConnections: accountCheckResult.currentConnections,
+          maxConnections: accountCheckResult.maxConnections,
+          isBlocked: accountCheckResult.isBlocked,
+          warningMessage: accountCheckResult.errorMessage
+        }
+      };
+
+      console.log('✅ Returning response with no posts');
+      return NextResponse.json(responseData, { headers });
+    }
 
     // 3. 各投稿のインサイトデータを取得
     const postsWithInsights = await Promise.all(
-      (mediaData.data || []).map(async (media: any, index: number) => {
+      postsToProcess.map(async (media: any, index: number) => {
         try {
           // Instagram Media Insights API
           const insightsResponse = await fetch(
@@ -262,7 +341,7 @@ export async function GET(request: NextRequest) {
     const postsWithRankings = calculateRankings(postsWithInsights);
 
     // 5. フォロワー推移データを生成
-    const followerHistory = generateFollowerHistory(userInfo.followers_count || 8634);
+    const followerHistory = generateFollowerHistory(userInfo.followers_count || 3);
 
     // 6. レスポンスデータを構築
     const responseData = {
@@ -272,7 +351,7 @@ export async function GET(request: NextRequest) {
         username: userInfo.username,
         followers_count: userInfo.followers_count,
         media_count: userInfo.media_count,
-        account_type: 'BUSINESS' // Instagram Business Accountとして固定
+        account_type: 'BUSINESS'
       },
       posts: postsWithRankings,
       follower_history: followerHistory,
@@ -281,9 +360,14 @@ export async function GET(request: NextRequest) {
         date_range: {
           from: days28Ago.toLocaleDateString('ja-JP'),
           to: today.toLocaleDateString('ja-JP')
+        },
+        debug_info: {
+          total_posts_found: mediaData.data?.length || 0,
+          filtered_posts_28days: filteredPosts.length,
+          posts_processed: postsToProcess.length,
+          mode: filteredPosts.length > 0 ? 'filtered' : 'debug_latest'
         }
       },
-      // 🚨 アカウント情報を追加（重複チェック結果含む）
       accountInfo: {
         planType: accountCheckResult.planType,
         currentConnections: accountCheckResult.currentConnections,
@@ -315,6 +399,8 @@ export async function GET(request: NextRequest) {
 
 // ランキング計算関数
 function calculateRankings(posts: any[]) {
+  if (posts.length === 0) return [];
+  
   // 各指標でソート
   const savesSorted = [...posts].sort((a, b) => 
     b.calculated_metrics.saves_rate - a.calculated_metrics.saves_rate
