@@ -1,74 +1,102 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
+// src/app/api/instagram/callback/route.js
+import { NextResponse } from 'next/server';
 
-// 動的レンダリングを強制
-export const dynamic = 'force-dynamic'
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const code = searchParams.get('code');
+  const error = searchParams.get('error');
+  const state = searchParams.get('state');
 
-export async function GET(request: NextRequest) {
+  console.log('=== Instagram Graph API Callback (New API) ===');
+  console.log('URL:', request.url);
+  console.log('Code:', code ? 'Received' : 'Missing');
+  console.log('Error:', error);
+  console.log('State:', state);
+
+  if (error) {
+    console.error('OAuth error:', error);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=${error}`);
+  }
+
+  if (!code) {
+    console.error('No authorization code received');
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=no_code`);
+  }
+
   try {
-    const { searchParams } = new URL(request.url)
-    const code = searchParams.get('code')
-    const error = searchParams.get('error')
-    
-    if (error) {
-      console.error('Instagram OAuth error:', error)
-      return NextResponse.redirect(new URL('/dashboard?error=instagram_denied', request.url))
-    }
-    
-    if (!code) {
-      return NextResponse.redirect(new URL('/dashboard?error=no_code', request.url))
-    }
-
-    // セッション確認
-    const session = await getServerSession()
-    if (!session?.user) {
-      return NextResponse.redirect(new URL('/api/auth/signin', request.url))
-    }
-
-    // アクセストークンを取得
-    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+    // Step 1: コードをアクセストークンに交換（新しいGraph API）
+    const tokenResponse = await fetch('https://graph.facebook.com/v21.0/oauth/access_token', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.INSTAGRAM_CLIENT_ID || '',
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET || '',
-        grant_type: 'authorization_code',
+        client_id: process.env.INSTAGRAM_CLIENT_ID,
+        client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
         redirect_uri: `${process.env.NEXTAUTH_URL}/api/instagram/callback`,
         code: code,
       }),
-    })
+    });
 
-    if (!tokenResponse.ok) {
-      const errorData = await tokenResponse.text()
-      console.error('Token exchange failed:', errorData)
-      return NextResponse.redirect(new URL('/dashboard?error=token_failed', request.url))
+    const tokenData = await tokenResponse.json();
+    console.log('Token response:', tokenData);
+
+    if (tokenData.error) {
+      console.error('Token exchange failed:', tokenData.error);
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=token_failed`);
     }
 
-    const tokenData = await tokenResponse.json()
+    const accessToken = tokenData.access_token;
+
+    // Step 2: ユーザーのFacebookページ一覧を取得
+    const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?access_token=${accessToken}`);
+    const pagesData = await pagesResponse.json();
     
-    // Long-lived tokenを取得
-    const longLivedTokenResponse = await fetch(
-      `https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=${process.env.INSTAGRAM_CLIENT_SECRET}&access_token=${tokenData.access_token}`
-    )
+    console.log('Pages response:', pagesData);
 
-    if (longLivedTokenResponse.ok) {
-      const longLivedData = await longLivedTokenResponse.json()
-      
-      // ダッシュボードにアクセストークン付きでリダイレクト
-      return NextResponse.redirect(
-        new URL(`/dashboard?access_token=${longLivedData.access_token}&instagram_connected=true`, request.url)
-      )
-    } else {
-      // Short-lived tokenでもとりあえずリダイレクト
-      return NextResponse.redirect(
-        new URL(`/dashboard?access_token=${tokenData.access_token}&instagram_connected=true`, request.url)
-      )
+    if (pagesData.error) {
+      console.error('Pages fetch failed:', pagesData.error);
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=pages_failed`);
     }
+
+    // Step 3: Instagramビジネスアカウントを探す
+    let instagramToken = null;
+    let instagramUserId = null;
+
+    for (const page of pagesData.data || []) {
+      try {
+        const pageAccessToken = page.access_token;
+        
+        // ページのInstagramアカウントを確認
+        const igResponse = await fetch(`https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`);
+        const igData = await igResponse.json();
+        
+        if (igData.instagram_business_account) {
+          instagramToken = pageAccessToken;
+          instagramUserId = igData.instagram_business_account.id;
+          console.log('Found Instagram Business Account:', instagramUserId);
+          break;
+        }
+      } catch (error) {
+        console.log('Error checking page:', page.name, error.message);
+        continue;
+      }
+    }
+
+    if (!instagramToken || !instagramUserId) {
+      console.error('No Instagram Business Account found');
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=no_instagram_account&message=Business/Creator account required`);
+    }
+
+    console.log('✅ Instagram connection successful');
+    
+    // ダッシュボードにリダイレクト（アクセストークンとユーザーIDを含む）
+    return NextResponse.redirect(
+      `${process.env.NEXTAUTH_URL}/dashboard?access_token=${instagramToken}&instagram_user_id=${instagramUserId}&success=true`
+    );
 
   } catch (error) {
-    console.error('Instagram callback error:', error)
-    return NextResponse.redirect(new URL('/dashboard?error=callback_failed', request.url))
+    console.error('Callback error:', error);
+    return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=callback_failed`);
   }
 }
