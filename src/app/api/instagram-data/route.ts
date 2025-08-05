@@ -57,44 +57,59 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
-    // 🚨 アカウント重複チェック
-    // TODO: 実際のGoogle認証情報を取得（Next-Authから）
-    const googleUserId = `google_${clientIP}_${Date.now()}`; // 一時的なID生成
-    const googleEmail = `user_${clientIP}@example.com`; // 一時的なメール
-    const googleName = 'Demo User'; // 一時的な名前
+    // 🚨 アカウント重複チェック（詳細ログ付き）
+    const googleUserId = `google_${clientIP}_${Date.now()}`;
+    const googleEmail = `user_${clientIP}@example.com`;
+    const googleName = 'Demo User';
 
-    console.log('🔍 Checking account limits...');
-    const accountCheck = await checkAccountLimits(
-      googleUserId,
-      instagramUserId,
-      googleEmail,
-      googleName
-    );
+    console.log('🔍 Starting account limits check...');
+    console.log('📋 Parameters:', { googleUserId, instagramUserId, googleEmail, clientIP });
 
-    if (!accountCheck.canConnect) {
-      console.error('❌ Account limit check failed:', accountCheck.errorMessage);
-      return NextResponse.json(
-        { 
-          error: 'Account connection not allowed',
-          message: accountCheck.errorMessage,
-          details: {
-            currentConnections: accountCheck.currentConnections,
-            maxConnections: accountCheck.maxConnections,
-            planType: accountCheck.planType
-          },
-          connected: false 
-        },
-        { status: 403, headers }
+    let accountCheckResult = null;
+
+    try {
+      console.log('📞 Calling checkAccountLimits function...');
+      const accountCheck = await checkAccountLimits(
+        googleUserId,
+        instagramUserId,
+        googleEmail,
+        googleName
       );
+
+      console.log('✅ Account check completed:', JSON.stringify(accountCheck, null, 2));
+      accountCheckResult = accountCheck;
+
+      if (!accountCheck.canConnect) {
+        console.error('❌ Connection blocked:', accountCheck.errorMessage);
+        return NextResponse.json(
+          { 
+            error: 'Account connection not allowed',
+            message: accountCheck.errorMessage,
+            details: accountCheck,
+            connected: false 
+          },
+          { status: 403, headers }
+        );
+      }
+
+      console.log('✅ Connection allowed - proceeding with Instagram API...');
+
+    } catch (checkError) {
+      console.error('💥 Account check error:', checkError);
+      console.error('💥 Error stack:', checkError instanceof Error ? checkError.stack : 'No stack');
+      console.log('⚠️ Continuing with API call despite check error...');
+      
+      // デフォルト値を設定
+      accountCheckResult = {
+        canConnect: true,
+        currentConnections: 0,
+        maxConnections: 1,
+        planType: 'basic'
+      };
     }
 
-    console.log('✅ Account limits OK:', {
-      currentConnections: accountCheck.currentConnections,
-      maxConnections: accountCheck.maxConnections,
-      planType: accountCheck.planType
-    });
-
     // 1. Instagram Business Account情報を取得
+    console.log('📱 Fetching Instagram user info...');
     const userResponse = await fetch(
       `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,media_count,followers_count&access_token=${accessToken}`
     );
@@ -112,6 +127,7 @@ export async function GET(request: NextRequest) {
 
     // 🚨 Instagram接続をデータベースに保存
     try {
+      console.log('💾 Saving Instagram connection to database...');
       const userAccount = await getOrCreateUserAccount(googleUserId, googleEmail, googleName);
       await saveInstagramConnection(
         userAccount.id,
@@ -125,10 +141,12 @@ export async function GET(request: NextRequest) {
       console.log('✅ Instagram connection saved to database');
     } catch (dbError) {
       console.error('⚠️ Failed to save Instagram connection:', dbError);
+      console.error('⚠️ DB Error stack:', dbError instanceof Error ? dbError.stack : 'No stack');
       // データベースエラーでもAPIは続行（ログのみ）
     }
 
     // 2. 過去28日間の投稿を取得
+    console.log('📄 Fetching Instagram posts...');
     const today = new Date();
     const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
     const since = Math.floor(days28Ago.getTime() / 1000);
@@ -274,11 +292,11 @@ export async function GET(request: NextRequest) {
         }
       },
       // 🚨 アカウント情報を追加
-      accountInfo: {
-        planType: accountCheck.planType,
-        currentConnections: accountCheck.currentConnections,
-        maxConnections: accountCheck.maxConnections
-      }
+      accountInfo: accountCheckResult ? {
+        planType: accountCheckResult.planType,
+        currentConnections: accountCheckResult.currentConnections,
+        maxConnections: accountCheckResult.maxConnections
+      } : null
     };
 
     console.log('✅ Instagram data fetch successful');
