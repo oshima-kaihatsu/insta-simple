@@ -85,6 +85,7 @@ export default function DashboardPage() {
       id: 'sample_1',
       title: '朝の園庭で元気いっぱい遊ぶ子どもたち',
       date: '2025-01-28',
+      timestamp: '2025-01-28T10:00:00',
       data_24h: { reach: 2847, likes: 184, saves: 112, profile_views: 89, follows: 12 },
       data_7d: { reach: 3251, likes: 203, saves: 127, profile_views: 98, follows: 15 },
       rankings: { saves_rate: 1, home_rate: 2, profile_access_rate: 1, follower_conversion_rate: 1 }
@@ -93,6 +94,7 @@ export default function DashboardPage() {
       id: 'sample_2',
       title: '今月の製作活動「冬の雪だるま」',
       date: '2025-01-27',
+      timestamp: '2025-01-27T15:30:00',
       data_24h: { reach: 1892, likes: 156, saves: 45, profile_views: 67, follows: 8 },
       data_7d: { reach: 2156, likes: 172, saves: 51, profile_views: 74, follows: 9 },
       rankings: { saves_rate: 5, home_rate: 4, profile_access_rate: 3, follower_conversion_rate: 4 }
@@ -101,6 +103,7 @@ export default function DashboardPage() {
       id: 'sample_3',
       title: '給食の時間の様子',
       date: '2025-01-26',
+      timestamp: '2025-01-26T12:00:00',
       data_24h: { reach: 3124, likes: 298, saves: 156, profile_views: 124, follows: 18 },
       data_7d: { reach: 3567, likes: 321, saves: 178, profile_views: 142, follows: 21 },
       rankings: { saves_rate: 2, home_rate: 1, profile_access_rate: 2, follower_conversion_rate: 2 }
@@ -109,6 +112,7 @@ export default function DashboardPage() {
       id: 'sample_4',
       title: '節分の準備中',
       date: '2025-01-25',
+      timestamp: '2025-01-25T18:45:00',
       data_24h: { reach: 2456, likes: 189, saves: 67, profile_views: 78, follows: 6 },
       data_7d: { reach: 2801, likes: 210, saves: 79, profile_views: 89, follows: 7 },
       rankings: { saves_rate: 8, home_rate: 6, profile_access_rate: 5, follower_conversion_rate: 8 }
@@ -117,6 +121,7 @@ export default function DashboardPage() {
       id: 'sample_5',
       title: '保護者参観日の様子',
       date: '2025-01-24',
+      timestamp: '2025-01-24T09:30:00',
       data_24h: { reach: 2789, likes: 234, saves: 134, profile_views: 98, follows: 14 },
       data_7d: { reach: 3198, likes: 267, saves: 156, profile_views: 112, follows: 16 },
       rankings: { saves_rate: 3, home_rate: 3, profile_access_rate: 4, follower_conversion_rate: 3 }
@@ -125,6 +130,7 @@ export default function DashboardPage() {
       id: 'sample_6',
       title: '午後のお昼寝タイム',
       date: '2025-01-23',
+      timestamp: '2025-01-23T14:20:00',
       data_24h: { reach: 1567, likes: 123, saves: 34, profile_views: 45, follows: 3 },
       data_7d: { reach: 1789, likes: 141, saves: 39, profile_views: 52, follows: 4 },
       rankings: { saves_rate: 12, home_rate: 11, profile_access_rate: 9, follower_conversion_rate: 12 }
@@ -133,6 +139,7 @@ export default function DashboardPage() {
       id: 'sample_7',
       title: '英語の時間',
       date: '2025-01-22',
+      timestamp: '2025-01-22T11:00:00',
       data_24h: { reach: 2234, likes: 167, saves: 89, profile_views: 67, follows: 9 },
       data_7d: { reach: 2567, likes: 189, saves: 102, profile_views: 78, follows: 11 },
       rankings: { saves_rate: 6, home_rate: 7, profile_access_rate: 6, follower_conversion_rate: 6 }
@@ -141,6 +148,7 @@ export default function DashboardPage() {
       id: 'sample_8',
       title: '体操教室で体力づくり',
       date: '2025-01-21',
+      timestamp: '2025-01-21T16:30:00',
       data_24h: { reach: 1789, likes: 134, saves: 56, profile_views: 43, follows: 5 },
       data_7d: { reach: 2034, likes: 152, saves: 64, profile_views: 49, follows: 6 },
       rankings: { saves_rate: 9, home_rate: 9, profile_access_rate: 8, follower_conversion_rate: 9 }
@@ -149,6 +157,7 @@ export default function DashboardPage() {
       id: 'sample_9',
       title: '絵本の読み聞かせタイム',
       date: '2025-01-20',
+      timestamp: '2025-01-20T13:15:00',
       data_24h: { reach: 2678, likes: 201, saves: 98, profile_views: 87, follows: 12 },
       data_7d: { reach: 3034, likes: 223, saves: 112, profile_views: 98, follows: 14 },
       rankings: { saves_rate: 7, home_rate: 5, profile_access_rate: 7, follower_conversion_rate: 5 }
@@ -157,6 +166,7 @@ export default function DashboardPage() {
       id: 'sample_10',
       title: 'お誕生日会を開催',
       date: '2025-01-19',
+      timestamp: '2025-01-19T10:45:00',
       data_24h: { reach: 2345, likes: 178, saves: 78, profile_views: 65, follows: 8 },
       data_7d: { reach: 2687, likes: 198, saves: 89, profile_views: 74, follows: 9 },
       rankings: { saves_rate: 10, home_rate: 8, profile_access_rate: 10, follower_conversion_rate: 7 }
@@ -165,6 +175,7 @@ export default function DashboardPage() {
       id: 'sample_11',
       title: 'リトミック教室',
       date: '2025-01-18',
+      timestamp: '2025-01-18T09:00:00',
       data_24h: { reach: 1923, likes: 145, saves: 45, profile_views: 56, follows: 4 },
       data_7d: { reach: 2198, likes: 165, saves: 52, profile_views: 64, follows: 5 },
       rankings: { saves_rate: 13, home_rate: 12, profile_access_rate: 11, follower_conversion_rate: 11 }
@@ -173,6 +184,7 @@ export default function DashboardPage() {
       id: 'sample_12',
       title: 'おやつの時間',
       date: '2025-01-17',
+      timestamp: '2025-01-17T15:00:00',
       data_24h: { reach: 2567, likes: 192, saves: 87, profile_views: 78, follows: 10 },
       data_7d: { reach: 2923, likes: 214, saves: 99, profile_views: 89, follows: 12 },
       rankings: { saves_rate: 11, home_rate: 10, profile_access_rate: 12, follower_conversion_rate: 10 }
@@ -181,6 +193,7 @@ export default function DashboardPage() {
       id: 'sample_13',
       title: '砂場遊びで創造力を',
       date: '2025-01-16',
+      timestamp: '2025-01-16T11:30:00',
       data_24h: { reach: 1678, likes: 123, saves: 34, profile_views: 45, follows: 3 },
       data_7d: { reach: 1923, likes: 141, saves: 39, profile_views: 52, follows: 4 },
       rankings: { saves_rate: 14, home_rate: 13, profile_access_rate: 13, follower_conversion_rate: 13 }
@@ -189,6 +202,7 @@ export default function DashboardPage() {
       id: 'sample_14',
       title: '今日の給食メニュー',
       date: '2025-01-15',
+      timestamp: '2025-01-15T12:15:00',
       data_24h: { reach: 2134, likes: 167, saves: 67, profile_views: 58, follows: 7 },
       data_7d: { reach: 2456, likes: 189, saves: 78, profile_views: 67, follows: 8 },
       rankings: { saves_rate: 15, home_rate: 14, profile_access_rate: 14, follower_conversion_rate: 14 }
@@ -197,6 +211,7 @@ export default function DashboardPage() {
       id: 'sample_15',
       title: '朝の体操で一日をスタート',
       date: '2025-01-14',
+      timestamp: '2025-01-14T08:30:00',
       data_24h: { reach: 1456, likes: 112, saves: 28, profile_views: 34, follows: 2 },
       data_7d: { reach: 1678, likes: 128, saves: 32, profile_views: 39, follows: 3 },
       rankings: { saves_rate: 4, home_rate: 15, profile_access_rate: 15, follower_conversion_rate: 15 }
@@ -220,11 +235,13 @@ export default function DashboardPage() {
 
   // 期間フィルター適用
   const filteredPosts = filterPeriod === 'all' ? postsData : postsData.filter(post => {
-    const postDate = new Date(post.date || post.timestamp);
+    const postDate = new Date(post.timestamp || post.date);
     const daysAgo = new Date();
     daysAgo.setDate(daysAgo.getDate() - parseInt(filterPeriod));
     return postDate >= daysAgo;
   });
+
+  console.log('Debug - postsData:', postsData.length, 'filteredPosts:', filteredPosts.length); // デバッグ用
 
   // 重要4指標の計算（完全修正版）
   const calculateMetrics = (post) => {
@@ -490,8 +507,9 @@ export default function DashboardPage() {
           <span style={{ fontSize: '20px', color: '#5d4e37', fontWeight: '600' }}>Instagram データを取得中...</span>
         </div>
 
-        {/* AI総合評価と改善提案 */}
-        <div style={{
+        {/* AI総合評価と改善提案 - データがある場合のみ表示 */}
+        {filteredPosts.length > 0 && (
+          <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
           padding: '32px',
@@ -524,6 +542,7 @@ export default function DashboardPage() {
                 }}>
                   {aiComments.grade || 'C'}
                 </div>
+        )}
                 <div style={{ fontSize: '14px', color: '#666', marginTop: '8px' }}>
                   ({aiComments.achievements || 0}/4指標達成)
                 </div>
@@ -1074,7 +1093,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPosts.map((post, index) => {
+                {filteredPosts.length > 0 ? filteredPosts.map((post, index) => {
                   const metrics24h = hasRealData ? calculateMetrics(post) : calculateMetrics({ data_7d: post.data_24h });
                   const metrics7d = calculateMetrics(post);
                   const title = hasRealData ? (post.caption?.substring(0, 50) + '...' || '投稿') : post.title;
@@ -1204,7 +1223,19 @@ export default function DashboardPage() {
                       </td>
                     </tr>
                   );
-                })}
+                }) : (
+                  <tr>
+                    <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                      <MessageSquare size={48} style={{ color: '#c79a42', marginBottom: '16px' }} />
+                      <p style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', marginBottom: '8px' }}>
+                        投稿データがありません
+                      </p>
+                      <p style={{ fontSize: '14px' }}>
+                        期間を変更するか、Instagramアカウントを連携してください
+                      </p>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
