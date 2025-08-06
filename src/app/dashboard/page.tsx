@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [showSampleData, setShowSampleData] = useState(true);
   const [aiComments, setAiComments] = useState({});
+  const [filterPeriod, setFilterPeriod] = useState('28');
 
   useEffect(() => {
     const checkForRealData = async () => {
@@ -217,6 +218,14 @@ export default function DashboardPage() {
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
 
+  // 期間フィルター適用
+  const filteredPosts = filterPeriod === 'all' ? postsData : postsData.filter(post => {
+    const postDate = new Date(post.date || post.timestamp);
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - parseInt(filterPeriod));
+    return postDate >= daysAgo;
+  });
+
   // 重要4指標の計算（完全修正版）
   const calculateMetrics = (post) => {
     if (hasRealData && post.insights) {
@@ -225,13 +234,13 @@ export default function DashboardPage() {
       const saves = parseInt(post.insights.saves) || 0;
       const profile_views = parseInt(post.insights.profile_views) || 0;
       const website_clicks = parseInt(post.insights.website_clicks) || 0;
-      const currentFollowers = parseInt(instagramData?.profile?.followers_count) || 0;
+      const currentFollowers = parseInt(instagramData?.profile?.followers_count) || 1; // 0除算を防ぐ
       
       // 正しい計算式 - 分母が0なら必ず0.0
-      const saves_rate = (reach > 0 && saves >= 0) ? ((saves / reach) * 100).toFixed(1) : '0.0';
-      const home_rate = (currentFollowers > 0 && reach >= 0) ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
-      const profile_access_rate = (reach > 0 && profile_views >= 0) ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
-      const follower_conversion_rate = (profile_views > 0 && website_clicks >= 0) ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
+      const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
+      const home_rate = currentFollowers > 0 && reach > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
+      const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
+      const follower_conversion_rate = profile_views > 0 ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     } else {
@@ -241,10 +250,11 @@ export default function DashboardPage() {
       const saves = parseInt(data.saves) || 0;
       const profile_views = parseInt(data.profile_views) || 0;
       const follows = parseInt(data.follows) || 0;
+      const currentFollowers = 8634;
       
-      // 正しい計算式
+      // 正しい計算式 - すべて分母が0の場合は0.0を返す
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
-      const home_rate = ((reach * 0.7) / 8634 * 100).toFixed(1);
+      const home_rate = currentFollowers > 0 && reach > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((follows / profile_views) * 100).toFixed(1) : '0.0';
       
@@ -275,7 +285,7 @@ export default function DashboardPage() {
     };
   };
 
-  const averages = calculateAverages(postsData);
+  const averages = calculateAverages(filteredPosts);
 
   // AIコメント生成
   const generateAIComments = () => {
@@ -313,7 +323,7 @@ export default function DashboardPage() {
     let bestPost = null;
     let bestScore = 0;
     
-    postsData.forEach(post => {
+    filteredPosts.forEach(post => {
       const metrics = calculateMetrics(post);
       const postScore = parseFloat(metrics.saves_rate) * 0.4 + 
                        parseFloat(metrics.profile_access_rate) * 0.3 + 
@@ -341,7 +351,7 @@ export default function DashboardPage() {
     const bestPostTitle = bestPost ? (hasRealData ? (bestPost.caption?.substring(0, 30) + '...' || '投稿') : bestPost.title) : '';
     const bestMetrics = bestPost ? calculateMetrics(bestPost) : null;
 
-    let overallComment = `${postsData.length}件の投稿を分析しました。`;
+    let overallComment = `${filteredPosts.length}件の投稿を分析しました。`;
     
     if (achievements >= 3) {
       overallComment += ` 優秀な成果です！4指標中${achievements}項目で目標を達成しています。`;
@@ -366,10 +376,10 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (postsData.length > 0) {
+    if (filteredPosts.length > 0) {
       generateAIComments();
     }
-  }, [postsData, hasRealData]);
+  }, [filteredPosts, hasRealData]);
 
   const getGradeColor = (grade) => {
     if (!grade) return '#c79a42';
@@ -432,7 +442,7 @@ export default function DashboardPage() {
       '保存率ランキング', 'ホーム率ランキング', 'プロフィールアクセス率ランキング', 'フォロワー転換率ランキング'
     ].join(',');
 
-    const rows = postsData.map(post => {
+    const rows = filteredPosts.map(post => {
       const metrics = calculateMetrics(post);
       const title = hasRealData ? (post.caption?.substring(0, 50) || '投稿') : post.title;
       const date = hasRealData ? new Date(post.timestamp).toLocaleDateString('ja-JP') : post.date;
@@ -448,10 +458,10 @@ export default function DashboardPage() {
         `"${title}"`, date,
         data.reach, data.likes, data.saves, data.profile_views, data.follows,
         metrics.saves_rate, metrics.home_rate, metrics.profile_access_rate, metrics.follower_conversion_rate,
-        `${post.rankings?.saves_rate || 0}位/${postsData.length}投稿`,
-        `${post.rankings?.home_rate || 0}位/${postsData.length}投稿`,
-        `${post.rankings?.profile_access_rate || 0}位/${postsData.length}投稿`,
-        `${post.rankings?.follower_conversion_rate || 0}位/${postsData.length}投稿`
+        `${post.rankings?.saves_rate || 0}位/${filteredPosts.length}投稿`,
+        `${post.rankings?.home_rate || 0}位/${filteredPosts.length}投稿`,
+        `${post.rankings?.profile_access_rate || 0}位/${filteredPosts.length}投稿`,
+        `${post.rankings?.follower_conversion_rate || 0}位/${filteredPosts.length}投稿`
       ].join(',');
     });
 
@@ -557,7 +567,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-                    @{hasRealData ? instagramData.profile?.username : 'hoikuen_sample'} • {dateRangeText} • {postsData.length}件の投稿を分析
+                    @{hasRealData ? instagramData.profile?.username : 'hoikuen_sample'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
                     <span style={{ 
                       color: hasRealData ? '#22c55e' : '#f59e0b', 
                       fontSize: '14px', 
@@ -877,55 +887,72 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 投稿別詳細分析 - 続きは次のメッセージで */}
+        {/* 投稿別詳細分析 */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.9)',
+          borderRadius: '16px',
+          padding: '32px',
+          marginBottom: '32px',
+          border: '1px solid rgba(199, 154, 66, 0.2)',
+          boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+            <h2 style={{ 
+              fontSize: '24px', 
+              fontWeight: '600', 
+              margin: 0, 
+              color: '#5d4e37'
+            }}>
+              投稿別詳細分析
+            </h2>
+            
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <select
+                value={filterPeriod}
+                onChange={(e) => setFilterPeriod(e.target.value)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid rgba(199, 154, 66, 0.3)',
+                  background: 'white',
+                  color: '#5d4e37',
+                  fontSize: '14px',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="7">過去7日間</option>
+                <option value="28">過去28日間</option>
+                <option value="90">過去90日間</option>
+                <option value="all">全期間</option>
+              </select>
+              
+              <button 
+                onClick={downloadCSV}
+                style={{
+                  background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+                  color: '#fcfbf8',
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
+                }}
+              >
+                <Download size={18} />
+                CSV出力
+              </button>
+            </div>
+          </div>
+
+          {/* テーブル部分は次に追加 */}
+        </div>
       </div>
     </div>
   );
 }
-
-{/* 投稿別詳細分析 */}
-<div style={{
-  background: 'rgba(255, 255, 255, 0.9)',
-  borderRadius: '16px',
-  padding: '32px',
-  marginBottom: '32px',
-  border: '1px solid rgba(199, 154, 66, 0.2)',
-  boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
-}}>
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
-    <h2 style={{ 
-      fontSize: '24px', 
-      fontWeight: '600', 
-      margin: 0, 
-      color: '#5d4e37'
-    }}>
-      投稿別詳細分析
-    </h2>
-    
-    <button 
-      onClick={downloadCSV}
-      style={{
-        background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
-        color: '#fcfbf8',
-        padding: '16px 32px',
-        border: 'none',
-        borderRadius: '12px',
-        fontSize: '16px',
-        fontWeight: '600',
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        transition: 'all 0.2s',
-        boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
-      }}
-    >
-      <Download size={18} />
-      CSV出力
-    </button>
-  </div>
-
-  {/* テーブル部分は長いので省略 */}
-</div>
-
-{/* AI総合評価と改善提案も同様に追加 */}
