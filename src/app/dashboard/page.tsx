@@ -217,7 +217,7 @@ export default function DashboardPage() {
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
 
-  // 重要4指標の計算
+  // 重要4指標の計算（修正版 - 整合性確保）
   const calculateMetrics = (post) => {
     if (hasRealData && post.insights) {
       // 実データの場合
@@ -227,8 +227,9 @@ export default function DashboardPage() {
       const website_clicks = post.insights.website_clicks || 0;
       const currentFollowers = instagramData?.profile?.followers_count || 1;
       
+      // 分母が0の場合は0.0を返す
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
-      const home_rate = Math.min(((reach * 0.7) / currentFollowers * 100), 100).toFixed(1);
+      const home_rate = currentFollowers > 0 ? Math.min(((reach * 0.7) / currentFollowers * 100), 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
       
@@ -236,10 +237,10 @@ export default function DashboardPage() {
     } else {
       // サンプルデータの場合
       const data = post.data_7d;
-      const saves_rate = ((data.saves / data.reach) * 100).toFixed(1);
+      const saves_rate = data.reach > 0 ? ((data.saves / data.reach) * 100).toFixed(1) : '0.0';
       const home_rate = Math.min(((data.reach * 0.7) / 8634 * 100), 100).toFixed(1);
-      const profile_access_rate = ((data.profile_views / data.reach) * 100).toFixed(1);
-      const follower_conversion_rate = ((data.follows / data.profile_views) * 100).toFixed(1);
+      const profile_access_rate = data.reach > 0 ? ((data.profile_views / data.reach) * 100).toFixed(1) : '0.0';
+      const follower_conversion_rate = data.profile_views > 0 ? ((data.follows / data.profile_views) * 100).toFixed(1) : '0.0';
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     }
@@ -593,8 +594,17 @@ export default function DashboardPage() {
                 fontSize: '18px',
                 fontWeight: '600',
                 cursor: 'pointer',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                transition: 'all 0.3s ease',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                transform: 'translateY(0px)'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.transform = 'translateY(0px)';
+                e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
               }}
             >
               Instagram連携を開始
@@ -764,7 +774,7 @@ export default function DashboardPage() {
             marginBottom: '24px', 
             color: '#5d4e37'
           }}>
-            重要4指標ランキング（28日間中）
+            重要4指標スコア
           </h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
