@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -21,7 +21,11 @@ import {
   AlertCircle,
   CheckCircle,
   Info,
-  Share2
+  Share2,
+  Camera,
+  Film,
+  Layout,
+  Play
 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -31,6 +35,8 @@ export default function Dashboard() {
   const [hasRealData, setHasRealData] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('');
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [filterPeriod, setFilterPeriod] = useState('28');
 
   // URLパラメータをチェック
   useEffect(() => {
@@ -40,10 +46,8 @@ export default function Dashboard() {
     const success = urlParams.get('success');
 
     if (accessToken && instagramUserId && success === 'true') {
-      // 連携成功 - 実データを取得
       fetchRealData(accessToken, instagramUserId);
     } else {
-      // サンプルデータを表示
       setInstagramData(getSampleData());
       setHasRealData(false);
     }
@@ -55,7 +59,6 @@ export default function Dashboard() {
     setLoadingMessage('Instagram連携成功！データを取得中...');
     
     try {
-      // API呼び出しの進捗表示
       const messages = [
         { delay: 1000, text: 'アカウント情報を確認中...' },
         { delay: 2000, text: '投稿データを分析中...' },
@@ -78,7 +81,6 @@ export default function Dashboard() {
 
       const data = await response.json();
       
-      // 実データの整合性チェックと修正
       if (data.posts) {
         data.posts = data.posts.map(post => ({
           ...post,
@@ -99,12 +101,10 @@ export default function Dashboard() {
       setHasRealData(true);
       setShowSuccessMessage(true);
       
-      // 成功メッセージを5秒後に非表示
       setTimeout(() => setShowSuccessMessage(false), 5000);
     } catch (err) {
       console.error('Error fetching data:', err);
       setError(err.message);
-      // エラー時はサンプルデータを表示
       setInstagramData(getSampleData());
       setHasRealData(false);
     } finally {
@@ -116,21 +116,22 @@ export default function Dashboard() {
   // サンプルデータ
   const getSampleData = () => ({
     user: {
-      username: 'sample_account',
+      username: 'hoikuen_sample',
       followers_count: 12456,
       following_count: 892,
       media_count: 234,
       profile_picture_url: null,
-      biography: 'サンプルアカウント - Instagram分析ダッシュボード',
+      biography: '保育園の日常をお届け - Instagram分析ダッシュボード',
       website: 'https://example.com',
       is_verified: false
     },
     posts: [
       {
         id: '1',
-        caption: '朝の園庭で元気いっぱい遊ぶ子どもたち。今日も笑顔がたくさん見られました！',
+        caption: '朝の園庭で元気いっぱい遊ぶ子どもたち。今日も笑顔がたくさん見られました',
         media_type: 'IMAGE',
         timestamp: '2025-01-28T10:00:00',
+        media_url: '',
         insights: {
           reach: 3456,
           likes: 234,
@@ -147,6 +148,7 @@ export default function Dashboard() {
         caption: '今月の製作活動「冬の雪だるま」みんな上手に作れました',
         media_type: 'CAROUSEL_ALBUM',
         timestamp: '2025-01-27T15:30:00',
+        media_url: '',
         insights: {
           reach: 2890,
           likes: 189,
@@ -160,9 +162,10 @@ export default function Dashboard() {
       },
       {
         id: '3',
-        caption: '給食の時間の様子です。好き嫌いなく食べられるようになりました！',
+        caption: '給食の時間の様子です。好き嫌いなく食べられるようになりました',
         media_type: 'VIDEO',
         timestamp: '2025-01-26T12:00:00',
+        media_url: '',
         insights: {
           reach: 4567,
           likes: 345,
@@ -179,6 +182,7 @@ export default function Dashboard() {
         caption: '節分の準備中！鬼のお面作りに夢中です',
         media_type: 'IMAGE',
         timestamp: '2025-01-25T18:45:00',
+        media_url: '',
         insights: {
           reach: 1234,
           likes: 89,
@@ -192,9 +196,10 @@ export default function Dashboard() {
       },
       {
         id: '5',
-        caption: '保護者参観日の様子。たくさんのご参加ありがとうございました！',
+        caption: '保護者参観日の様子。たくさんのご参加ありがとうございました',
         media_type: 'REELS',
         timestamp: '2025-01-24T09:30:00',
+        media_url: '',
         insights: {
           reach: 5678,
           likes: 456,
@@ -211,6 +216,7 @@ export default function Dashboard() {
         caption: '午後のお昼寝タイム。ぐっすり眠って午後も元気に活動します',
         media_type: 'IMAGE',
         timestamp: '2025-01-23T14:20:00',
+        media_url: '',
         insights: {
           reach: 3789,
           likes: 267,
@@ -227,6 +233,7 @@ export default function Dashboard() {
         caption: '英語の時間！ABCの歌を楽しく歌いながら学んでいます',
         media_type: 'CAROUSEL_ALBUM',
         timestamp: '2025-01-22T11:00:00',
+        media_url: '',
         insights: {
           reach: 2345,
           likes: 156,
@@ -243,6 +250,7 @@ export default function Dashboard() {
         caption: '体操教室で体力づくり！みんな一生懸命頑張っています',
         media_type: 'VIDEO',
         timestamp: '2025-01-21T16:30:00',
+        media_url: '',
         insights: {
           reach: 4890,
           likes: 378,
@@ -259,6 +267,7 @@ export default function Dashboard() {
         caption: '絵本の読み聞かせタイム。真剣に聞いている姿が素敵です',
         media_type: 'IMAGE',
         timestamp: '2025-01-20T13:15:00',
+        media_url: '',
         insights: {
           reach: 3123,
           likes: 234,
@@ -275,6 +284,7 @@ export default function Dashboard() {
         caption: 'お誕生日会を開催しました！1月生まれのお友達おめでとう',
         media_type: 'CAROUSEL_ALBUM',
         timestamp: '2025-01-19T10:45:00',
+        media_url: '',
         insights: {
           reach: 2678,
           likes: 189,
@@ -284,6 +294,91 @@ export default function Dashboard() {
           comments: 34,
           shares: 11,
           impressions: 3234
+        }
+      },
+      {
+        id: '11',
+        caption: 'リトミック教室でリズム感を育てています',
+        media_type: 'VIDEO',
+        timestamp: '2025-01-18T09:00:00',
+        media_url: '',
+        insights: {
+          reach: 3234,
+          likes: 245,
+          saves: 167,
+          profile_views: 89,
+          website_clicks: 21,
+          comments: 52,
+          shares: 17,
+          impressions: 3987
+        }
+      },
+      {
+        id: '12',
+        caption: 'おやつの時間！手作りクッキーを美味しくいただきました',
+        media_type: 'IMAGE',
+        timestamp: '2025-01-17T15:00:00',
+        media_url: '',
+        insights: {
+          reach: 2456,
+          likes: 178,
+          saves: 98,
+          profile_views: 54,
+          website_clicks: 11,
+          comments: 29,
+          shares: 8,
+          impressions: 2987
+        }
+      },
+      {
+        id: '13',
+        caption: '砂場遊びで創造力を育てています',
+        media_type: 'CAROUSEL_ALBUM',
+        timestamp: '2025-01-16T11:30:00',
+        media_url: '',
+        insights: {
+          reach: 1890,
+          likes: 134,
+          saves: 67,
+          profile_views: 34,
+          website_clicks: 8,
+          comments: 18,
+          shares: 5,
+          impressions: 2234
+        }
+      },
+      {
+        id: '14',
+        caption: '今日の給食メニュー。栄養バランスバッチリです',
+        media_type: 'IMAGE',
+        timestamp: '2025-01-15T12:15:00',
+        media_url: '',
+        insights: {
+          reach: 2789,
+          likes: 198,
+          saves: 123,
+          profile_views: 72,
+          website_clicks: 16,
+          comments: 38,
+          shares: 13,
+          impressions: 3345
+        }
+      },
+      {
+        id: '15',
+        caption: '朝の体操で一日をスタート！元気いっぱいです',
+        media_type: 'REELS',
+        timestamp: '2025-01-14T08:30:00',
+        media_url: '',
+        insights: {
+          reach: 4123,
+          likes: 312,
+          saves: 234,
+          profile_views: 134,
+          website_clicks: 31,
+          comments: 64,
+          shares: 25,
+          impressions: 4987
         }
       }
     ],
@@ -308,7 +403,6 @@ export default function Dashboard() {
       };
     }
 
-    // 厳密な型変換と計算
     const reach = parseInt(post.insights.reach) || 0;
     const saves = parseInt(post.insights.saves) || 0;
     const profile_views = parseInt(post.insights.profile_views) || 0;
@@ -354,12 +448,35 @@ export default function Dashboard() {
     window.location.href = authUrl;
   };
 
+  // ソート機能
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // メディアタイプアイコン
+  const MediaIcon = ({ type }) => {
+    switch(type) {
+      case 'VIDEO':
+        return <Film size={16} color="#c79a42" />;
+      case 'CAROUSEL_ALBUM':
+        return <Layout size={16} color="#c79a42" />;
+      case 'REELS':
+        return <Play size={16} color="#c79a42" />;
+      default:
+        return <Camera size={16} color="#c79a42" />;
+    }
+  };
+
   // CSV出力
   const handleExportCSV = () => {
     if (!instagramData?.posts) return;
 
     const csvContent = [
-      ['タイトル', '日付', 'タイプ', 'リーチ数', 'インプレッション', 'いいね数', '保存数', 'コメント数', 'シェア数', 'プロフィール表示数', 'ウェブサイトクリック', '保存率', 'ホーム率', 'プロフィールアクセス率', 'フォロワー転換率', 'エンゲージメント率'],
+      ['投稿内容', '日付', 'タイプ', 'リーチ数', 'インプレッション', 'いいね数', '保存数', 'コメント数', 'シェア数', 'プロフィール表示数', 'ウェブサイトクリック', '保存率', 'ホーム率', 'プロフィールアクセス率', 'フォロワー転換率', 'エンゲージメント率'],
       ...instagramData.posts.map(post => {
         const metrics = calculateMetrics(post);
         const engagementRate = calculateEngagementRate(post);
@@ -476,22 +593,54 @@ export default function Dashboard() {
 
   // データ準備
   const posts = instagramData?.posts || [];
-  const followerHistory = instagramData?.follower_history || { hasData: false };
-  const user = instagramData?.user || {};
+  const filteredPosts = filterPeriod === 'all' ? posts : posts.filter(post => {
+    const postDate = new Date(post.timestamp);
+    const daysAgo = new Date();
+    daysAgo.setDate(daysAgo.getDate() - parseInt(filterPeriod));
+    return postDate >= daysAgo;
+  });
 
-  // 投稿をランキング計算
-  const postsWithRankings = posts.map(post => {
+  // ソート処理
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    if (!sortConfig.key) return 0;
+    
+    let aValue, bValue;
+    
+    if (sortConfig.key === 'timestamp') {
+      aValue = new Date(a.timestamp).getTime();
+      bValue = new Date(b.timestamp).getTime();
+    } else if (sortConfig.key === 'reach') {
+      aValue = a.insights?.reach || 0;
+      bValue = b.insights?.reach || 0;
+    } else if (sortConfig.key.includes('_rate')) {
+      const aMetrics = calculateMetrics(a);
+      const bMetrics = calculateMetrics(b);
+      aValue = parseFloat(aMetrics[sortConfig.key]);
+      bValue = parseFloat(bMetrics[sortConfig.key]);
+    }
+    
+    if (sortConfig.direction === 'asc') {
+      return aValue - bValue;
+    } else {
+      return bValue - aValue;
+    }
+  });
+
+  // ランキング計算
+  const postsWithRankings = sortedPosts.map(post => {
     const metrics = calculateMetrics(post);
     return { ...post, metrics };
   });
 
-  // ランキング付与
   const rankings = {
     saves_rate: [...postsWithRankings].sort((a, b) => parseFloat(b.metrics.saves_rate) - parseFloat(a.metrics.saves_rate)),
     home_rate: [...postsWithRankings].sort((a, b) => parseFloat(b.metrics.home_rate) - parseFloat(a.metrics.home_rate)),
     profile_access_rate: [...postsWithRankings].sort((a, b) => parseFloat(b.metrics.profile_access_rate) - parseFloat(a.metrics.profile_access_rate)),
     follower_conversion_rate: [...postsWithRankings].sort((a, b) => parseFloat(b.metrics.follower_conversion_rate) - parseFloat(a.metrics.follower_conversion_rate))
   };
+
+  const followerHistory = instagramData?.follower_history || { hasData: false };
+  const user = instagramData?.user || {};
 
   // メインダッシュボード
   return (
@@ -708,9 +857,9 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <div style={{ fontSize: '32px', fontWeight: '800', color: '#c79a42' }}>
-                    4.2%
+                    {posts.length > 0 ? (posts.reduce((sum, post) => sum + parseFloat(calculateEngagementRate(post)), 0) / posts.length).toFixed(1) : '0.0'}%
                   </div>
-                  <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>エンゲージメント率</div>
+                  <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>平均エンゲージメント率</div>
                 </div>
               </div>
             </div>
@@ -921,10 +1070,28 @@ export default function Dashboard() {
                 投稿分析
               </h2>
               <p style={{ color: '#6b7280', marginTop: '8px', fontSize: '14px' }}>
-                直近28日間の投稿パフォーマンス
+                直近の投稿パフォーマンス
               </p>
             </div>
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <select
+                value={filterPeriod}
+                onChange={(e) => setFilterPeriod(e.target.value)}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  border: '2px solid #c79a42',
+                  background: 'white',
+                  color: '#5d4e37',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="7">過去7日間</option>
+                <option value="28">過去28日間</option>
+                <option value="90">過去90日間</option>
+                <option value="all">全期間</option>
+              </select>
               <button
                 onClick={handleExportCSV}
                 style={{
@@ -957,40 +1124,98 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {posts.length > 0 ? (
+          {sortedPosts.length > 0 ? (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ borderBottom: '2px solid #c79a42' }}>
-                    <th style={{ padding: '16px', textAlign: 'left', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'left', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('caption')}>
                       投稿
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      日付
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('timestamp')}>
+                      日付 {sortConfig.key === 'timestamp' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      リーチ
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('reach')}>
+                      リーチ {sortConfig.key === 'reach' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      保存率
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('saves_rate')}>
+                      保存率 {sortConfig.key === 'saves_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      ホーム率
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('home_rate')}>
+                      ホーム率 {sortConfig.key === 'home_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      プロフィールアクセス率
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('profile_access_rate')}>
+                      プロフィールアクセス率 {sortConfig.key === 'profile_access_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
-                    <th style={{ padding: '16px', textAlign: 'center', color: '#5d4e37', fontWeight: '600', fontSize: '14px' }}>
-                      フォロワー転換率
+                    <th style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#5d4e37', 
+                      fontWeight: '600', 
+                      fontSize: '14px',
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => handleSort('follower_conversion_rate')}>
+                      フォロワー転換率 {sortConfig.key === 'follower_conversion_rate' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {postsWithRankings.map((post, index) => {
+                  {sortedPosts.map((post, index) => {
+                    const metrics = calculateMetrics(post);
                     const savesRank = rankings.saves_rate.findIndex(p => p.id === post.id) + 1;
                     const homeRank = rankings.home_rate.findIndex(p => p.id === post.id) + 1;
                     const profileRank = rankings.profile_access_rate.findIndex(p => p.id === post.id) + 1;
                     const followerRank = rankings.follower_conversion_rate.findIndex(p => p.id === post.id) + 1;
+                    const isTop25 = (rank, total) => rank <= Math.ceil(total * 0.25);
                     
                     return (
                       <tr key={post.id} style={{ 
@@ -1004,14 +1229,17 @@ export default function Dashboard() {
                         e.currentTarget.style.background = 'transparent';
                       }}>
                         <td style={{ padding: '16px', color: '#374151' }}>
-                          <div style={{ 
-                            fontWeight: '500',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                            maxWidth: '300px'
-                          }}>
-                            {post.caption?.substring(0, 40) || `投稿${index + 1}`}...
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <MediaIcon type={post.media_type} />
+                            <div style={{ 
+                              fontWeight: '500',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              maxWidth: '300px'
+                            }}>
+                              {post.caption?.substring(0, 40) || `投稿${index + 1}`}...
+                            </div>
                           </div>
                         </td>
                         <td style={{ padding: '16px', textAlign: 'center', color: '#6b7280', fontSize: '14px' }}>
@@ -1025,14 +1253,18 @@ export default function Dashboard() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '12px',
-                              background: savesRank <= Math.ceil(posts.length * 0.25) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : parseFloat(post.metrics.saves_rate) >= 3 ? '#22c55e20' : '#ef444420',
-                              color: savesRank <= Math.ceil(posts.length * 0.25) ? 'white' : parseFloat(post.metrics.saves_rate) >= 3 ? '#22c55e' : '#ef4444',
+                              background: isTop25(savesRank, sortedPosts.length) 
+                                ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+                                : parseFloat(metrics.saves_rate) >= 3 ? '#22c55e20' : '#ef444420',
+                              color: isTop25(savesRank, sortedPosts.length) 
+                                ? 'white' 
+                                : parseFloat(metrics.saves_rate) >= 3 ? '#22c55e' : '#ef4444',
                               fontWeight: '600'
                             }}>
-                              {post.metrics.saves_rate}%
+                              {metrics.saves_rate}%
                             </span>
                             <span style={{ fontSize: '11px', color: '#888' }}>
-                              {savesRank}位/{posts.length}投稿
+                              {savesRank}位/{sortedPosts.length}投稿
                             </span>
                           </div>
                         </td>
@@ -1041,14 +1273,18 @@ export default function Dashboard() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '12px',
-                              background: homeRank <= Math.ceil(posts.length * 0.25) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : parseFloat(post.metrics.home_rate) >= 20 ? '#22c55e20' : '#ef444420',
-                              color: homeRank <= Math.ceil(posts.length * 0.25) ? 'white' : parseFloat(post.metrics.home_rate) >= 20 ? '#22c55e' : '#ef4444',
+                              background: isTop25(homeRank, sortedPosts.length) 
+                                ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+                                : parseFloat(metrics.home_rate) >= 20 ? '#22c55e20' : '#ef444420',
+                              color: isTop25(homeRank, sortedPosts.length) 
+                                ? 'white' 
+                                : parseFloat(metrics.home_rate) >= 20 ? '#22c55e' : '#ef4444',
                               fontWeight: '600'
                             }}>
-                              {post.metrics.home_rate}%
+                              {metrics.home_rate}%
                             </span>
                             <span style={{ fontSize: '11px', color: '#888' }}>
-                              {homeRank}位/{posts.length}投稿
+                              {homeRank}位/{sortedPosts.length}投稿
                             </span>
                           </div>
                         </td>
@@ -1057,14 +1293,18 @@ export default function Dashboard() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '12px',
-                              background: profileRank <= Math.ceil(posts.length * 0.25) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : parseFloat(post.metrics.profile_access_rate) >= 3 ? '#22c55e20' : '#ef444420',
-                              color: profileRank <= Math.ceil(posts.length * 0.25) ? 'white' : parseFloat(post.metrics.profile_access_rate) >= 3 ? '#22c55e' : '#ef4444',
+                              background: isTop25(profileRank, sortedPosts.length) 
+                                ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+                                : parseFloat(metrics.profile_access_rate) >= 3 ? '#22c55e20' : '#ef444420',
+                              color: isTop25(profileRank, sortedPosts.length) 
+                                ? 'white' 
+                                : parseFloat(metrics.profile_access_rate) >= 3 ? '#22c55e' : '#ef4444',
                               fontWeight: '600'
                             }}>
-                              {post.metrics.profile_access_rate}%
+                              {metrics.profile_access_rate}%
                             </span>
                             <span style={{ fontSize: '11px', color: '#888' }}>
-                              {profileRank}位/{posts.length}投稿
+                              {profileRank}位/{sortedPosts.length}投稿
                             </span>
                           </div>
                         </td>
@@ -1073,14 +1313,18 @@ export default function Dashboard() {
                             <span style={{
                               padding: '4px 8px',
                               borderRadius: '12px',
-                              background: followerRank <= Math.ceil(posts.length * 0.25) ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' : parseFloat(post.metrics.follower_conversion_rate) >= 10 ? '#22c55e20' : '#ef444420',
-                              color: followerRank <= Math.ceil(posts.length * 0.25) ? 'white' : parseFloat(post.metrics.follower_conversion_rate) >= 10 ? '#22c55e' : '#ef4444',
+                              background: isTop25(followerRank, sortedPosts.length) 
+                                ? 'linear-gradient(135deg, #fbbf24, #f59e0b)' 
+                                : parseFloat(metrics.follower_conversion_rate) >= 10 ? '#22c55e20' : '#ef444420',
+                              color: isTop25(followerRank, sortedPosts.length) 
+                                ? 'white' 
+                                : parseFloat(metrics.follower_conversion_rate) >= 10 ? '#22c55e' : '#ef4444',
                               fontWeight: '600'
                             }}>
-                              {post.metrics.follower_conversion_rate}%
+                              {metrics.follower_conversion_rate}%
                             </span>
                             <span style={{ fontSize: '11px', color: '#888' }}>
-                              {followerRank}位/{posts.length}投稿
+                              {followerRank}位/{sortedPosts.length}投稿
                             </span>
                           </div>
                         </td>
@@ -1139,7 +1383,7 @@ export default function Dashboard() {
         </div>
 
         {/* AI総合評価 */}
-        {posts.length > 0 && (
+        {sortedPosts.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #667eea15, #764ba215)',
             borderRadius: '20px',
@@ -1183,13 +1427,13 @@ export default function Dashboard() {
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                 {(() => {
-                  const totalReach = posts.reduce((sum, post) => sum + (post.insights?.reach || 0), 0);
-                  const totalEngagement = posts.reduce((sum, post) => {
+                  const totalReach = sortedPosts.reduce((sum, post) => sum + (post.insights?.reach || 0), 0);
+                  const totalEngagement = sortedPosts.reduce((sum, post) => {
                     const insights = post.insights || {};
                     return sum + (insights.likes || 0) + (insights.comments || 0) + (insights.saves || 0) + (insights.shares || 0);
                   }, 0);
-                  const avgEngagementRate = posts.reduce((sum, post) => sum + parseFloat(calculateEngagementRate(post)), 0) / posts.length;
-                  const avgSavesRate = posts.reduce((sum, post) => sum + parseFloat(calculateMetrics(post).saves_rate), 0) / posts.length;
+                  const avgEngagementRate = sortedPosts.reduce((sum, post) => sum + parseFloat(calculateEngagementRate(post)), 0) / sortedPosts.length;
+                  const avgSavesRate = sortedPosts.reduce((sum, post) => sum + parseFloat(calculateMetrics(post).saves_rate), 0) / sortedPosts.length;
                   
                   const overallScore = Math.min(100, Math.round(
                     (avgEngagementRate * 10) + 
@@ -1259,11 +1503,11 @@ export default function Dashboard() {
 
             {/* 最高パフォーマンス投稿 */}
             {(() => {
-              const bestPost = posts.reduce((best, post) => {
+              const bestPost = sortedPosts.reduce((best, post) => {
                 const currentScore = parseFloat(calculateEngagementRate(post)) + parseFloat(calculateMetrics(post).saves_rate);
                 const bestScore = parseFloat(calculateEngagementRate(best)) + parseFloat(calculateMetrics(best).saves_rate);
                 return currentScore > bestScore ? post : best;
-              }, posts[0]);
+              }, sortedPosts[0]);
 
               const bestMetrics = calculateMetrics(bestPost);
               const bestEngagement = calculateEngagementRate(bestPost);
@@ -1338,7 +1582,7 @@ export default function Dashboard() {
               <div>
                 {(() => {
                   const suggestions = [];
-                  const avgMetrics = posts.reduce((acc, post) => {
+                  const avgMetrics = sortedPosts.reduce((acc, post) => {
                     const metrics = calculateMetrics(post);
                     return {
                       saves_rate: acc.saves_rate + parseFloat(metrics.saves_rate),
@@ -1349,15 +1593,14 @@ export default function Dashboard() {
                   }, { saves_rate: 0, home_rate: 0, profile_access_rate: 0, follower_conversion_rate: 0 });
 
                   Object.keys(avgMetrics).forEach(key => {
-                    avgMetrics[key] = avgMetrics[key] / posts.length;
+                    avgMetrics[key] = avgMetrics[key] / sortedPosts.length;
                   });
 
-                  // 実データに基づく具体的な提案
                   if (avgMetrics.saves_rate < 3) {
                     suggestions.push({
                       type: 'warning',
                       title: '保存率の改善が必要',
-                      content: `現在の平均保存率は${avgMetrics.saves_rate.toFixed(1)}%です。価値のある情報やチュートリアル、レシピなど、後で見返したくなるコンテンツを増やしましょう。`,
+                      content: `現在の平均保存率は${avgMetrics.saves_rate.toFixed(1)}%です。保育園の活動写真に加えて、育児のヒントや季節の行事情報など、保護者が後で見返したくなるコンテンツを増やしましょう。`,
                       priority: 'high'
                     });
                   }
@@ -1366,7 +1609,7 @@ export default function Dashboard() {
                     suggestions.push({
                       type: 'warning',
                       title: 'プロフィールへの誘導強化',
-                      content: `プロフィールアクセス率が${avgMetrics.profile_access_rate.toFixed(1)}%と低めです。投稿の最後にプロフィールへの誘導文を追加し、他の投稿やサービスへの興味を引きましょう。`,
+                      content: `プロフィールアクセス率が${avgMetrics.profile_access_rate.toFixed(1)}%と低めです。投稿の最後に「他の写真はプロフィールから」などの誘導文を追加しましょう。`,
                       priority: 'medium'
                     });
                   }
@@ -1375,7 +1618,7 @@ export default function Dashboard() {
                     suggestions.push({
                       type: 'info',
                       title: 'フォロワー転換率の向上',
-                      content: `フォロワー転換率は${avgMetrics.follower_conversion_rate.toFixed(1)}%です。プロフィールの最適化、投稿の統一感、定期的な投稿スケジュールを心がけましょう。`,
+                      content: `フォロワー転換率は${avgMetrics.follower_conversion_rate.toFixed(1)}%です。プロフィールに園の特徴や教育方針を明記し、定期的な投稿スケジュールを維持しましょう。`,
                       priority: 'medium'
                     });
                   }
@@ -1384,16 +1627,15 @@ export default function Dashboard() {
                     suggestions.push({
                       type: 'info',
                       title: 'ホーム表示率の改善',
-                      content: `ホーム率が${avgMetrics.home_rate.toFixed(1)}%です。投稿時間の最適化とハッシュタグ戦略の見直しを検討してください。`,
+                      content: `ホーム率が${avgMetrics.home_rate.toFixed(1)}%です。投稿時間を保護者がアクティブな時間帯（朝7-9時、夜19-21時）に調整してみましょう。`,
                       priority: 'low'
                     });
                   }
 
-                  // 良好なパフォーマンスの場合
                   if (suggestions.length === 0) {
                     suggestions.push({
                       type: 'success',
-                      title: '素晴らしいパフォーマンス！',
+                      title: '素晴らしいパフォーマンスです！',
                       content: 'すべての指標が目標値を達成しています。この調子で質の高いコンテンツを継続的に投稿していきましょう。',
                       priority: 'low'
                     });
