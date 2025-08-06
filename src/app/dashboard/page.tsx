@@ -217,46 +217,41 @@ export default function DashboardPage() {
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
 
-  // 重要4指標の計算（正しい計算式）
+  // 重要4指標の計算（完全修正版）
   const calculateMetrics = (post) => {
     if (hasRealData && post.insights) {
-      // 実データの場合
-      const reach = post.insights.reach || 0;
-      const saves = post.insights.saves || 0;
-      const profile_views = post.insights.profile_views || 0;
-      const website_clicks = post.insights.website_clicks || 0;
-      const currentFollowers = instagramData?.profile?.followers_count || 0;
+      // 実データの場合 - 厳格にチェック
+      const reach = parseInt(post.insights.reach) || 0;
+      const saves = parseInt(post.insights.saves) || 0;
+      const profile_views = parseInt(post.insights.profile_views) || 0;
+      const website_clicks = parseInt(post.insights.website_clicks) || 0;
+      const currentFollowers = parseInt(instagramData?.profile?.followers_count) || 0;
       
-      // 正しい計算式
-      // 保存率：保存数÷リーチ数
-      const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
+      // デバッグ用ログ
+      console.log('Real data calculation:', { reach, saves, profile_views, website_clicks, currentFollowers });
       
-      // ホーム率：ホーム数÷フォロワー数 (ホーム数はリーチ数で代用)
-      const home_rate = currentFollowers > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
+      // 正しい計算式 - 分母が0なら必ず0.0
+      const saves_rate = (reach > 0 && saves >= 0) ? ((saves / reach) * 100).toFixed(1) : '0.0';
+      const home_rate = (currentFollowers > 0 && reach >= 0) ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
+      const profile_access_rate = (reach > 0 && profile_views >= 0) ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
+      const follower_conversion_rate = (profile_views > 0 && website_clicks >= 0) ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
       
-      // プロフィールアクセス率：プロフアクセス数÷リーチ数
-      const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
-      
-      // フォロワー転換率：フォロワー増加数÷プロフアクセス数 (フォロワー増加数はウェブクリック数で代用)
-      const follower_conversion_rate = profile_views > 0 ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
+      console.log('Calculated metrics:', { saves_rate, home_rate, profile_access_rate, follower_conversion_rate });
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     } else {
       // サンプルデータの場合
       const data = post.data_7d;
+      const reach = parseInt(data.reach) || 0;
+      const saves = parseInt(data.saves) || 0;
+      const profile_views = parseInt(data.profile_views) || 0;
+      const follows = parseInt(data.follows) || 0;
       
       // 正しい計算式
-      // 保存率：保存数÷リーチ数
-      const saves_rate = data.reach > 0 ? ((data.saves / data.reach) * 100).toFixed(1) : '0.0';
-      
-      // ホーム率：ホーム数÷フォロワー数 (推定値)
-      const home_rate = ((data.reach * 0.7) / 8634 * 100).toFixed(1);
-      
-      // プロフィールアクセス率：プロフアクセス数÷リーチ数
-      const profile_access_rate = data.reach > 0 ? ((data.profile_views / data.reach) * 100).toFixed(1) : '0.0';
-      
-      // フォロワー転換率：フォロワー増加数÷プロフアクセス数
-      const follower_conversion_rate = data.profile_views > 0 ? ((data.follows / data.profile_views) * 100).toFixed(1) : '0.0';
+      const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
+      const home_rate = ((reach * 0.7) / 8634 * 100).toFixed(1);
+      const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
+      const follower_conversion_rate = profile_views > 0 ? ((follows / profile_views) * 100).toFixed(1) : '0.0';
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     }
