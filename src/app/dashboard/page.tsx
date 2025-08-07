@@ -31,7 +31,7 @@ export default function DashboardPage() {
   const [aiComments, setAiComments] = useState({});
   const [filterPeriod, setFilterPeriod] = useState('28');
 
-  // サンプルデータ
+  // サンプルデータ（15件）
   const samplePosts = [
     {
       id: 'sample_1',
@@ -112,6 +112,46 @@ export default function DashboardPage() {
       timestamp: '2025-01-19T09:00:00',
       data_24h: { reach: 2789, likes: 198, saves: 76, profile_views: 89, follows: 7 },
       data_7d: { reach: 3456, likes: 245, saves: 89, profile_views: 112, follows: 9 }
+    },
+    {
+      id: 'sample_11',
+      title: '製品の使い方を詳しく解説',
+      date: '2025-01-18',
+      timestamp: '2025-01-18T13:00:00',
+      data_24h: { reach: 1892, likes: 134, saves: 45, profile_views: 56, follows: 4 },
+      data_7d: { reach: 2345, likes: 167, saves: 56, profile_views: 67, follows: 5 }
+    },
+    {
+      id: 'sample_12',
+      title: 'お客様の作品をご紹介',
+      date: '2025-01-17',
+      timestamp: '2025-01-17T10:00:00',
+      data_24h: { reach: 3345, likes: 256, saves: 145, profile_views: 178, follows: 16 },
+      data_7d: { reach: 4012, likes: 312, saves: 178, profile_views: 212, follows: 20 }
+    },
+    {
+      id: 'sample_13',
+      title: '季節のおすすめアイテム',
+      date: '2025-01-16',
+      timestamp: '2025-01-16T11:00:00',
+      data_24h: { reach: 4567, likes: 389, saves: 212, profile_views: 267, follows: 31 },
+      data_7d: { reach: 5432, likes: 478, saves: 256, profile_views: 323, follows: 37 }
+    },
+    {
+      id: 'sample_14',
+      title: 'コラボレーション企画のお知らせ',
+      date: '2025-01-15',
+      timestamp: '2025-01-15T15:30:00',
+      data_24h: { reach: 2234, likes: 156, saves: 67, profile_views: 78, follows: 5 },
+      data_7d: { reach: 2890, likes: 189, saves: 78, profile_views: 89, follows: 6 }
+    },
+    {
+      id: 'sample_15',
+      title: '年末年始の営業時間のお知らせ',
+      date: '2025-01-14',
+      timestamp: '2025-01-14T12:00:00',
+      data_24h: { reach: 6789, likes: 234, saves: 345, profile_views: 456, follows: 67 },
+      data_7d: { reach: 8234, likes: 289, saves: 412, profile_views: 567, follows: 78 }
     }
   ];
 
