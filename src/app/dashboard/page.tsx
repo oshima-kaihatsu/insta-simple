@@ -429,7 +429,7 @@ export default function DashboardPage() {
     return (
       <div style={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #f8b500 100%)',
+        background: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -437,22 +437,21 @@ export default function DashboardPage() {
         padding: '20px'
       }}>
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '24px',
-          padding: '48px',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+          background: 'white',
+          borderRadius: '12px',
+          padding: '40px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
           textAlign: 'center',
           maxWidth: '400px'
         }}>
-          <div style={{
-            width: '80px',
-            height: '80px',
-            margin: '0 auto 24px',
-            borderRadius: '50%',
-            border: '4px solid #f8b500',
-            borderTopColor: 'transparent',
-            animation: 'spin 1s linear infinite'
-          }} />
+          <RefreshCw 
+            size={48} 
+            style={{ 
+              color: '#1890ff',
+              marginBottom: '24px',
+              animation: 'spin 1s linear infinite'
+            }} 
+          />
           <h2 style={{ 
             fontSize: '24px', 
             fontWeight: '600',
@@ -484,56 +483,53 @@ export default function DashboardPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 50%, #f8b500 100%)',
+      background: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
       padding: '40px 20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
     }}>
       <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
         {/* ヘッダー */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '20px',
+          background: 'white',
+          borderRadius: '12px',
           padding: '24px 32px',
           marginBottom: '32px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button 
               onClick={() => router.push('/')}
               style={{
-                background: 'white',
-                border: '2px solid #f8b500',
-                borderRadius: '12px',
-                padding: '12px',
+                background: 'transparent',
+                border: '1px solid #d9d9d9',
+                borderRadius: '8px',
+                padding: '8px 12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.3s',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
+                transition: 'all 0.2s'
               }}
               onMouseOver={(e) => {
-                e.currentTarget.style.background = '#f8b500';
-                e.currentTarget.style.transform = 'translateX(-2px)';
+                e.currentTarget.style.borderColor = '#1890ff';
+                e.currentTarget.style.color = '#1890ff';
               }}
               onMouseOut={(e) => {
-                e.currentTarget.style.background = 'white';
-                e.currentTarget.style.transform = 'translateX(0)';
+                e.currentTarget.style.borderColor = '#d9d9d9';
+                e.currentTarget.style.color = '#333';
               }}
             >
-              <ArrowLeft size={20} style={{ color: '#333' }} />
+              <ArrowLeft size={20} />
             </button>
             <div>
               <h1 style={{ 
-                fontSize: '28px', 
-                fontWeight: '700', 
+                fontSize: '24px', 
+                fontWeight: '600', 
                 margin: 0,
-                background: 'linear-gradient(135deg, #f8b500, #ff6b6b)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+                color: '#333'
               }}>
                 Instagram分析ダッシュボード
               </h1>
@@ -551,22 +547,18 @@ export default function DashboardPage() {
             <button 
               onClick={() => window.location.href = '/api/instagram/connect'}
               style={{
-                background: 'linear-gradient(135deg, #f8b500, #ff6b6b)',
+                background: '#1890ff',
                 color: 'white',
-                padding: '14px 28px',
+                padding: '12px 24px',
                 border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
-                fontWeight: '600',
+                borderRadius: '8px',
+                fontSize: '14px',
+                fontWeight: '500',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 15px rgba(248, 181, 0, 0.3)',
-                transition: 'transform 0.2s'
+                transition: 'all 0.2s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              onMouseOver={(e) => e.currentTarget.style.background = '#40a9ff'}
+              onMouseOut={(e) => e.currentTarget.style.background = '#1890ff'}
             >
               Instagram連携
             </button>
@@ -575,80 +567,74 @@ export default function DashboardPage() {
 
         {/* フォロワー推移 */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '20px',
-          padding: '32px',
-          marginBottom: '32px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+          background: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <h2 style={{ 
-            fontSize: '24px', 
+            fontSize: '18px', 
             fontWeight: '600', 
-            marginBottom: '24px', 
+            marginBottom: '20px', 
             color: '#333',
             display: 'flex',
             alignItems: 'center',
             gap: '8px'
           }}>
-            <Users size={24} style={{ color: '#f8b500' }} />
+            <Users size={20} />
             フォロワー推移
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '24px' }}>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>現在のフォロワー</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#f8b500' }}>{currentFollowers.toLocaleString()}</p>
+              <p style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>現在のフォロワー</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#333' }}>{currentFollowers.toLocaleString()}</p>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>28日間増減</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>+{(currentFollowers - 8234).toLocaleString()}</p>
+              <p style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>28日間増減</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#52c41a' }}>+{(currentFollowers - 8234).toLocaleString()}</p>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>1日平均増減</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>+{Math.round((currentFollowers - 8234) / 28)}</p>
+              <p style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>1日平均増減</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#52c41a' }}>+{Math.round((currentFollowers - 8234) / 28)}</p>
             </div>
             <div style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>成長率</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>
+              <p style={{ fontSize: '12px', color: '#999', marginBottom: '4px' }}>成長率</p>
+              <p style={{ fontSize: '24px', fontWeight: '600', color: '#52c41a' }}>
                 {(((currentFollowers - 8234) / 8234) * 100).toFixed(1)}%
               </p>
             </div>
           </div>
           
           {followerData && (
-            <div style={{ height: '300px', background: '#fafafa', borderRadius: '12px', padding: '20px' }}>
-              <svg viewBox="0 0 800 250" style={{ width: '100%', height: '100%' }}>
-                <defs>
-                  <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f8b500" />
-                    <stop offset="100%" stopColor="#ff6b6b" />
-                  </linearGradient>
-                </defs>
+            <div style={{ height: '200px', background: '#fafafa', borderRadius: '8px', padding: '16px' }}>
+              <svg viewBox="0 0 800 180" style={{ width: '100%', height: '100%' }}>
                 <polyline
                   points={followerData.data.map((val, i) => 
-                    `${(i / (followerData.data.length - 1)) * 780 + 10},${240 - ((val - 8200) / 450) * 220}`
+                    `${(i / (followerData.data.length - 1)) * 760 + 20},${170 - ((val - 8200) / 450) * 150}`
                   ).join(' ')}
                   fill="none"
-                  stroke="url(#lineGradient)"
-                  strokeWidth="3"
+                  stroke="#1890ff"
+                  strokeWidth="2"
                 />
                 {followerData.data.map((val, i) => (
                   <circle
                     key={i}
-                    cx={(i / (followerData.data.length - 1)) * 780 + 10}
-                    cy={240 - ((val - 8200) / 450) * 220}
-                    r="5"
-                    fill="#f8b500"
+                    cx={(i / (followerData.data.length - 1)) * 760 + 20}
+                    cy={170 - ((val - 8200) / 450) * 150}
+                    r="4"
+                    fill="#1890ff"
                   />
                 ))}
                 {followerData.labels.map((label, i) => (
                   <text
                     key={i}
-                    x={(i / (followerData.labels.length - 1)) * 780 + 10}
-                    y="250"
+                    x={(i / (followerData.labels.length - 1)) * 760 + 20}
+                    y="180"
                     textAnchor="middle"
-                    fontSize="12"
-                    fill="#666"
+                    fontSize="10"
+                    fill="#999"
                   >
                     {label}
                   </text>
@@ -660,114 +646,102 @@ export default function DashboardPage() {
 
         {/* 重要4指標スコア */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '20px',
-          padding: '32px',
-          marginBottom: '32px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+          background: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
           <h2 style={{ 
-            fontSize: '24px', 
+            fontSize: '18px', 
             fontWeight: '600', 
-            marginBottom: '24px', 
-            color: '#333',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
+            marginBottom: '20px', 
+            color: '#333'
           }}>
-            <Target size={24} style={{ color: '#f8b500' }} />
             重要4指標スコア
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
             <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #fff9e6 0%, #ffefcc 100%)',
-              borderRadius: '16px',
-              border: '2px solid #ffd666'
+              padding: '16px',
+              background: '#f5f5f5',
+              borderRadius: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>
-                  <Bookmark size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#faad14' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', margin: 0 }}>
                   保存率
                 </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#faad14' }}>
+                <span style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
                   {averages.avg_saves_rate}%
                 </span>
               </div>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
                 計算式: 保存数 ÷ リーチ数
               </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
+              <p style={{ fontSize: '11px', color: parseFloat(averages.avg_saves_rate) >= 3.0 ? '#52c41a' : '#ff4d4f' }}>
                 目標: 3.0%以上
               </p>
             </div>
             
             <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #e6f7ff 0%, #cce7ff 100%)',
-              borderRadius: '16px',
-              border: '2px solid #69c0ff'
+              padding: '16px',
+              background: '#f5f5f5',
+              borderRadius: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>
-                  <TrendingUp size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#1890ff' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', margin: 0 }}>
                   ホーム率
                 </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#1890ff' }}>
+                <span style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
                   {averages.avg_home_rate}%
                 </span>
               </div>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
                 計算式: リーチ数 ÷ フォロワー数
               </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
+              <p style={{ fontSize: '11px', color: parseFloat(averages.avg_home_rate) >= 50.0 ? '#52c41a' : '#ff4d4f' }}>
                 目標: 50.0%以上
               </p>
             </div>
             
             <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #f0f9ff 0%, #d6f0ff 100%)',
-              borderRadius: '16px',
-              border: '2px solid #91d5ff'
+              padding: '16px',
+              background: '#f5f5f5',
+              borderRadius: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>
-                  <Eye size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#40a9ff' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', margin: 0 }}>
                   プロフィールアクセス率
                 </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#40a9ff' }}>
+                <span style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
                   {averages.avg_profile_access_rate}%
                 </span>
               </div>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
                 計算式: プロフィール表示 ÷ リーチ数
               </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
+              <p style={{ fontSize: '11px', color: parseFloat(averages.avg_profile_access_rate) >= 3.0 ? '#52c41a' : '#ff4d4f' }}>
                 目標: 3.0%以上
               </p>
             </div>
             
             <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #f6ffed 0%, #e4ffc7 100%)',
-              borderRadius: '16px',
-              border: '2px solid #95de64'
+              padding: '16px',
+              background: '#f5f5f5',
+              borderRadius: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', margin: 0 }}>
-                  <UserPlus size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#52c41a' }} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', margin: 0 }}>
                   フォロワー転換率
                 </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#52c41a' }}>
+                <span style={{ fontSize: '20px', fontWeight: '600', color: '#333' }}>
                   {averages.avg_follower_conversion_rate}%
                 </span>
               </div>
-              <p style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <p style={{ fontSize: '11px', color: '#999', marginBottom: '4px' }}>
                 計算式: フォロー数 ÷ プロフィール表示
               </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
+              <p style={{ fontSize: '11px', color: parseFloat(averages.avg_follower_conversion_rate) >= 7.0 ? '#52c41a' : '#ff4d4f' }}>
                 目標: 7.0%以上
               </p>
             </div>
@@ -776,31 +750,30 @@ export default function DashboardPage() {
 
         {/* 投稿別詳細分析 */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: '20px',
-          padding: '32px',
-          marginBottom: '32px',
-          boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+          background: 'white',
+          borderRadius: '12px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
             <h2 style={{ 
-              fontSize: '24px', 
+              fontSize: '18px', 
               fontWeight: '600', 
               margin: 0, 
               color: '#333'
             }}>
-              <BarChart3 size={24} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#f8b500' }} />
               投稿別詳細分析
             </h2>
             
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
               <select
                 value={filterPeriod}
                 onChange={(e) => setFilterPeriod(e.target.value)}
                 style={{
-                  padding: '10px 16px',
-                  borderRadius: '8px',
-                  border: '2px solid #f8b500',
+                  padding: '6px 12px',
+                  borderRadius: '6px',
+                  border: '1px solid #d9d9d9',
                   background: 'white',
                   fontSize: '14px',
                   cursor: 'pointer',
@@ -816,49 +789,47 @@ export default function DashboardPage() {
               <button 
                 onClick={downloadCSV}
                 style={{
-                  background: 'linear-gradient(135deg, #f8b500, #ff6b6b)',
+                  background: '#1890ff',
                   color: 'white',
-                  padding: '10px 20px',
+                  padding: '6px 16px',
                   border: 'none',
-                  borderRadius: '8px',
+                  borderRadius: '6px',
                   fontSize: '14px',
-                  fontWeight: '600',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  boxShadow: '0 2px 8px rgba(248, 181, 0, 0.3)',
-                  transition: 'transform 0.2s'
+                  gap: '4px',
+                  transition: 'background 0.2s'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                onMouseOver={(e) => e.currentTarget.style.background = '#40a9ff'}
+                onMouseOut={(e) => e.currentTarget.style.background = '#1890ff'}
               >
-                <Download size={16} />
+                <Download size={14} />
                 CSV出力
               </button>
             </div>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
               <thead>
-                <tr style={{ background: 'linear-gradient(135deg, #fff9e6, #ffefcc)' }}>
-                  <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                <tr style={{ borderBottom: '2px solid #f0f0f0' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '500', color: '#666' }}>
                     投稿日
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: '500', color: '#666' }}>
                     投稿内容
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '500', color: '#666' }}>
                     保存率
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '500', color: '#666' }}>
                     ホーム率
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '500', color: '#666' }}>
                     プロフィール<br/>アクセス率
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#333', borderBottom: '3px solid #f8b500' }}>
+                  <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: '500', color: '#666' }}>
                     フォロワー<br/>転換率
                   </th>
                 </tr>
@@ -875,31 +846,27 @@ export default function DashboardPage() {
                   
                   return (
                     <tr key={post.id} style={{ 
-                      borderBottom: '1px solid #e8e8e8',
-                      background: index % 2 === 0 ? 'white' : '#fafafa',
-                      transition: 'background 0.2s'
-                    }}
-                    onMouseOver={(e) => e.currentTarget.style.background = '#fff9e6'}
-                    onMouseOut={(e) => e.currentTarget.style.background = index % 2 === 0 ? 'white' : '#fafafa'}
-                    >
-                      <td style={{ padding: '16px' }}>
+                      borderBottom: '1px solid #f0f0f0'
+                    }}>
+                      <td style={{ padding: '12px 8px', color: '#666' }}>
                         {post.date || post.timestamp?.split('T')[0]}
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {isTop25 && (
                             <span style={{
-                              background: 'linear-gradient(135deg, #ffd700, #ffed4e)',
-                              padding: '2px 8px',
+                              background: '#fff1b8',
+                              color: '#d48806',
+                              padding: '2px 6px',
                               borderRadius: '4px',
                               fontSize: '10px',
-                              fontWeight: '700',
-                              color: '#856404'
+                              fontWeight: '500'
                             }}>
                               TOP 25%
                             </span>
                           )}
                           <span style={{ 
+                            color: '#333',
                             maxWidth: '300px',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -909,62 +876,62 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                         <div>
                           <span style={{ 
-                            fontSize: '16px', 
-                            fontWeight: '600', 
-                            color: parseFloat(metrics.saves_rate) >= 3.0 ? '#52c41a' : '#666' 
+                            fontSize: '14px', 
+                            fontWeight: '500', 
+                            color: parseFloat(metrics.saves_rate) >= 3.0 ? '#52c41a' : '#333' 
                           }}>
                             {metrics.saves_rate}%
                           </span>
                           <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
+                          <span style={{ fontSize: '10px', color: '#999' }}>
                             {post.rankings?.saves_rate}位/{filteredPosts.length}
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                         <div>
                           <span style={{ 
-                            fontSize: '16px', 
-                            fontWeight: '600', 
-                            color: parseFloat(metrics.home_rate) >= 50.0 ? '#52c41a' : '#666' 
+                            fontSize: '14px', 
+                            fontWeight: '500', 
+                            color: parseFloat(metrics.home_rate) >= 50.0 ? '#52c41a' : '#333' 
                           }}>
                             {metrics.home_rate}%
                           </span>
                           <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
+                          <span style={{ fontSize: '10px', color: '#999' }}>
                             {post.rankings?.home_rate}位/{filteredPosts.length}
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                         <div>
                           <span style={{ 
-                            fontSize: '16px', 
-                            fontWeight: '600', 
-                            color: parseFloat(metrics.profile_access_rate) >= 3.0 ? '#52c41a' : '#666' 
+                            fontSize: '14px', 
+                            fontWeight: '500', 
+                            color: parseFloat(metrics.profile_access_rate) >= 3.0 ? '#52c41a' : '#333' 
                           }}>
                             {metrics.profile_access_rate}%
                           </span>
                           <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
+                          <span style={{ fontSize: '10px', color: '#999' }}>
                             {post.rankings?.profile_access_rate}位/{filteredPosts.length}
                           </span>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
+                      <td style={{ padding: '12px 8px', textAlign: 'center' }}>
                         <div>
                           <span style={{ 
-                            fontSize: '16px', 
-                            fontWeight: '600', 
-                            color: parseFloat(metrics.follower_conversion_rate) >= 7.0 ? '#52c41a' : '#666' 
+                            fontSize: '14px', 
+                            fontWeight: '500', 
+                            color: parseFloat(metrics.follower_conversion_rate) >= 7.0 ? '#52c41a' : '#333' 
                           }}>
                             {metrics.follower_conversion_rate}%
                           </span>
                           <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
+                          <span style={{ fontSize: '10px', color: '#999' }}>
                             {post.rankings?.follower_conversion_rate}位/{filteredPosts.length}
                           </span>
                         </div>
@@ -973,8 +940,8 @@ export default function DashboardPage() {
                   );
                 }) : (
                   <tr>
-                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
-                      <MessageSquare size={48} style={{ margin: '0 auto 16px', color: '#ccc' }} />
+                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#999' }}>
+                      <MessageSquare size={32} style={{ margin: '0 auto 12px', color: '#d9d9d9' }} />
                       <p>表示する投稿データがありません</p>
                     </td>
                   </tr>
@@ -987,57 +954,49 @@ export default function DashboardPage() {
         {/* AI総合評価と改善提案 */}
         {filteredPosts.length > 0 && (
           <div style={{
-            background: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '20px',
-            padding: '32px',
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)'
+            background: 'white',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)'
           }}>
             <h2 style={{ 
-              fontSize: '24px', 
+              fontSize: '18px', 
               fontWeight: '600', 
-              marginBottom: '24px', 
-              color: '#333',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
+              marginBottom: '20px', 
+              color: '#333'
             }}>
-              <Brain size={24} style={{ color: '#f8b500' }} />
               AI総合評価と改善提案
             </h2>
             
             <div style={{
-              background: 'linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              marginBottom: '24px',
-              border: '2px solid #ffe58f'
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              padding: '16px',
+              marginBottom: '16px'
             }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
-                <Award size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#faad14' }} />
+              <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', marginBottom: '8px' }}>
                 総合評価
               </h3>
-              <p style={{ fontSize: '14px', lineHeight: '1.8', color: '#666' }}>
+              <p style={{ fontSize: '13px', lineHeight: '1.6', color: '#666', margin: 0 }}>
                 {aiComments.overall?.comment}
               </p>
             </div>
             
             <div style={{
-              background: 'linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%)',
-              borderRadius: '16px',
-              padding: '24px',
-              border: '2px solid #adc6ff'
+              background: '#f5f5f5',
+              borderRadius: '8px',
+              padding: '16px'
             }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#333', marginBottom: '16px' }}>
-                <CheckCircle size={20} style={{ verticalAlign: 'middle', marginRight: '8px', color: '#1890ff' }} />
+              <h3 style={{ fontSize: '14px', fontWeight: '500', color: '#333', marginBottom: '8px' }}>
                 改善提案
               </h3>
               <ul style={{ margin: 0, paddingLeft: '20px' }}>
                 {aiComments.overall?.suggestions?.map((suggestion, index) => (
                   <li key={index} style={{ 
-                    fontSize: '14px', 
-                    lineHeight: '1.8', 
+                    fontSize: '13px', 
+                    lineHeight: '1.6', 
                     color: '#666',
-                    marginBottom: '8px'
+                    marginBottom: '4px'
                   }}>
                     {suggestion}
                   </li>
