@@ -33,7 +33,7 @@ export async function GET(request) {
       body: new URLSearchParams({
         client_id: process.env.INSTAGRAM_CLIENT_ID,
         client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-        redirect_uri: `${process.env.NEXTAUTH_URL}/api/instagram/callback`,
+        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
         code: code,
       }),
     });
