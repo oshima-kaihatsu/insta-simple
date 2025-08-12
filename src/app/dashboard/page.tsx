@@ -32,139 +32,139 @@ export default function DashboardPage() {
   const [filterPeriod, setFilterPeriod] = useState('28');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
 
-  // サンプルデータ（15件の保育園テーマ投稿）
+  // サンプルデータ（15件の一般的なインスタ投稿）
   const samplePosts = [
     {
       id: 'sample_1',
-      title: '朝の園庭で元気いっぱい遊ぶ子どもたち',
-      date: '2025-01-28',
-      timestamp: '2025-01-28T10:00:00',
+      title: '夏の自然の美しさを捉えた一枚',
+      date: '2025-08-15',
+      timestamp: '2025-08-15T10:00:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 2847, likes: 184, saves: 112, profile_views: 89, follows: 12 },
-      data_7d: { reach: 3251, likes: 237, saves: 134, profile_views: 102, follows: 14 }
+      data_7d: { reach: 3251, likes: 237, saves: 134, profile_views: 142, follows: 16 }
     },
     {
       id: 'sample_2',
-      title: '今日の給食は大人気のカレーライス',
-      date: '2025-01-27',
-      timestamp: '2025-01-27T12:30:00',
+      title: '今日のランチメニュー',
+      date: '2025-08-10',
+      timestamp: '2025-08-10T12:30:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 3124, likes: 256, saves: 87, profile_views: 124, follows: 8 },
-      data_7d: { reach: 3892, likes: 312, saves: 98, profile_views: 156, follows: 11 }
+      data_24h: { reach: 3124, likes: 256, saves: 167, profile_views: 124, follows: 8 },
+      data_7d: { reach: 3892, likes: 312, saves: 198, profile_views: 156, follows: 11 }
     },
     {
       id: 'sample_3',
-      title: '節分の準備！鬼のお面作り',
-      date: '2025-01-26',
-      timestamp: '2025-01-26T14:00:00',
+      title: '週末のアクティビティ準備',
+      date: '2025-08-05',
+      timestamp: '2025-08-05T14:00:00',
       media_type: 'VIDEO',
       data_24h: { reach: 4231, likes: 342, saves: 178, profile_views: 234, follows: 28 },
       data_7d: { reach: 5124, likes: 456, saves: 213, profile_views: 289, follows: 34 }
     },
     {
       id: 'sample_4',
-      title: '雪が降った日の特別な外遊び',
-      date: '2025-01-25',
-      timestamp: '2025-01-25T09:30:00',
+      title: '夏祭りの思い出',
+      date: '2025-07-30',
+      timestamp: '2025-07-30T09:30:00',
       media_type: 'REELS',
       data_24h: { reach: 5672, likes: 489, saves: 234, profile_views: 345, follows: 42 },
       data_7d: { reach: 6891, likes: 612, saves: 298, profile_views: 412, follows: 51 }
     },
     {
       id: 'sample_5',
-      title: '保護者参観日の様子をお届け',
-      date: '2025-01-24',
-      timestamp: '2025-01-24T11:00:00',
+      title: 'DIYプロジェクトの成果',
+      date: '2025-07-25',
+      timestamp: '2025-07-25T11:00:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 3892, likes: 298, saves: 156, profile_views: 189, follows: 19 },
       data_7d: { reach: 4567, likes: 367, saves: 189, profile_views: 234, follows: 24 }
     },
     {
       id: 'sample_6',
-      title: '年長組の卒園制作が始まりました',
-      date: '2025-01-23',
-      timestamp: '2025-01-23T15:00:00',
+      title: '新しいアート作品',
+      date: '2025-07-20',
+      timestamp: '2025-07-20T15:00:00',
       media_type: 'IMAGE',
       data_24h: { reach: 2456, likes: 167, saves: 89, profile_views: 78, follows: 6 },
       data_7d: { reach: 3124, likes: 198, saves: 102, profile_views: 98, follows: 8 }
     },
     {
       id: 'sample_7',
-      title: '音楽の時間♪みんなで合奏',
-      date: '2025-01-22',
-      timestamp: '2025-01-22T10:30:00',
+      title: '音楽フェスティバルのハイライト',
+      date: '2025-07-15',
+      timestamp: '2025-07-15T10:30:00',
       media_type: 'VIDEO',
       data_24h: { reach: 3567, likes: 278, saves: 134, profile_views: 167, follows: 15 },
       data_7d: { reach: 4231, likes: 345, saves: 167, profile_views: 198, follows: 18 }
     },
     {
       id: 'sample_8',
-      title: '今月のお誕生日会',
-      date: '2025-01-21',
-      timestamp: '2025-01-21T14:30:00',
+      title: '友達との集まり',
+      date: '2025-07-10',
+      timestamp: '2025-07-10T14:30:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 4123, likes: 367, saves: 198, profile_views: 234, follows: 23 },
       data_7d: { reach: 4892, likes: 445, saves: 234, profile_views: 278, follows: 29 }
     },
     {
       id: 'sample_9',
-      title: '食育活動：野菜の収穫体験',
-      date: '2025-01-20',
-      timestamp: '2025-01-20T11:30:00',
+      title: '健康的なライフスタイルのヒント',
+      date: '2025-06-30',
+      timestamp: '2025-06-30T11:30:00',
       media_type: 'REELS',
       data_24h: { reach: 5234, likes: 445, saves: 267, profile_views: 312, follows: 38 },
       data_7d: { reach: 6123, likes: 556, saves: 334, profile_views: 389, follows: 45 }
     },
     {
       id: 'sample_10',
-      title: '室内遊びの新しい遊具が届きました',
-      date: '2025-01-19',
-      timestamp: '2025-01-19T09:00:00',
+      title: '新しい趣味の発見',
+      date: '2025-06-25',
+      timestamp: '2025-06-25T09:00:00',
       media_type: 'IMAGE',
       data_24h: { reach: 2789, likes: 198, saves: 76, profile_views: 89, follows: 7 },
       data_7d: { reach: 3456, likes: 245, saves: 89, profile_views: 112, follows: 9 }
     },
     {
       id: 'sample_11',
-      title: '避難訓練を実施しました',
-      date: '2025-01-18',
-      timestamp: '2025-01-18T13:00:00',
+      title: '読書レビュー',
+      date: '2025-06-20',
+      timestamp: '2025-06-20T13:00:00',
       media_type: 'VIDEO',
       data_24h: { reach: 1892, likes: 134, saves: 45, profile_views: 56, follows: 4 },
       data_7d: { reach: 2345, likes: 167, saves: 56, profile_views: 67, follows: 5 }
     },
     {
       id: 'sample_12',
-      title: '年中組の製作：冬の壁面飾り',
-      date: '2025-01-17',
-      timestamp: '2025-01-17T10:00:00',
+      title: '季節のファッション',
+      date: '2025-05-15',
+      timestamp: '2025-05-15T10:00:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 3345, likes: 256, saves: 145, profile_views: 178, follows: 16 },
       data_7d: { reach: 4012, likes: 312, saves: 178, profile_views: 212, follows: 20 }
     },
     {
       id: 'sample_13',
-      title: '体操教室の様子',
-      date: '2025-01-16',
-      timestamp: '2025-01-16T11:00:00',
+      title: 'フィットネス ルーチン',
+      date: '2025-05-10',
+      timestamp: '2025-05-10T11:00:00',
       media_type: 'REELS',
       data_24h: { reach: 4567, likes: 389, saves: 212, profile_views: 267, follows: 31 },
       data_7d: { reach: 5432, likes: 478, saves: 256, profile_views: 323, follows: 37 }
     },
     {
       id: 'sample_14',
-      title: '絵本の読み聞かせタイム',
-      date: '2025-01-15',
-      timestamp: '2025-01-15T15:30:00',
+      title: 'カフェ巡りの記録',
+      date: '2025-04-25',
+      timestamp: '2025-04-25T15:30:00',
       media_type: 'IMAGE',
       data_24h: { reach: 2234, likes: 156, saves: 67, profile_views: 78, follows: 5 },
       data_7d: { reach: 2890, likes: 189, saves: 78, profile_views: 89, follows: 6 }
     },
     {
       id: 'sample_15',
-      title: '来年度の入園説明会のお知らせ',
-      date: '2025-01-14',
-      timestamp: '2025-01-14T12:00:00',
+      title: '春の旅行計画',
+      date: '2025-04-20',
+      timestamp: '2025-04-20T12:00:00',
       media_type: 'IMAGE',
       data_24h: { reach: 6789, likes: 234, saves: 345, profile_views: 456, follows: 67 },
       data_7d: { reach: 8234, likes: 289, saves: 412, profile_views: 567, follows: 78 }
@@ -653,7 +653,16 @@ export default function DashboardPage() {
           
           {!hasRealData && (
             <button 
-              onClick={() => window.location.href = '/api/instagram/connect'}
+              onClick={() => {
+                const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '1776291423096614';
+                const redirectUri = encodeURIComponent(`${window.location.origin}/api/instagram/callback`);
+                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement');
+                
+                const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
+                
+                console.log('Instagram auth URL:', authUrl);
+                window.location.href = authUrl;
+              }}
               style={{
                 background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
                 color: '#fcfbf8',
@@ -796,8 +805,8 @@ export default function DashboardPage() {
             {[
               { key: 'saves_rate', title: '保存率', value: averages.avg_saves_rate, target: 3.0, formula: '保存数 ÷ リーチ数' },
               { key: 'home_rate', title: 'ホーム率', value: averages.avg_home_rate, target: 50.0, formula: 'リーチ数 ÷ フォロワー数' },
-              { key: 'profile_access_rate', title: 'プロフィールアクセス率', value: averages.avg_profile_access_rate, target: 3.0, formula: 'プロフィール表示 ÷ リーチ数' },
-              { key: 'follower_conversion_rate', title: 'フォロワー転換率', value: averages.avg_follower_conversion_rate, target: 7.0, formula: 'フォロー数 ÷ プロフィール表示' }
+              { key: 'profile_access_rate', title: 'プロフィールアクセス率', value: averages.avg_profile_access_rate, target: 5.0, formula: 'プロフィール表示 ÷ リーチ数' },
+              { key: 'follower_conversion_rate', title: 'フォロワー転換率', value: averages.avg_follower_conversion_rate, target: 8.0, formula: 'フォロー数 ÷ プロフィール表示' }
             ].map((metric) => (
               <div key={metric.key} style={{
                 padding: '32px',
@@ -1033,6 +1042,114 @@ export default function DashboardPage() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        {/* 総合評価セクション */}
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 243, 0.98) 100%)',
+          borderRadius: '20px',
+          padding: '40px',
+          marginBottom: '32px',
+          border: '2px solid rgba(199, 154, 66, 0.3)',
+          boxShadow: '0 20px 60px rgba(199, 154, 66, 0.15), 0 8px 32px rgba(0, 0, 0, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* ゴージャス背景パターン */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 30% 30%, rgba(199, 154, 66, 0.03) 0%, transparent 50%), radial-gradient(circle at 70% 70%, rgba(184, 135, 59, 0.03) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }} />
+          
+          <h2 style={{ 
+            fontSize: '28px', 
+            fontWeight: '700', 
+            marginBottom: '32px', 
+            color: '#5d4e37',
+            position: 'relative',
+            zIndex: 1
+          }}>
+            総合評価
+          </h2>
+          
+          {(() => {
+            // 目標達成数を計算
+            const metrics = [
+              { value: parseFloat(averages.avg_saves_rate), target: 3.0 },
+              { value: parseFloat(averages.avg_home_rate), target: 50.0 },
+              { value: parseFloat(averages.avg_profile_access_rate), target: 5.0 },
+              { value: parseFloat(averages.avg_follower_conversion_rate), target: 8.0 }
+            ];
+            
+            const achievedCount = metrics.filter(metric => metric.value >= metric.target).length;
+            
+            let grade = 'D';
+            let gradeColor = '#ef4444';
+            let comment = '';
+            
+            if (achievedCount === 4) {
+              grade = 'A';
+              gradeColor = '#22c55e';
+              comment = '素晴らしい成果です！全ての重要指標で目標を達成しています。';
+            } else if (achievedCount === 3) {
+              grade = 'B';
+              gradeColor = '#3b82f6';
+              comment = '良好な結果です。ほぼ全ての指標で目標を達成しています。';
+            } else if (achievedCount === 2) {
+              grade = 'C';
+              gradeColor = '#f59e0b';
+              comment = '標準的な成果です。半数の指標で目標を達成しています。';
+            } else {
+              grade = 'D';
+              gradeColor = '#ef4444';
+              comment = '改善の余地があります。基本的な運用戦略の見直しを推奨します。';
+            }
+            
+            return (
+              <div style={{
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(252, 251, 248, 0.95) 100%)',
+                borderRadius: '16px',
+                padding: '40px',
+                border: '1px solid rgba(199, 154, 66, 0.2)',
+                boxShadow: '0 8px 24px rgba(199, 154, 66, 0.1)',
+                position: 'relative',
+                zIndex: 1,
+                textAlign: 'center'
+              }}>
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    fontSize: '72px',
+                    fontWeight: '700',
+                    color: gradeColor,
+                    marginBottom: '16px',
+                    textShadow: '0 4px 8px rgba(0, 0, 0, 0.1)'
+                  }}>
+                    {grade}
+                  </div>
+                  <div style={{ 
+                    fontSize: '20px', 
+                    color: '#5d4e37', 
+                    fontWeight: '600',
+                    marginBottom: '8px'
+                  }}>
+                    4指標中 {achievedCount}項目 達成
+                  </div>
+                  <div style={{ 
+                    fontSize: '16px', 
+                    color: '#8b7355',
+                    lineHeight: '1.6'
+                  }}>
+                    {comment}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </div>
 
       </div>
