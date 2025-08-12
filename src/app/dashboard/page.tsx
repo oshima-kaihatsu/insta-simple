@@ -406,24 +406,64 @@ export default function DashboardPage() {
     }
   }, [filteredPosts, hasRealData]);
 
-  // Instagram連携チェック
+  // Instagram連携とURLパラメーターのチェック
   useEffect(() => {
-    const checkInstagramConnection = async () => {
-      try {
-        const res = await fetch('/api/instagram/user');
-        if (res.ok) {
-          const data = await res.json();
-          setInstagramData(data);
-          setShowSampleData(false);
-        }
-      } catch (error) {
-        console.error('Instagram connection check failed:', error);
-      } finally {
+    const initializeData = async () => {
+      // URLパラメーターをチェック
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessToken = urlParams.get('access_token');
+      const instagramUserId = urlParams.get('instagram_user_id');
+      const success = urlParams.get('success');
+      const error = urlParams.get('error');
+
+      // エラーパラメーターがある場合の処理
+      if (error) {
+        console.error('Instagram OAuth error:', error);
+        setShowSampleData(true);
         setLoading(false);
+        return;
       }
+
+      // 成功パラメーターがある場合の処理
+      if (success === 'true' && accessToken && instagramUserId) {
+        console.log('Instagram connection successful, fetching data...');
+        try {
+          const res = await fetch(`/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setInstagramData(data);
+            setShowSampleData(false);
+            // URLパラメーターをクリア
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            console.error('Failed to fetch Instagram data');
+            setShowSampleData(true);
+          }
+        } catch (error) {
+          console.error('Error fetching Instagram data:', error);
+          setShowSampleData(true);
+        }
+      } else {
+        // 通常のInstagram接続チェック
+        try {
+          const res = await fetch('/api/instagram/user');
+          if (res.ok) {
+            const data = await res.json();
+            setInstagramData(data);
+            setShowSampleData(false);
+          } else {
+            setShowSampleData(true);
+          }
+        } catch (error) {
+          console.error('Instagram connection check failed:', error);
+          setShowSampleData(true);
+        }
+      }
+      
+      setLoading(false);
     };
 
-    checkInstagramConnection();
+    initializeData();
   }, []);
 
   // CSV出力機能
@@ -606,7 +646,7 @@ export default function DashboardPage() {
                 color: '#8b7355', 
                 margin: '4px 0 0 0' 
               }}>
-                @{hasRealData ? instagramData.profile?.username : 'hoikuen_sample'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
+                @{hasRealData ? instagramData.profile?.username : 'sample_account'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
               </p>
             </div>
           </div>
@@ -715,120 +755,92 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 重要4指標スコア */}
+        {/* 重要4指標スコア - ゴージャス白金デザイン */}
         <div style={{
-          background: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '16px',
-          padding: '32px',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 243, 0.98) 100%)',
+          borderRadius: '20px',
+          padding: '40px',
           marginBottom: '32px',
-          border: '1px solid rgba(199, 154, 66, 0.2)',
-          boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
+          border: '2px solid rgba(199, 154, 66, 0.3)',
+          boxShadow: '0 20px 60px rgba(199, 154, 66, 0.15), 0 8px 32px rgba(0, 0, 0, 0.1)',
+          position: 'relative',
+          overflow: 'hidden'
         }}>
+          {/* ゴージャス背景パターン */}
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'radial-gradient(circle at 20% 20%, rgba(199, 154, 66, 0.03) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(184, 135, 59, 0.03) 0%, transparent 50%)',
+            pointerEvents: 'none'
+          }} />
+          
           <h2 style={{ 
-            fontSize: '24px', 
-            fontWeight: '600', 
-            marginBottom: '24px', 
+            fontSize: '28px', 
+            fontWeight: '700', 
+            marginBottom: '32px', 
             color: '#5d4e37',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '12px',
+            position: 'relative',
+            zIndex: 1
           }}>
-            <BarChart3 size={24} />
+            <BarChart3 size={28} style={{ color: '#c79a42' }} />
             重要4指標スコア
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
-            <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #fff4e6 0%, #ffe7cc 100%)',
-              borderRadius: '12px',
-              border: '1px solid #ffd4a3'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
-                  <Bookmark size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                  保存率
-                </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#c79a42' }}>
-                  {averages.avg_saves_rate}%
-                </span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', position: 'relative', zIndex: 1 }}>
+            {[
+              { key: 'saves_rate', title: '保存率', value: averages.avg_saves_rate, target: 3.0, formula: '保存数 ÷ リーチ数' },
+              { key: 'home_rate', title: 'ホーム率', value: averages.avg_home_rate, target: 50.0, formula: 'リーチ数 ÷ フォロワー数' },
+              { key: 'profile_access_rate', title: 'プロフィールアクセス率', value: averages.avg_profile_access_rate, target: 3.0, formula: 'プロフィール表示 ÷ リーチ数' },
+              { key: 'follower_conversion_rate', title: 'フォロワー転換率', value: averages.avg_follower_conversion_rate, target: 7.0, formula: 'フォロー数 ÷ プロフィール表示' }
+            ].map((metric) => (
+              <div key={metric.key} style={{
+                padding: '32px',
+                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(252, 251, 248, 0.95) 100%)',
+                borderRadius: '16px',
+                border: '1px solid rgba(199, 154, 66, 0.2)',
+                boxShadow: '0 8px 24px rgba(199, 154, 66, 0.1)',
+                position: 'relative',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '-50%',
+                  right: '-30%',
+                  width: '120px',
+                  height: '120px',
+                  background: 'linear-gradient(135deg, rgba(199, 154, 66, 0.1) 0%, rgba(184, 135, 59, 0.05) 100%)',
+                  borderRadius: '50%',
+                  filter: 'blur(20px)'
+                }} />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', position: 'relative', zIndex: 1 }}>
+                  <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
+                    {metric.title}
+                  </h3>
+                  <span style={{ 
+                    fontSize: '32px', 
+                    fontWeight: '700', 
+                    background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    textShadow: '0 2px 4px rgba(199, 154, 66, 0.1)'
+                  }}>
+                    {metric.value}%
+                  </span>
+                </div>
+                <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '12px', opacity: 0.8 }}>
+                  計算式: {metric.formula}
+                </p>
+                <p style={{ fontSize: '14px', color: parseFloat(metric.value) >= metric.target ? '#22c55e' : '#ef4444', fontWeight: '600' }}>
+                  目標: {metric.target}%以上 • {parseFloat(metric.value) >= metric.target ? '達成' : '要改善'}
+                </p>
               </div>
-              <p style={{ fontSize: '12px', color: '#8b7355', marginBottom: '8px' }}>
-                計算式: 保存数 ÷ リーチ数
-              </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
-                目標: 3.0%以上
-              </p>
-            </div>
-            
-            <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #e6f7ff 0%, #cce7ff 100%)',
-              borderRadius: '12px',
-              border: '1px solid #91d5ff'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
-                  <TrendingUp size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                  ホーム率
-                </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#1890ff' }}>
-                  {averages.avg_home_rate}%
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#8b7355', marginBottom: '8px' }}>
-                計算式: リーチ数 ÷ フォロワー数
-              </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
-                目標: 50.0%以上
-              </p>
-            </div>
-            
-            <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #f0f9ff 0%, #d6f0ff 100%)',
-              borderRadius: '12px',
-              border: '1px solid #a3d9ff'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
-                  <Eye size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                  プロフィールアクセス率
-                </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#40a9ff' }}>
-                  {averages.avg_profile_access_rate}%
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#8b7355', marginBottom: '8px' }}>
-                計算式: プロフィール表示 ÷ リーチ数
-              </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
-                目標: 3.0%以上
-              </p>
-            </div>
-            
-            <div style={{
-              padding: '24px',
-              background: 'linear-gradient(135deg, #f6ffed 0%, #e4ffc7 100%)',
-              borderRadius: '12px',
-              border: '1px solid #b7eb8f'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
-                  <UserPlus size={20} style={{ verticalAlign: 'middle', marginRight: '8px' }} />
-                  フォロワー転換率
-                </h3>
-                <span style={{ fontSize: '24px', fontWeight: '700', color: '#52c41a' }}>
-                  {averages.avg_follower_conversion_rate}%
-                </span>
-              </div>
-              <p style={{ fontSize: '12px', color: '#8b7355', marginBottom: '8px' }}>
-                計算式: フォロー数 ÷ プロフィール表示
-              </p>
-              <p style={{ fontSize: '12px', color: '#52c41a', fontWeight: '600' }}>
-                目標: 7.0%以上
-              </p>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -1023,68 +1035,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI総合評価と改善提案 - データがある場合のみ表示 */}
-        {filteredPosts.length > 0 && (
-          <div style={{
-            background: 'rgba(255, 255, 255, 0.9)',
-            borderRadius: '16px',
-            padding: '32px',
-            marginBottom: '32px',
-            border: '1px solid rgba(199, 154, 66, 0.2)',
-            boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
-          }}>
-            <h2 style={{ 
-              fontSize: '24px', 
-              fontWeight: '600', 
-              marginBottom: '24px', 
-              color: '#5d4e37',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-              <Brain size={24} />
-              AI総合評価と改善提案
-            </h2>
-            
-            <div style={{
-              background: 'linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%)',
-              borderRadius: '12px',
-              padding: '24px',
-              marginBottom: '24px',
-              border: '1px solid #ffe58f'
-            }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', marginBottom: '16px' }}>
-                総合評価
-              </h3>
-              <p style={{ fontSize: '14px', lineHeight: '1.8', color: '#666' }}>
-                {aiComments.overall?.comment}
-              </p>
-            </div>
-            
-            <div style={{
-              background: 'linear-gradient(135deg, #f0f5ff 0%, #e6edff 100%)',
-              borderRadius: '12px',
-              padding: '24px',
-              border: '1px solid #adc6ff'
-            }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#5d4e37', marginBottom: '16px' }}>
-                改善提案
-              </h3>
-              <ul style={{ margin: 0, paddingLeft: '20px' }}>
-                {aiComments.overall?.suggestions?.map((suggestion, index) => (
-                  <li key={index} style={{ 
-                    fontSize: '14px', 
-                    lineHeight: '1.8', 
-                    color: '#666',
-                    marginBottom: '8px'
-                  }}>
-                    {suggestion}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
