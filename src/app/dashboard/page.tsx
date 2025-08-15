@@ -27,7 +27,7 @@ import {
   AlertCircle,
   CheckCircle,
   Award,
-  Gauge
+  Activity
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -1094,7 +1094,7 @@ export default function DashboardPage() {
                 boxShadow: '0 8px 24px rgba(34, 197, 94, 0.1)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                  <Gauge size={24} style={{ color: '#22c55e' }} />
+                  <Activity size={24} style={{ color: '#22c55e' }} />
                   <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#065f46', margin: 0 }}>
                     エンゲージメント品質
                   </h3>
@@ -1426,7 +1426,7 @@ export default function DashboardPage() {
                             fontSize: '14px'
                           }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                              <Gauge size={14} />
+                              <Activity size={14} />
                               AI最適化: {post.advanced_metrics?.optimization_score || Math.floor(Math.random() * 40) + 50}/100
                             </div>
                           </div>
