@@ -185,6 +185,9 @@ export default function DashboardPage() {
   const postsData = instagramData?.posts || (showSampleData ? samplePosts : []);
   const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
   const hasRealData = instagramData !== null;
+  
+  // followerDataがnullの場合のセーフガード
+  const safeFollowerData = followerData || { data: [], labels: [] };
 
   // 期間フィルター適用
   const filteredPosts = filterPeriod === 'all' ? postsData : postsData.filter(post => {
@@ -810,30 +813,30 @@ export default function DashboardPage() {
             </div>
           </div>
           
-          {followerData && (
+          {safeFollowerData.data && safeFollowerData.data.length > 0 && (
             <div style={{ height: '300px', background: '#fafafa', borderRadius: '8px', padding: '20px' }}>
               <svg viewBox="0 0 800 250" style={{ width: '100%', height: '100%' }}>
                 <polyline
-                  points={followerData.data.map((val, i) => 
-                    `${(i / (followerData.data.length - 1)) * 780 + 10},${240 - ((val - 8200) / 450) * 220}`
-                  ).join(' ')}
+                  points={safeFollowerData.data?.map((val, i) => 
+                    `${(i / (safeFollowerData.data.length - 1)) * 780 + 10},${240 - ((val - 8200) / 450) * 220}`
+                  ).join(' ') || ''}
                   fill="none"
                   stroke="#c79a42"
                   strokeWidth="3"
                 />
-                {followerData.data.map((val, i) => (
+                {safeFollowerData.data?.map((val, i) => (
                   <circle
                     key={i}
-                    cx={(i / (followerData.data.length - 1)) * 780 + 10}
+                    cx={(i / (safeFollowerData.data.length - 1)) * 780 + 10}
                     cy={240 - ((val - 8200) / 450) * 220}
                     r="5"
                     fill="#c79a42"
                   />
-                ))}
-                {followerData.labels.map((label, i) => (
+                )) || []}
+                {safeFollowerData.labels?.map((label, i) => (
                   <text
                     key={i}
-                    x={(i / (followerData.labels.length - 1)) * 780 + 10}
+                    x={(i / (safeFollowerData.labels.length - 1)) * 780 + 10}
                     y="250"
                     textAnchor="middle"
                     fontSize="12"
@@ -841,7 +844,7 @@ export default function DashboardPage() {
                   >
                     {label}
                   </text>
-                ))}
+                )) || []}
               </svg>
             </div>
           )}
@@ -1018,7 +1021,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {sortedPosts.length > 0 ? sortedPosts.map((post, index) => {
+                {Array.isArray(sortedPosts) && sortedPosts.length > 0 ? sortedPosts.map((post, index) => {
                   const metrics24h = calculateMetrics({ ...post, data_7d: post.data_24h });
                   const metrics7d = calculateMetrics(post);
                   const title = hasRealData ? (post.caption?.substring(0, 50) + '...' || '投稿') : post.title;
