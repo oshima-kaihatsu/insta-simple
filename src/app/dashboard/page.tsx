@@ -36,138 +36,138 @@ export default function DashboardPage() {
   const samplePosts = [
     {
       id: 'sample_1',
-      title: '夏の自然の美しさを捉えた一枚',
-      date: '2025-08-15',
-      timestamp: '2025-08-15T10:00:00',
+      title: '週末の特別なディナー',
+      date: '2025-01-13',
+      timestamp: '2025-01-13T19:00:00',
       media_type: 'CAROUSEL_ALBUM',
-      data_24h: { reach: 2847, likes: 184, saves: 112, profile_views: 89, follows: 12 },
-      data_7d: { reach: 3251, likes: 237, saves: 134, profile_views: 142, follows: 16 }
+      data_24h: { reach: 2847, likes: 184, saves: 45, profile_views: 89, follows: 3 },
+      data_7d: { reach: 3251, likes: 237, saves: 58, profile_views: 142, follows: 5 }
     },
     {
       id: 'sample_2',
-      title: '今日のランチメニュー',
-      date: '2025-08-10',
-      timestamp: '2025-08-10T12:30:00',
+      title: '新年の目標設定',
+      date: '2025-01-08',
+      timestamp: '2025-01-08T10:00:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 3124, likes: 256, saves: 167, profile_views: 124, follows: 8 },
-      data_7d: { reach: 3892, likes: 312, saves: 198, profile_views: 156, follows: 11 }
+      data_24h: { reach: 5124, likes: 256, saves: 34, profile_views: 124, follows: 2 },
+      data_7d: { reach: 6892, likes: 312, saves: 45, profile_views: 156, follows: 3 }
     },
     {
       id: 'sample_3',
-      title: '週末のアクティビティ準備',
-      date: '2025-08-05',
-      timestamp: '2025-08-05T14:00:00',
+      title: '冬のカフェ巡り',
+      date: '2025-01-03',
+      timestamp: '2025-01-03T14:00:00',
       media_type: 'VIDEO',
       data_24h: { reach: 4231, likes: 342, saves: 178, profile_views: 234, follows: 28 },
       data_7d: { reach: 5124, likes: 456, saves: 213, profile_views: 289, follows: 34 }
     },
     {
       id: 'sample_4',
-      title: '夏祭りの思い出',
-      date: '2025-07-30',
-      timestamp: '2025-07-30T09:30:00',
+      title: '年末年始の過ごし方',
+      date: '2024-12-28',
+      timestamp: '2024-12-28T09:30:00',
       media_type: 'REELS',
-      data_24h: { reach: 5672, likes: 489, saves: 234, profile_views: 345, follows: 42 },
-      data_7d: { reach: 6891, likes: 612, saves: 298, profile_views: 412, follows: 51 }
+      data_24h: { reach: 3672, likes: 489, saves: 28, profile_views: 98, follows: 1 },
+      data_7d: { reach: 4891, likes: 612, saves: 38, profile_views: 124, follows: 2 }
     },
     {
       id: 'sample_5',
-      title: 'DIYプロジェクトの成果',
-      date: '2025-07-25',
-      timestamp: '2025-07-25T11:00:00',
+      title: 'クリスマスパーティーの準備',
+      date: '2024-12-23',
+      timestamp: '2024-12-23T11:00:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 3892, likes: 298, saves: 156, profile_views: 189, follows: 19 },
       data_7d: { reach: 4567, likes: 367, saves: 189, profile_views: 234, follows: 24 }
     },
     {
       id: 'sample_6',
-      title: '新しいアート作品',
-      date: '2025-07-20',
-      timestamp: '2025-07-20T15:00:00',
+      title: '冬のファッションコーデ',
+      date: '2024-12-18',
+      timestamp: '2024-12-18T15:00:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 2456, likes: 167, saves: 89, profile_views: 78, follows: 6 },
-      data_7d: { reach: 3124, likes: 198, saves: 102, profile_views: 98, follows: 8 }
+      data_24h: { reach: 3456, likes: 167, saves: 22, profile_views: 78, follows: 1 },
+      data_7d: { reach: 4324, likes: 198, saves: 28, profile_views: 98, follows: 2 }
     },
     {
       id: 'sample_7',
-      title: '音楽フェスティバルのハイライト',
-      date: '2025-07-15',
-      timestamp: '2025-07-15T10:30:00',
+      title: '紅葉狩りの思い出',
+      date: '2024-11-25',
+      timestamp: '2024-11-25T10:30:00',
       media_type: 'VIDEO',
-      data_24h: { reach: 3567, likes: 278, saves: 134, profile_views: 167, follows: 15 },
-      data_7d: { reach: 4231, likes: 345, saves: 167, profile_views: 198, follows: 18 }
+      data_24h: { reach: 4567, likes: 278, saves: 34, profile_views: 78, follows: 2 },
+      data_7d: { reach: 5431, likes: 345, saves: 45, profile_views: 98, follows: 3 }
     },
     {
       id: 'sample_8',
-      title: '友達との集まり',
-      date: '2025-07-10',
-      timestamp: '2025-07-10T14:30:00',
+      title: '秋の料理レシピ',
+      date: '2024-11-20',
+      timestamp: '2024-11-20T14:30:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 4123, likes: 367, saves: 198, profile_views: 234, follows: 23 },
       data_7d: { reach: 4892, likes: 445, saves: 234, profile_views: 278, follows: 29 }
     },
     {
       id: 'sample_9',
-      title: '健康的なライフスタイルのヒント',
-      date: '2025-06-30',
-      timestamp: '2025-06-30T11:30:00',
+      title: 'ハロウィンパーティー',
+      date: '2024-10-31',
+      timestamp: '2024-10-31T11:30:00',
       media_type: 'REELS',
       data_24h: { reach: 5234, likes: 445, saves: 267, profile_views: 312, follows: 38 },
       data_7d: { reach: 6123, likes: 556, saves: 334, profile_views: 389, follows: 45 }
     },
     {
       id: 'sample_10',
-      title: '新しい趣味の発見',
-      date: '2025-06-25',
-      timestamp: '2025-06-25T09:00:00',
+      title: '読書の秋',
+      date: '2024-10-25',
+      timestamp: '2024-10-25T09:00:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 2789, likes: 198, saves: 76, profile_views: 89, follows: 7 },
-      data_7d: { reach: 3456, likes: 245, saves: 89, profile_views: 112, follows: 9 }
+      data_24h: { reach: 3789, likes: 198, saves: 28, profile_views: 67, follows: 1 },
+      data_7d: { reach: 4456, likes: 245, saves: 38, profile_views: 89, follows: 2 }
     },
     {
       id: 'sample_11',
-      title: '読書レビュー',
-      date: '2025-06-20',
-      timestamp: '2025-06-20T13:00:00',
+      title: 'スポーツの秋',
+      date: '2024-10-20',
+      timestamp: '2024-10-20T13:00:00',
       media_type: 'VIDEO',
-      data_24h: { reach: 1892, likes: 134, saves: 45, profile_views: 56, follows: 4 },
-      data_7d: { reach: 2345, likes: 167, saves: 56, profile_views: 67, follows: 5 }
+      data_24h: { reach: 2892, likes: 134, saves: 18, profile_views: 45, follows: 1 },
+      data_7d: { reach: 3345, likes: 167, saves: 22, profile_views: 56, follows: 1 }
     },
     {
       id: 'sample_12',
-      title: '季節のファッション',
-      date: '2025-05-15',
-      timestamp: '2025-05-15T10:00:00',
+      title: '夏の思い出アルバム',
+      date: '2024-09-15',
+      timestamp: '2024-09-15T10:00:00',
       media_type: 'CAROUSEL_ALBUM',
       data_24h: { reach: 3345, likes: 256, saves: 145, profile_views: 178, follows: 16 },
       data_7d: { reach: 4012, likes: 312, saves: 178, profile_views: 212, follows: 20 }
     },
     {
       id: 'sample_13',
-      title: 'フィットネス ルーチン',
-      date: '2025-05-10',
-      timestamp: '2025-05-10T11:00:00',
+      title: '夏フェスのハイライト',
+      date: '2024-09-10',
+      timestamp: '2024-09-10T11:00:00',
       media_type: 'REELS',
       data_24h: { reach: 4567, likes: 389, saves: 212, profile_views: 267, follows: 31 },
       data_7d: { reach: 5432, likes: 478, saves: 256, profile_views: 323, follows: 37 }
     },
     {
       id: 'sample_14',
-      title: 'カフェ巡りの記録',
-      date: '2025-04-25',
-      timestamp: '2025-04-25T15:30:00',
+      title: '海水浴の楽しい一日',
+      date: '2024-09-05',
+      timestamp: '2024-09-05T15:30:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 2234, likes: 156, saves: 67, profile_views: 78, follows: 5 },
-      data_7d: { reach: 2890, likes: 189, saves: 78, profile_views: 89, follows: 6 }
+      data_24h: { reach: 3234, likes: 156, saves: 24, profile_views: 56, follows: 1 },
+      data_7d: { reach: 3890, likes: 189, saves: 32, profile_views: 78, follows: 2 }
     },
     {
       id: 'sample_15',
-      title: '春の旅行計画',
-      date: '2025-04-20',
-      timestamp: '2025-04-20T12:00:00',
+      title: '新学期の準備',
+      date: '2024-09-01',
+      timestamp: '2024-09-01T12:00:00',
       media_type: 'IMAGE',
-      data_24h: { reach: 6789, likes: 234, saves: 345, profile_views: 456, follows: 67 },
-      data_7d: { reach: 8234, likes: 289, saves: 412, profile_views: 567, follows: 78 }
+      data_24h: { reach: 2789, likes: 234, saves: 18, profile_views: 89, follows: 1 },
+      data_7d: { reach: 3234, likes: 289, saves: 22, profile_views: 112, follows: 2 }
     }
   ];
 
@@ -273,6 +273,7 @@ export default function DashboardPage() {
     };
   };
 
+  // 重要4指標スコアの平均はフィルター後の投稿から計算
   const averages = calculateAverages(filteredPosts);
 
   // ランキング計算
@@ -921,119 +922,151 @@ export default function DashboardPage() {
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg, #faf8f5, #f5f2ed)' }}>
                   <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    投稿日
-                  </th>
-                  <th style={{ padding: '16px', textAlign: 'left', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    投稿内容
+                    投稿
                   </th>
                   <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    保存率
+                    24時間後
                   </th>
                   <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    ホーム率
+                    1週間後
                   </th>
                   <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    プロフィールアクセス率
-                  </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    フォロワー転換率
+                    重要4指標
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {sortedPosts.length > 0 ? sortedPosts.map((post, index) => {
-                  const metrics = calculateMetrics(post);
-                  const isTop25 = post.rankings && (
-                    post.rankings.saves_rate <= Math.ceil(filteredPosts.length * 0.25) ||
-                    post.rankings.home_rate <= Math.ceil(filteredPosts.length * 0.25) ||
-                    post.rankings.profile_access_rate <= Math.ceil(filteredPosts.length * 0.25) ||
-                    post.rankings.follower_conversion_rate <= Math.ceil(filteredPosts.length * 0.25)
-                  );
+                  const metrics24h = calculateMetrics({ ...post, data_7d: post.data_24h });
+                  const metrics7d = calculateMetrics(post);
+                  const title = hasRealData ? (post.caption?.substring(0, 50) + '...' || '投稿') : post.title;
+                  const date = hasRealData ? new Date(post.timestamp).toLocaleDateString('ja-JP') : post.date;
                   
                   return (
                     <tr key={post.id} style={{ 
-                      borderBottom: '1px solid #e8e8e8',
-                      background: index % 2 === 0 ? 'white' : '#fafafa'
+                      borderBottom: '1px solid rgba(199, 154, 66, 0.1)',
+                      background: index % 2 === 0 ? 'rgba(252, 251, 248, 0.3)' : 'transparent'
                     }}>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <td style={{ padding: '16px 12px' }}>
+                        <div style={{ fontWeight: '600', color: '#5d4e37', marginBottom: '4px' }}>{title}</div>
+                        <div style={{ fontSize: '12px', color: '#666', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {getMediaIcon(post.media_type)}
-                          {post.date || post.timestamp?.split('T')[0]}
+                          {date}
                         </div>
                       </td>
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {isTop25 && (
-                            <span style={{
-                              background: 'linear-gradient(135deg, #ffd700, #ffed4e)',
-                              padding: '2px 8px',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              fontWeight: '700',
-                              color: '#856404'
-                            }}>
-                              TOP 25%
-                            </span>
-                          )}
-                          <span style={{ 
-                            maxWidth: '300px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap'
-                          }}>
-                            {post.title || post.caption || '投稿内容なし'}
-                          </span>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', marginBottom: '8px', color: '#666' }}>
+                          <div>リーチ: {post.data_24h.reach.toLocaleString()}</div>
+                          <div>いいね: {post.data_24h.likes}</div>
+                          <div>保存: {post.data_24h.saves}</div>
+                          <div>プロフ: {post.data_24h.profile_views}</div>
+                          <div>フォロー: {post.data_24h.follows}</div>
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: '600' }}>
+                          <div style={{ color: parseFloat(metrics24h.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444' }}>保存率: {metrics24h.saves_rate}%</div>
+                          <div style={{ color: parseFloat(metrics24h.home_rate) >= 50.0 ? '#22c55e' : '#ef4444' }}>ホーム率: {metrics24h.home_rate}%</div>
+                          <div style={{ color: parseFloat(metrics24h.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444' }}>プロフ率: {metrics24h.profile_access_rate}%</div>
+                          <div style={{ color: parseFloat(metrics24h.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444' }}>転換率: {metrics24h.follower_conversion_rate}%</div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: parseFloat(metrics.saves_rate) >= 3.0 ? '#52c41a' : '#666' }}>
-                            {metrics.saves_rate}%
-                          </span>
-                          <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
-                            {post.rankings?.saves_rate}位/{filteredPosts.length}
-                          </span>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px', marginBottom: '8px', color: '#666' }}>
+                          <div>リーチ: {post.data_7d.reach.toLocaleString()}</div>
+                          <div>いいね: {post.data_7d.likes}</div>
+                          <div>保存: {post.data_7d.saves}</div>
+                          <div>プロフ: {post.data_7d.profile_views}</div>
+                          <div>フォロー: {post.data_7d.follows}</div>
+                        </div>
+                        <div style={{ fontSize: '11px', fontWeight: '600' }}>
+                          <div style={{ color: parseFloat(metrics7d.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444' }}>保存率: {metrics7d.saves_rate}%</div>
+                          <div style={{ color: parseFloat(metrics7d.home_rate) >= 50.0 ? '#22c55e' : '#ef4444' }}>ホーム率: {metrics7d.home_rate}%</div>
+                          <div style={{ color: parseFloat(metrics7d.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444' }}>プロフ率: {metrics7d.profile_access_rate}%</div>
+                          <div style={{ color: parseFloat(metrics7d.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444' }}>転換率: {metrics7d.follower_conversion_rate}%</div>
                         </div>
                       </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: parseFloat(metrics.home_rate) >= 50.0 ? '#52c41a' : '#666' }}>
-                            {metrics.home_rate}%
-                          </span>
-                          <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
-                            {post.rankings?.home_rate}位/{filteredPosts.length}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: parseFloat(metrics.profile_access_rate) >= 3.0 ? '#52c41a' : '#666' }}>
-                            {metrics.profile_access_rate}%
-                          </span>
-                          <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
-                            {post.rankings?.profile_access_rate}位/{filteredPosts.length}
-                          </span>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <div>
-                          <span style={{ fontSize: '16px', fontWeight: '600', color: parseFloat(metrics.follower_conversion_rate) >= 7.0 ? '#52c41a' : '#666' }}>
-                            {metrics.follower_conversion_rate}%
-                          </span>
-                          <br />
-                          <span style={{ fontSize: '11px', color: '#999' }}>
-                            {post.rankings?.follower_conversion_rate}位/{filteredPosts.length}
-                          </span>
+                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
+                        <div style={{ fontSize: '12px' }}>
+                          {(() => {
+                            // 最小4投稿以上の場合のみ色分け
+                            const shouldColorCode = filteredPosts.length >= 4;
+                            const top25Threshold = Math.max(1, Math.floor(filteredPosts.length * 0.25));
+                            const bottom25Threshold = filteredPosts.length - Math.max(0, Math.floor(filteredPosts.length * 0.25)) + 1;
+                            
+                            return (
+                              <>
+                                <div style={{
+                                  padding: '2px 8px',
+                                  marginBottom: '4px',
+                                  borderRadius: '12px',
+                                  background: shouldColorCode ? 
+                                    (post.rankings?.saves_rate <= top25Threshold ? 'rgba(34, 197, 94, 0.2)' : 
+                                     post.rankings?.saves_rate >= bottom25Threshold ? 'rgba(239, 68, 68, 0.2)' : 
+                                     'rgba(199, 154, 66, 0.1)') : 'rgba(199, 154, 66, 0.1)',
+                                  color: shouldColorCode ? 
+                                    (post.rankings?.saves_rate <= top25Threshold ? '#16a34a' : 
+                                     post.rankings?.saves_rate >= bottom25Threshold ? '#dc2626' : 
+                                     '#b8873b') : '#b8873b',
+                                  fontWeight: '600'
+                                }}>
+                                  保存率: {post.rankings?.saves_rate || (index + 1)}位/{filteredPosts.length}
+                                </div>
+                                <div style={{
+                                  padding: '2px 8px',
+                                  marginBottom: '4px',
+                                  borderRadius: '12px',
+                                  background: shouldColorCode ? 
+                                    (post.rankings?.home_rate <= top25Threshold ? 'rgba(34, 197, 94, 0.2)' : 
+                                     post.rankings?.home_rate >= bottom25Threshold ? 'rgba(239, 68, 68, 0.2)' : 
+                                     'rgba(199, 154, 66, 0.1)') : 'rgba(199, 154, 66, 0.1)',
+                                  color: shouldColorCode ? 
+                                    (post.rankings?.home_rate <= top25Threshold ? '#16a34a' : 
+                                     post.rankings?.home_rate >= bottom25Threshold ? '#dc2626' : 
+                                     '#b8873b') : '#b8873b',
+                                  fontWeight: '600'
+                                }}>
+                                  ホーム率: {post.rankings?.home_rate || (index + 1)}位/{filteredPosts.length}
+                                </div>
+                                <div style={{
+                                  padding: '2px 8px',
+                                  marginBottom: '4px',
+                                  borderRadius: '12px',
+                                  background: shouldColorCode ? 
+                                    (post.rankings?.profile_access_rate <= top25Threshold ? 'rgba(34, 197, 94, 0.2)' : 
+                                     post.rankings?.profile_access_rate >= bottom25Threshold ? 'rgba(239, 68, 68, 0.2)' : 
+                                     'rgba(199, 154, 66, 0.1)') : 'rgba(199, 154, 66, 0.1)',
+                                  color: shouldColorCode ? 
+                                    (post.rankings?.profile_access_rate <= top25Threshold ? '#16a34a' : 
+                                     post.rankings?.profile_access_rate >= bottom25Threshold ? '#dc2626' : 
+                                     '#b8873b') : '#b8873b',
+                                  fontWeight: '600'
+                                }}>
+                                  プロフ率: {post.rankings?.profile_access_rate || (index + 1)}位/{filteredPosts.length}
+                                </div>
+                                <div style={{
+                                  padding: '2px 8px',
+                                  borderRadius: '12px',
+                                  background: shouldColorCode ? 
+                                    (post.rankings?.follower_conversion_rate <= top25Threshold ? 'rgba(34, 197, 94, 0.2)' : 
+                                     post.rankings?.follower_conversion_rate >= bottom25Threshold ? 'rgba(239, 68, 68, 0.2)' : 
+                                     'rgba(199, 154, 66, 0.1)') : 'rgba(199, 154, 66, 0.1)',
+                                  color: shouldColorCode ? 
+                                    (post.rankings?.follower_conversion_rate <= top25Threshold ? '#16a34a' : 
+                                     post.rankings?.follower_conversion_rate >= bottom25Threshold ? '#dc2626' : 
+                                     '#b8873b') : '#b8873b',
+                                  fontWeight: '600'
+                                }}>
+                                  転換率: {post.rankings?.follower_conversion_rate || (index + 1)}位/{filteredPosts.length}
+                                </div>
+                              </>
+                            );
+                          })()}
                         </div>
                       </td>
                     </tr>
                   );
                 }) : (
                   <tr>
-                    <td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                    <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                       <MessageSquare size={48} style={{ margin: '0 auto 16px', color: '#ccc' }} />
                       <p>表示する投稿データがありません</p>
                     </td>
