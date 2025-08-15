@@ -7,11 +7,17 @@ export async function GET(request) {
   const error = searchParams.get('error');
   const state = searchParams.get('state');
 
+  // 本番環境では確実にHTTPSのURLを使用
+  const REDIRECT_URI = 'https://insta-simple.thorsync.com/api/instagram/callback';
+  const CLIENT_ID = '1776291423096614';
+  const CLIENT_SECRET = process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a';
+
   console.log('=== Instagram Graph API Callback (New API) ===');
   console.log('URL:', request.url);
   console.log('Code:', code ? 'Received' : 'Missing');
   console.log('Error:', error);
   console.log('State:', state);
+  console.log('Using Redirect URI:', REDIRECT_URI);
 
   if (error) {
     console.error('OAuth error:', error);
@@ -31,9 +37,9 @@ export async function GET(request) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.INSTAGRAM_CLIENT_ID || '1776291423096614',
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a',
-        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI || 'https://insta-simple.thorsync.com/api/instagram/callback',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        redirect_uri: REDIRECT_URI,
         code: code,
         grant_type: 'authorization_code',
       }),

@@ -29,8 +29,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const clientId = process.env.INSTAGRAM_CLIENT_ID;
-    const redirectUri = `${process.env.NEXTAUTH_URL}/api/instagram/callback`;
+    // 本番環境で確実にHTTPSのURLを使用
+    const clientId = '1776291423096614';
+    const redirectUri = 'https://insta-simple.thorsync.com/api/instagram/callback';
 
     console.log('=== Instagram Graph API Connect (New API) ===');
     console.log('Client ID:', clientId);
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
     // 新しいInstagram Graph API エンドポイント（2024年12月4日以降）
-    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,pages_show_list&response_type=code&state=instagram`;
+    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,business_management&response_type=code&state=instagram`;
 
     console.log('Auth URL:', authUrl);
     return Response.redirect(authUrl);
