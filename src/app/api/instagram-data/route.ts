@@ -437,21 +437,21 @@ export async function GET(request: NextRequest) {
           
           // 2. ホーム率 = ホーム数 ÷ フォロワー数
           // 注意: Instagram APIから「ホーム数」は直接取得不可
-          // 以下の推定方法を使用:
-          // - video_viewsがある場合: video_views の一部をホーム閲覧として推定
-          // - engagementがある場合: engagement を基にホーム閲覧を推定  
-          // - 上記がない場合: reach の70%をホーム閲覧として推定（業界標準）
+          // インプレッションベースの推定方法を使用:
           let home_views = 0;
-          if (insights.video_views > 0) {
-            // ビデオ再生数の70%がホームからの閲覧と推定
-            home_views = Math.floor(insights.video_views * 0.7);
-          } else if (insights.engagement > 0) {
-            // エンゲージメントベースでホーム閲覧を推定
-            home_views = Math.floor(insights.engagement * 1.5);
+          const impressions = insights.impressions || data7d.reach; // インプレッションがない場合はリーチを使用
+          
+          if (mediaType === 'VIDEO') {
+            // リール: インプレッションの25%がホーム（発見タブが多いため）
+            home_views = Math.floor(impressions * 0.25);
+          } else if (mediaType === 'IMAGE' || mediaType === 'CAROUSEL_ALBUM') {
+            // 通常投稿: インプレッションの45%がホーム
+            home_views = Math.floor(impressions * 0.45);
           } else {
-            // リーチの70%をホーム閲覧として推定（最後の手段）
-            home_views = Math.floor(data7d.reach * 0.7);
+            // デフォルト: インプレッションの35%がホーム
+            home_views = Math.floor(impressions * 0.35);
           }
+          
           const home_rate = userInfo.followers_count > 0 ? ((home_views / userInfo.followers_count) * 100).toFixed(1) : '0.0';
           
           // 3. プロフィールアクセス率 = プロフアクセス数 ÷ リーチ数  
@@ -465,7 +465,7 @@ export async function GET(request: NextRequest) {
           console.log(`   - Home Rate: ${home_rate}% (${home_views}/${userInfo.followers_count})`);
           console.log(`   - Profile Access Rate: ${profile_access_rate}% (${data7d.profile_views}/${data7d.reach})`);
           console.log(`   - Follower Conversion Rate: ${follower_conversion_rate}% (${data7d.follows}/${data7d.profile_views})`);
-          console.log(`   - Home Views Estimation: video_views=${insights.video_views}, engagement=${insights.engagement}, final=${home_views}`);
+          console.log(`   - Home Views Estimation: mediaType=${mediaType}, impressions=${impressions}, rate=${mediaType === 'VIDEO' ? '25%' : '45%'}, final=${home_views}`);
 
           return {
             id: media.id,

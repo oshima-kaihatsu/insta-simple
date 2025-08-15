@@ -940,53 +940,71 @@ export default function DashboardPage() {
             重要4指標スコア
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px', position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', position: 'relative', zIndex: 1 }}>
             {[
-              { key: 'saves_rate', title: '保存率', value: averages.avg_saves_rate, target: 3.0, formula: '保存数 ÷ リーチ数' },
-              { key: 'home_rate', title: 'ホーム率', value: averages.avg_home_rate, target: 50.0, formula: 'リーチ数 ÷ フォロワー数' },
-              { key: 'profile_access_rate', title: 'プロフィールアクセス率', value: averages.avg_profile_access_rate, target: 5.0, formula: 'プロフィール表示 ÷ リーチ数' },
-              { key: 'follower_conversion_rate', title: 'フォロワー転換率', value: averages.avg_follower_conversion_rate, target: 8.0, formula: 'フォロー数 ÷ プロフィール表示' }
+              { key: 'saves_rate', title: '保存率', value: averages.avg_saves_rate, target: 3.0, formula: '保存数 ÷ リーチ数', note: '' },
+              { key: 'home_rate', title: 'ホーム率', value: averages.avg_home_rate, target: 50.0, formula: 'ホーム数 ÷ フォロワー数', note: 'ホーム数：実データ取得不可のため推定値' },
+              { key: 'profile_access_rate', title: 'プロフィールアクセス率', value: averages.avg_profile_access_rate, target: 5.0, formula: 'プロフィール表示 ÷ リーチ数', note: '' },
+              { key: 'follower_conversion_rate', title: 'フォロワー転換率', value: averages.avg_follower_conversion_rate, target: 8.0, formula: 'フォロー数 ÷ プロフィール表示', note: '' }
             ].map((metric) => (
               <div key={metric.key} style={{
-                padding: '32px',
+                padding: '24px',
                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(252, 251, 248, 0.95) 100%)',
                 borderRadius: '16px',
                 border: '1px solid rgba(199, 154, 66, 0.2)',
                 boxShadow: '0 8px 24px rgba(199, 154, 66, 0.1)',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: '200px'
               }}>
                 <div style={{
                   position: 'absolute',
                   top: '-50%',
                   right: '-30%',
-                  width: '120px',
-                  height: '120px',
+                  width: '100px',
+                  height: '100px',
                   background: 'linear-gradient(135deg, rgba(199, 154, 66, 0.1) 0%, rgba(184, 135, 59, 0.05) 100%)',
                   borderRadius: '50%',
                   filter: 'blur(20px)'
                 }} />
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', position: 'relative', zIndex: 1 }}>
-                  <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#5d4e37', margin: 0 }}>
+                <div style={{ marginBottom: '12px', position: 'relative', zIndex: 1 }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#5d4e37', margin: 0, marginBottom: '8px' }}>
                     {metric.title}
                   </h3>
                   <span style={{ 
-                    fontSize: '32px', 
+                    fontSize: '28px', 
                     fontWeight: '700', 
                     background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
-                    textShadow: '0 2px 4px rgba(199, 154, 66, 0.1)'
+                    textShadow: '0 2px 4px rgba(199, 154, 66, 0.1)',
+                    display: 'block'
                   }}>
                     {metric.value}%
                   </span>
                 </div>
-                <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '12px', opacity: 0.8 }}>
+                <p style={{ fontSize: '12px', color: '#8b7355', marginBottom: '8px', opacity: 0.8 }}>
                   計算式: {metric.formula}
                 </p>
-                <p style={{ fontSize: '14px', color: parseFloat(metric.value) >= metric.target ? '#22c55e' : '#ef4444', fontWeight: '600' }}>
+                <p style={{ fontSize: '12px', color: parseFloat(metric.value) >= metric.target ? '#22c55e' : '#ef4444', fontWeight: '600', marginBottom: 'auto' }}>
                   目標: {metric.target}%以上 • {parseFloat(metric.value) >= metric.target ? '達成' : '要改善'}
                 </p>
+                {metric.note && (
+                  <p style={{ 
+                    fontSize: '10px', 
+                    color: '#9ca3af',
+                    marginTop: '12px',
+                    padding: '6px 8px',
+                    background: 'rgba(199, 154, 66, 0.05)',
+                    borderRadius: '6px',
+                    textAlign: 'right',
+                    fontStyle: 'italic'
+                  }}>
+                    {metric.note}
+                  </p>
+                )}
               </div>
             ))}
           </div>
