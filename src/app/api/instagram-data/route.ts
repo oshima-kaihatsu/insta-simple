@@ -314,8 +314,10 @@ export async function GET(request: NextRequest) {
             // 写真・カルーセルは追加メトリクスがサポートされる可能性
             supportedMetrics.push('impressions', 'profile_visits', 'follows');
           } else if (mediaType === 'VIDEO') {
-            // 動画・リールは限定的
-            // impressions, profile_visits, followsはREELでサポートされない
+            // 動画・リールでホーム数関連のメトリクスをテスト
+            // 可能性のあるメトリクス: video_views, plays, engagement など
+            const additionalMetrics = ['video_views', 'plays', 'engagement', 'total_interactions'];
+            supportedMetrics.push(...additionalMetrics);
           }
           
           console.log(`📱 Media ${media.id} type: ${mediaType}, supported metrics: [${supportedMetrics.join(', ')}]`);
@@ -414,7 +416,11 @@ export async function GET(request: NextRequest) {
             likes: actualLikes,
             saves: actualSaves,
             profile_views: actualProfileVisits,
-            follows: actualFollows
+            follows: actualFollows,
+            // 追加メトリクス（取得できた場合）
+            video_views: insights.video_views || 0,
+            engagement: insights.engagement || 0,
+            total_interactions: insights.total_interactions || 0
           };
           
           console.log(`📊 Media ${media.id} data comparison:`);
@@ -424,17 +430,42 @@ export async function GET(request: NextRequest) {
           console.log(`   - Generated 24h: ${JSON.stringify(data24h)}`);
           console.log(`   - Generated 7d: ${JSON.stringify(data7d)}`);
 
-          // 重要4指標を計算（実データに基づく適正な計算）
+          // 重要4指標を計算（正しい計算式に修正）
+          
+          // 1. 保存率 = 保存数 ÷ リーチ数
           const saves_rate = data7d.reach > 0 ? ((data7d.saves / data7d.reach) * 100).toFixed(1) : '0.0';
-          const home_rate = (data7d.reach / (userInfo.followers_count || 3) * 100).toFixed(1);  // 上限なし（実データ基準）
+          
+          // 2. ホーム率 = ホーム数 ÷ フォロワー数
+          // 注意: Instagram APIから「ホーム数」は直接取得不可
+          // 以下の推定方法を使用:
+          // - video_viewsがある場合: video_views の一部をホーム閲覧として推定
+          // - engagementがある場合: engagement を基にホーム閲覧を推定  
+          // - 上記がない場合: reach の70%をホーム閲覧として推定（業界標準）
+          let home_views = 0;
+          if (insights.video_views > 0) {
+            // ビデオ再生数の70%がホームからの閲覧と推定
+            home_views = Math.floor(insights.video_views * 0.7);
+          } else if (insights.engagement > 0) {
+            // エンゲージメントベースでホーム閲覧を推定
+            home_views = Math.floor(insights.engagement * 1.5);
+          } else {
+            // リーチの70%をホーム閲覧として推定（最後の手段）
+            home_views = Math.floor(data7d.reach * 0.7);
+          }
+          const home_rate = userInfo.followers_count > 0 ? ((home_views / userInfo.followers_count) * 100).toFixed(1) : '0.0';
+          
+          // 3. プロフィールアクセス率 = プロフアクセス数 ÷ リーチ数  
           const profile_access_rate = data7d.reach > 0 ? ((data7d.profile_views / data7d.reach) * 100).toFixed(1) : '0.0';
+          
+          // 4. フォロワー転換率 = フォロワー増加数 ÷ プロフアクセス数
           const follower_conversion_rate = data7d.profile_views > 0 ? ((data7d.follows / data7d.profile_views) * 100).toFixed(1) : '0.0';
           
           console.log(`📊 Media ${media.id} calculated metrics:`);
-          console.log(`   - Saves Rate: ${saves_rate}%`);
-          console.log(`   - Home Rate: ${home_rate}%`);
-          console.log(`   - Profile Access Rate: ${profile_access_rate}%`);
-          console.log(`   - Follower Conversion Rate: ${follower_conversion_rate}%`);
+          console.log(`   - Saves Rate: ${saves_rate}% (${data7d.saves}/${data7d.reach})`);
+          console.log(`   - Home Rate: ${home_rate}% (${home_views}/${userInfo.followers_count})`);
+          console.log(`   - Profile Access Rate: ${profile_access_rate}% (${data7d.profile_views}/${data7d.reach})`);
+          console.log(`   - Follower Conversion Rate: ${follower_conversion_rate}% (${data7d.follows}/${data7d.profile_views})`);
+          console.log(`   - Home Views Estimation: video_views=${insights.video_views}, engagement=${insights.engagement}, final=${home_views}`);
 
           return {
             id: media.id,
