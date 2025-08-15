@@ -66,11 +66,20 @@ export async function GET(request) {
 
     const accessToken = tokenData.access_token;
 
-    // Step 2: ユーザーのFacebookページ一覧を取得
-    const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?access_token=${accessToken}`);
+    // Step 2: ユーザーのFacebookページ一覧を取得（追加フィールドとデバッグ情報付き）
+    console.log('🔍 Fetching user pages with detailed permissions check...');
+    
+    // まず、現在のユーザー情報を取得
+    const userResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`);
+    const userData = await userResponse.json();
+    console.log('Current user data:', userData);
+    
+    // ページを取得（詳細フィールド付き）
+    const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account&access_token=${accessToken}`);
     const pagesData = await pagesResponse.json();
     
-    console.log('Pages response:', pagesData);
+    console.log('Pages response status:', pagesResponse.status);
+    console.log('Pages response:', JSON.stringify(pagesData, null, 2));
 
     if (pagesData.error) {
       console.error('Pages fetch failed:', pagesData.error);
@@ -81,39 +90,77 @@ export async function GET(request) {
     let instagramToken = null;
     let instagramUserId = null;
 
+    console.log('🔍 Searching for Instagram accounts...');
+    console.log('Available pages count:', pagesData.data?.length || 0);
+
+    // 方法1: Facebookページ経由でInstagramビジネスアカウントを探す
     for (const page of pagesData.data || []) {
       try {
         const pageAccessToken = page.access_token;
+        
+        console.log(`📄 Checking page: ${page.name} (ID: ${page.id})`);
+        console.log(`   - Category: ${page.category}`);
+        console.log(`   - Tasks: ${JSON.stringify(page.tasks)}`);
         
         // ページのInstagramアカウントを確認（Business & Creator両対応）
         const igResponse = await fetch(`https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`);
         const igData = await igResponse.json();
         
-        console.log(`Page ${page.name} (${page.id}) Instagram check:`, igData);
+        console.log(`   - Instagram check result:`, igData);
         
         if (igData.instagram_business_account) {
           instagramToken = pageAccessToken;
           instagramUserId = igData.instagram_business_account.id;
-          console.log('Found Instagram Business Account:', instagramUserId);
+          console.log('✅ Found Instagram Business Account via page:', instagramUserId);
           break;
         } else {
-          console.log(`Page ${page.name} has no Instagram Business Account`);
+          console.log(`   - No Instagram Business Account found for this page`);
         }
       } catch (error) {
-        console.log('Error checking page:', page.name, error.message);
+        console.log(`❌ Error checking page ${page.name}:`, error.message);
         continue;
       }
     }
 
+    // 方法2: 直接個人のInstagramアカウントを確認（ページが見つからない場合）
+    if (!instagramToken && (!pagesData.data || pagesData.data.length === 0)) {
+      console.log('🔍 No pages found, trying direct Instagram user account...');
+      try {
+        // 個人のInstagramアカウント（Creator account）を確認
+        const directIgResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,instagram_business_account&access_token=${accessToken}`);
+        const directIgData = await directIgResponse.json();
+        
+        console.log('Direct Instagram check result:', directIgData);
+        
+        if (directIgData.instagram_business_account) {
+          instagramToken = accessToken;
+          instagramUserId = directIgData.instagram_business_account.id;
+          console.log('✅ Found Instagram Business Account directly:', instagramUserId);
+        }
+      } catch (error) {
+        console.log('❌ Error checking direct Instagram account:', error.message);
+      }
+    }
+
     if (!instagramToken || !instagramUserId) {
-      console.error('No Instagram Business Account found');
-      console.error('Available pages:', pagesData.data?.map(p => ({ name: p.name, id: p.id })));
-      console.error('Debug: Please check:');
-      console.error('1. Instagram account is Business or Creator');
-      console.error('2. Instagram account is connected to Facebook page');
-      console.error('3. User has admin/editor access to the page');
+      console.error('❌ No Instagram Business Account found after all attempts');
+      console.error('📊 Summary:');
+      console.error(`   - Facebook pages found: ${pagesData.data?.length || 0}`);
+      console.error(`   - Pages details:`, pagesData.data?.map(p => ({ name: p.name, id: p.id, category: p.category })));
+      console.error('⚠️ Troubleshooting checklist:');
+      console.error('1. Instagram account must be Business or Creator');
+      console.error('2. Instagram account must be connected to Facebook page');
+      console.error('3. User must have admin/editor access to the Facebook page');
+      console.error('4. Facebook app must have proper permissions');
+      console.error('5. Try switching to Business account in Instagram settings');
       
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=no_instagram_account&message=${encodeURIComponent('Instagram Business/Creator account not found. Please check: 1) Instagram is Business/Creator account, 2) Connected to Facebook page, 3) You have page admin access')}`);
+      const errorMessage = `Instagram Business/Creator account not found. 
+        Found ${pagesData.data?.length || 0} Facebook pages. 
+        Steps to fix: 1) Switch Instagram to Business/Creator account, 
+        2) Connect to Facebook page, 3) Ensure you have page admin access, 
+        4) Try reconnecting`;
+      
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=no_instagram_account&message=${encodeURIComponent(errorMessage)}`);
     }
 
     console.log('✅ Instagram connection successful');

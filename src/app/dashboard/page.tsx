@@ -729,7 +729,7 @@ export default function DashboardPage() {
               onClick={() => {
                 const clientId = '1776291423096614';
                 const redirectUri = encodeURIComponent('https://insta-simple.thorsync.com/api/instagram/callback');
-                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement');
+                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,pages_manage_metadata');
                 
                 const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
                 
