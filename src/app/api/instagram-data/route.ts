@@ -184,7 +184,7 @@ export async function GET(request: NextRequest) {
     // 2. 投稿を取得（期間制限を一時的に無効化 - デバッグ用）
     console.log('📄 Fetching Instagram posts (DEBUG MODE - NO DATE FILTER)...');
 
-    // デバッグ用：期間制限なしで全投稿を取得
+    // デバッグ用：期間制限なしで全投稿を取得（media_typeを含む）
     const mediaResponse = await fetch(
       `https://graph.facebook.com/v21.0/${instagramUserId}/media?fields=id,media_type,media_url,permalink,timestamp,caption,comments_count,like_count&limit=50&access_token=${accessToken}`
     );
@@ -304,11 +304,25 @@ export async function GET(request: NextRequest) {
           // Instagram Media Insights API - 各メトリクスを個別にテスト
           console.log(`🔍 Fetching insights for media ${media.id}...`);
           
-          // 1. 権限確認のため、各メトリクスを個別に取得
-          const metricsToTest = ['impressions', 'reach', 'saved', 'follows', 'profile_visits'];
+          // 1. メディアタイプに応じたメトリクスを選択
+          const mediaType = media.media_type || 'VIDEO'; // VIDEO, IMAGE, CAROUSEL_ALBUM
+          
+          // メディアタイプ別サポートメトリクス
+          let supportedMetrics = ['reach', 'saved']; // 全タイプで共通
+          
+          if (mediaType === 'IMAGE' || mediaType === 'CAROUSEL_ALBUM') {
+            // 写真・カルーセルは追加メトリクスがサポートされる可能性
+            supportedMetrics.push('impressions', 'profile_visits', 'follows');
+          } else if (mediaType === 'VIDEO') {
+            // 動画・リールは限定的
+            // impressions, profile_visits, followsはREELでサポートされない
+          }
+          
+          console.log(`📱 Media ${media.id} type: ${mediaType}, supported metrics: [${supportedMetrics.join(', ')}]`);
+          
           const individualInsights: any = {};
           
-          for (const metric of metricsToTest) {
+          for (const metric of supportedMetrics) {
             try {
               const response = await fetch(
                 `https://graph.facebook.com/v21.0/${media.id}/insights?metric=${metric}&access_token=${accessToken}`
@@ -334,9 +348,10 @@ export async function GET(request: NextRequest) {
             }
           }
           
-          // 従来の一括取得も試行（比較用）
+          // 従来の一括取得も試行（サポートされるメトリクスのみ）
+          const bulkMetrics = supportedMetrics.join(',');
           const insightsResponse = await fetch(
-            `https://graph.facebook.com/v21.0/${media.id}/insights?metric=reach,impressions,saved,profile_visits,follows&access_token=${accessToken}`
+            `https://graph.facebook.com/v21.0/${media.id}/insights?metric=${bulkMetrics}&access_token=${accessToken}`
           );
           const insightsData = await insightsResponse.json();
           
