@@ -238,11 +238,13 @@ export async function GET(request: NextRequest) {
       console.log(`📈 Filtered result: ${filteredPosts.length} posts within last 28 days`);
     }
 
-    // 28日以内に投稿がない場合は、最新の5件を表示（デバッグ用）
-    const postsToProcess = filteredPosts.length > 0 ? filteredPosts : (mediaData.data || []).slice(0, 5);
+    // 投稿の処理方法を決定
+    // - 28日以内の投稿がある場合: 28日以内の投稿を全て処理
+    // - 28日以内の投稿がない場合: 全投稿を処理（最大50件）
+    const postsToProcess = filteredPosts.length > 0 ? filteredPosts : (mediaData.data || []);
 
     console.log(`🔧 Processing ${postsToProcess.length} posts`);
-    console.log(`🔧 Mode: ${filteredPosts.length > 0 ? '28-day filtered posts' : 'latest posts for debugging'}`);
+    console.log(`🔧 Mode: ${filteredPosts.length > 0 ? '28-day filtered posts' : 'all posts (no recent posts)'}`);
 
     if (postsToProcess.length === 0) {
       console.warn('⚠️ No posts found at all - Instagram account may have no posts or API permission issue');
