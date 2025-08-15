@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [aiComments, setAiComments] = useState({});
   const [filterPeriod, setFilterPeriod] = useState('28');
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'desc' });
+  const [errorMessage, setErrorMessage] = useState(null);
 
   // サンプルデータ（15件の一般的なインスタ投稿）
   const samplePosts = [
@@ -420,8 +421,34 @@ export default function DashboardPage() {
       // エラーパラメーターがある場合の処理
       if (error) {
         console.error('Instagram OAuth error:', error);
+        const details = urlParams.get('details');
+        const message = urlParams.get('message');
+        
+        let errorMsg = 'Instagram連携エラー: ';
+        if (error === 'token_failed') {
+          errorMsg += 'アクセストークンの取得に失敗しました。';
+        } else if (error === 'no_instagram_account') {
+          errorMsg += 'Instagramビジネスアカウントまたはクリエイターアカウントが必要です。';
+        } else if (error === 'pages_failed') {
+          errorMsg += 'Facebookページの取得に失敗しました。';
+        } else if (error === 'no_code') {
+          errorMsg += '認証コードが取得できませんでした。';
+        } else {
+          errorMsg += error;
+        }
+        
+        if (details) {
+          errorMsg += ` 詳細: ${decodeURIComponent(details)}`;
+        }
+        if (message) {
+          errorMsg += ` ${decodeURIComponent(message)}`;
+        }
+        
+        setErrorMessage(errorMsg);
         setShowSampleData(true);
         setLoading(false);
+        // URLパラメーターをクリア
+        window.history.replaceState({}, document.title, window.location.pathname);
         return;
       }
 
@@ -655,9 +682,9 @@ export default function DashboardPage() {
           {!hasRealData && (
             <button 
               onClick={() => {
-                const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '1776291423096614';
-                const redirectUri = encodeURIComponent(`${window.location.origin}/api/instagram/callback`);
-                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement');
+                const clientId = '1776291423096614';
+                const redirectUri = encodeURIComponent('https://insta-simple.thorsync.com/api/instagram/callback');
+                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,business_management');
                 
                 const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
                 
@@ -684,6 +711,61 @@ export default function DashboardPage() {
             </button>
           )}
         </div>
+
+        {/* エラーメッセージ表示 */}
+        {errorMessage && (
+          <div style={{
+            background: 'linear-gradient(135deg, #fee2e2, #fecaca)',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '32px',
+            border: '1px solid #ef4444',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '12px'
+          }}>
+            <div style={{
+              background: '#ef4444',
+              color: 'white',
+              borderRadius: '50%',
+              width: '24px',
+              height: '24px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              flexShrink: 0
+            }}>!</div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#991b1b', margin: '0 0 8px 0' }}>
+                {errorMessage}
+              </h3>
+              <p style={{ fontSize: '14px', color: '#7f1d1d', margin: '0 0 12px 0' }}>
+                サンプルデータを表示中です。Instagram連携をするには以下を確認してください：
+              </p>
+              <ul style={{ fontSize: '13px', color: '#7f1d1d', margin: 0, paddingLeft: '20px' }}>
+                <li>Instagramアカウントがビジネスまたはクリエイターアカウントであること</li>
+                <li>FacebookページとInstagramアカウントが連携されていること</li>
+                <li>必要な権限をすべて許可していること</li>
+              </ul>
+            </div>
+            <button
+              onClick={() => setErrorMessage(null)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#991b1b',
+                cursor: 'pointer',
+                fontSize: '20px',
+                padding: '0',
+                lineHeight: '1'
+              }}
+            >
+              ×
+            </button>
+          </div>
+        )}
 
         {/* フォロワー推移 */}
         <div style={{

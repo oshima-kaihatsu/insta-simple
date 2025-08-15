@@ -31,19 +31,28 @@ export async function GET(request) {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body: new URLSearchParams({
-        client_id: process.env.INSTAGRAM_CLIENT_ID,
-        client_secret: process.env.INSTAGRAM_CLIENT_SECRET,
-        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
+        client_id: process.env.INSTAGRAM_CLIENT_ID || '1776291423096614',
+        client_secret: process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a',
+        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI || 'https://insta-simple.thorsync.com/api/instagram/callback',
         code: code,
+        grant_type: 'authorization_code',
       }),
     });
 
     const tokenData = await tokenResponse.json();
+    console.log('Token response status:', tokenResponse.status);
     console.log('Token response:', tokenData);
 
     if (tokenData.error) {
       console.error('Token exchange failed:', tokenData.error);
-      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=token_failed`);
+      console.error('Error details:', {
+        error: tokenData.error,
+        error_description: tokenData.error_description,
+        client_id: process.env.INSTAGRAM_CLIENT_ID,
+        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI,
+        code_length: code?.length
+      });
+      return NextResponse.redirect(`${process.env.NEXTAUTH_URL}/dashboard?error=token_failed&details=${encodeURIComponent(tokenData.error_description || tokenData.error.message || 'Unknown error')}`);
     }
 
     const accessToken = tokenData.access_token;
