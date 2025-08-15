@@ -292,11 +292,56 @@ export async function GET(request: NextRequest) {
           maxConnections: accountCheckResult.maxConnections,
           isBlocked: accountCheckResult.isBlocked,
           warningMessage: accountCheckResult.errorMessage
+        },
+        // 🚀 NEW: 高度なエンゲージメント分析データ
+        advanced_engagement: advancedEngagementData ? {
+          hasAdvancedData: true,
+          engagement_timeline: advancedEngagementData.engagement_rate,
+          impressions_timeline: advancedEngagementData.impressions_timeline,
+          reach_timeline: advancedEngagementData.reach_timeline,
+          profile_views_timeline: advancedEngagementData.profile_views_timeline,
+          // AI分析結果
+          ai_insights: generateAccountLevelAIInsights(advancedEngagementData, postsWithRankings)
+        } : {
+          hasAdvancedData: false,
+          message: 'pages_read_engagement権限でより詳細な分析が可能です'
         }
       };
 
       console.log('✅ Returning response with no posts');
       return NextResponse.json(responseData, { headers });
+    }
+
+    // 🚀 ADVANCED: pages_read_engagement権限でエンゲージメント詳細を取得
+    let advancedEngagementData = null;
+    try {
+      console.log('🔍 Fetching advanced engagement data with pages_read_engagement...');
+      
+      // Instagram Business AccountからPage IDを取得
+      const pageResponse = await fetch(
+        `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,name,followers_count,media_count&access_token=${accessToken}`
+      );
+      const pageData = await pageResponse.json();
+      
+      if (!pageData.error) {
+        // エンゲージメント詳細データを取得
+        const engagementResponse = await fetch(
+          `https://graph.facebook.com/v21.0/${instagramUserId}/insights?metric=engagement,impressions,reach,profile_views&period=day&since=${Math.floor(days28Ago.getTime() / 1000)}&until=${Math.floor(today.getTime() / 1000)}&access_token=${accessToken}`
+        );
+        const engagementData = await engagementResponse.json();
+        
+        if (!engagementData.error && engagementData.data) {
+          advancedEngagementData = {
+            engagement_rate: engagementData.data.find(d => d.name === 'engagement')?.values || [],
+            impressions_timeline: engagementData.data.find(d => d.name === 'impressions')?.values || [],
+            reach_timeline: engagementData.data.find(d => d.name === 'reach')?.values || [],
+            profile_views_timeline: engagementData.data.find(d => d.name === 'profile_views')?.values || []
+          };
+          console.log('✅ Advanced engagement data retrieved:', Object.keys(advancedEngagementData));
+        }
+      }
+    } catch (error) {
+      console.log('⚠️ Advanced engagement data not available:', error);
     }
 
     // 3. 各投稿のインサイトデータを取得
@@ -432,26 +477,49 @@ export async function GET(request: NextRequest) {
           console.log(`   - Generated 24h: ${JSON.stringify(data24h)}`);
           console.log(`   - Generated 7d: ${JSON.stringify(data7d)}`);
 
-          // 重要4指標を計算（正しい計算式に修正）
+          // 🚀 ADVANCED: AIによる高度な指標計算と分析
           
+          // エンゲージメント品質スコア（新機能）
+          const totalEngagement = actualLikes + actualSaves + (media.comments_count || 0);
+          const engagement_quality_score = actualReach > 0 ? 
+            ((totalEngagement / actualReach) * 100 * 
+             (actualSaves > 0 ? 1.5 : 1) * // 保存は高品質の証拠
+             (actualFollows > 0 ? 1.3 : 1)   // フォロー獲得は高品質の証拠
+            ).toFixed(1) : '0.0';
+
+          // バイラル指数（リーチ対フォロワー比率）
+          const viral_index = userInfo.followers_count > 0 ? 
+            ((actualReach / userInfo.followers_count) * 100).toFixed(1) : '0.0';
+
           // 1. 保存率 = 保存数 ÷ リーチ数
           const saves_rate = data7d.reach > 0 ? ((data7d.saves / data7d.reach) * 100).toFixed(1) : '0.0';
           
-          // 2. ホーム率 = ホーム数 ÷ フォロワー数
-          // 注意: Instagram APIから「ホーム数」は直接取得不可
-          // インプレッションベースの推定方法を使用:
+          // 2. 🚀 ADVANCED: ホーム率の精密推定（エンゲージメントデータ活用）
           let home_views = 0;
-          const impressions = insights.impressions || data7d.reach; // インプレッションがない場合はリーチを使用
+          const impressions = insights.impressions || data7d.reach;
           
-          if (mediaType === 'VIDEO') {
-            // リール: インプレッションの25%がホーム（発見タブが多いため）
-            home_views = Math.floor(impressions * 0.25);
-          } else if (mediaType === 'IMAGE' || mediaType === 'CAROUSEL_ALBUM') {
-            // 通常投稿: インプレッションの45%がホーム
-            home_views = Math.floor(impressions * 0.45);
+          // 高度なホーム率推定アルゴリズム
+          if (advancedEngagementData) {
+            // エンゲージメント率に基づく動的推定
+            const avgEngagementRate = parseFloat(engagement_quality_score) || 0;
+            let homeMultiplier = 0.35; // デフォルト
+            
+            if (mediaType === 'VIDEO') {
+              homeMultiplier = avgEngagementRate > 5 ? 0.30 : 0.25; // 高エンゲージメントは発見多め
+            } else if (mediaType === 'IMAGE' || mediaType === 'CAROUSEL_ALBUM') {
+              homeMultiplier = avgEngagementRate > 3 ? 0.50 : 0.45; // 通常投稿はホーム多め
+            }
+            
+            home_views = Math.floor(impressions * homeMultiplier);
           } else {
-            // デフォルト: インプレッションの35%がホーム
-            home_views = Math.floor(impressions * 0.35);
+            // 従来の推定方法
+            if (mediaType === 'VIDEO') {
+              home_views = Math.floor(impressions * 0.25);
+            } else if (mediaType === 'IMAGE' || mediaType === 'CAROUSEL_ALBUM') {
+              home_views = Math.floor(impressions * 0.45);
+            } else {
+              home_views = Math.floor(impressions * 0.35);
+            }
           }
           
           const home_rate = userInfo.followers_count > 0 ? ((home_views / userInfo.followers_count) * 100).toFixed(1) : '0.0';
@@ -461,6 +529,18 @@ export async function GET(request: NextRequest) {
           
           // 4. フォロワー転換率 = フォロワー増加数 ÷ プロフアクセス数
           const follower_conversion_rate = data7d.profile_views > 0 ? ((data7d.follows / data7d.profile_views) * 100).toFixed(1) : '0.0';
+
+          // 🚀 NEW: AI投稿最適化スコア
+          const optimization_score = calculateOptimizationScore({
+            saves_rate: parseFloat(saves_rate),
+            home_rate: parseFloat(home_rate),
+            profile_access_rate: parseFloat(profile_access_rate),
+            follower_conversion_rate: parseFloat(follower_conversion_rate),
+            engagement_quality_score: parseFloat(engagement_quality_score),
+            viral_index: parseFloat(viral_index),
+            mediaType,
+            postDate
+          });
           
           console.log(`📊 Media ${media.id} calculated metrics:`);
           console.log(`   - Saves Rate: ${saves_rate}% (${data7d.saves}/${data7d.reach})`);
@@ -482,7 +562,30 @@ export async function GET(request: NextRequest) {
               home_rate: parseFloat(home_rate),
               profile_access_rate: parseFloat(profile_access_rate),
               follower_conversion_rate: parseFloat(follower_conversion_rate)
-            }
+            },
+            // 🚀 NEW: 高度な分析指標
+            advanced_metrics: {
+              engagement_quality_score: parseFloat(engagement_quality_score),
+              viral_index: parseFloat(viral_index),
+              optimization_score: optimization_score,
+              content_type_performance: {
+                mediaType,
+                relative_performance: optimization_score > 75 ? 'excellent' : 
+                                   optimization_score > 50 ? 'good' : 
+                                   optimization_score > 25 ? 'average' : 'needs_improvement'
+              }
+            },
+            // 🚀 AI投稿最適化提案
+            ai_recommendations: generateAIRecommendations({
+              saves_rate: parseFloat(saves_rate),
+              home_rate: parseFloat(home_rate),
+              profile_access_rate: parseFloat(profile_access_rate),
+              follower_conversion_rate: parseFloat(follower_conversion_rate),
+              engagement_quality_score: parseFloat(engagement_quality_score),
+              viral_index: parseFloat(viral_index),
+              mediaType,
+              optimization_score
+            })
           };
 
         } catch (error) {
@@ -574,6 +677,19 @@ export async function GET(request: NextRequest) {
         maxConnections: accountCheckResult.maxConnections,
         isBlocked: accountCheckResult.isBlocked,
         warningMessage: accountCheckResult.errorMessage
+      },
+      // 🚀 NEW: 高度なエンゲージメント分析データ
+      advanced_engagement: advancedEngagementData ? {
+        hasAdvancedData: true,
+        engagement_timeline: advancedEngagementData.engagement_rate,
+        impressions_timeline: advancedEngagementData.impressions_timeline,
+        reach_timeline: advancedEngagementData.reach_timeline,
+        profile_views_timeline: advancedEngagementData.profile_views_timeline,
+        // AI分析結果
+        ai_insights: generateAccountLevelAIInsights(advancedEngagementData, postsWithRankings)
+      } : {
+        hasAdvancedData: false,
+        message: 'pages_read_engagement権限でより詳細な分析が可能です'
       }
     };
 
@@ -595,6 +711,154 @@ export async function GET(request: NextRequest) {
       }}
     );
   }
+}
+
+// 🚀 AI投稿最適化スコア計算
+function calculateOptimizationScore(metrics: {
+  saves_rate: number;
+  home_rate: number;
+  profile_access_rate: number;
+  follower_conversion_rate: number;
+  engagement_quality_score: number;
+  viral_index: number;
+  mediaType: string;
+  postDate: Date;
+}) {
+  const {
+    saves_rate, home_rate, profile_access_rate, 
+    follower_conversion_rate, engagement_quality_score, viral_index, mediaType
+  } = metrics;
+
+  // 基本スコア（各指標の重み付け）
+  let baseScore = 0;
+  baseScore += Math.min(saves_rate / 3.0 * 25, 25);           // 保存率 (25点満点)
+  baseScore += Math.min(home_rate / 50.0 * 25, 25);          // ホーム率 (25点満点)
+  baseScore += Math.min(profile_access_rate / 3.0 * 25, 25); // プロフアクセス率 (25点満点)
+  baseScore += Math.min(follower_conversion_rate / 8.0 * 25, 25); // フォロワー転換率 (25点満点)
+
+  // ボーナス点
+  let bonusScore = 0;
+  if (engagement_quality_score > 5) bonusScore += 5;  // 高エンゲージメント
+  if (viral_index > 150) bonusScore += 5;            // バイラル性
+  if (mediaType === 'CAROUSEL_ALBUM') bonusScore += 3; // カルーセル優遇
+
+  return Math.min(Math.round(baseScore + bonusScore), 100);
+}
+
+// 🚀 AI投稿最適化提案生成
+function generateAIRecommendations(metrics: {
+  saves_rate: number;
+  home_rate: number;
+  profile_access_rate: number;
+  follower_conversion_rate: number;
+  engagement_quality_score: number;
+  viral_index: number;
+  mediaType: string;
+  optimization_score: number;
+}) {
+  const recommendations = [];
+  const { saves_rate, home_rate, profile_access_rate, follower_conversion_rate, 
+          viral_index, mediaType, optimization_score } = metrics;
+
+  // 保存率改善提案
+  if (saves_rate < 2.0) {
+    recommendations.push({
+      type: 'saves_improvement',
+      priority: 'high',
+      message: '保存率が低めです。より実用的で保存したくなるコンテンツ（ハウツー、リスト、テンプレート等）を心がけましょう。',
+      actionable_tips: [
+        'スワイプ投稿でステップバイステップの解説を作成',
+        'チェックリストや一覧表を画像化',
+        '「保存してあとで見返そう」等のCTAを追加'
+      ]
+    });
+  }
+
+  // ホーム率改善提案
+  if (home_rate < 40.0) {
+    recommendations.push({
+      type: 'home_rate_improvement',
+      priority: 'medium',
+      message: 'フォロワーのホーム画面での表示率を上げるため、フォロワーが最もアクティブな時間帯の投稿を心がけましょう。',
+      actionable_tips: [
+        'インサイトで最適な投稿時間を確認',
+        'フォロワーが関心の高いトピックを分析',
+        'ストーリーズでの事前告知を活用'
+      ]
+    });
+  }
+
+  // バイラル性向上提案
+  if (viral_index < 100) {
+    recommendations.push({
+      type: 'viral_potential',
+      priority: 'medium',
+      message: 'フォロワー外への拡散力を高めるため、発見タブで注目されやすいコンテンツ作りを意識しましょう。',
+      actionable_tips: [
+        'トレンドのハッシュタグを2-3個活用',
+        '業界の話題性の高いテーマを取り入れ',
+        '視覚的にインパクトのある画像・動画を使用'
+      ]
+    });
+  }
+
+  // メディアタイプ別提案
+  if (mediaType === 'IMAGE' && optimization_score < 60) {
+    recommendations.push({
+      type: 'content_format',
+      priority: 'low',
+      message: '画像投稿のパフォーマンスを向上させるため、カルーセル投稿やリール形式も試してみましょう。',
+      actionable_tips: [
+        'カルーセル投稿で情報量を増やす',
+        'リール形式で動きのあるコンテンツに挑戦',
+        'インフォグラフィック形式の画像を作成'
+      ]
+    });
+  }
+
+  return recommendations;
+}
+
+// 🚀 アカウントレベルAI分析
+function generateAccountLevelAIInsights(engagementData: any, posts: any[]) {
+  const insights = {
+    overall_trend: 'stable',
+    best_performing_content_type: 'unknown',
+    optimal_posting_frequency: 'unknown',
+    growth_potential: 'medium',
+    key_recommendations: []
+  };
+
+  if (posts.length > 0) {
+    // コンテンツタイプ別パフォーマンス分析
+    const typePerformance = posts.reduce((acc: any, post: any) => {
+      const type = post.advanced_metrics?.content_type_performance?.mediaType || 'unknown';
+      if (!acc[type]) acc[type] = { count: 0, totalScore: 0 };
+      acc[type].count++;
+      acc[type].totalScore += post.advanced_metrics?.optimization_score || 0;
+      return acc;
+    }, {});
+
+    const bestType = Object.entries(typePerformance)
+      .map(([type, data]: [string, any]) => ({ type, avgScore: data.totalScore / data.count }))
+      .sort((a, b) => b.avgScore - a.avgScore)[0];
+    
+    insights.best_performing_content_type = bestType?.type || 'unknown';
+
+    // 全体的なトレンド分析
+    const avgScore = posts.reduce((sum, post) => sum + (post.advanced_metrics?.optimization_score || 0), 0) / posts.length;
+    insights.growth_potential = avgScore > 70 ? 'high' : avgScore > 50 ? 'medium' : 'low';
+
+    // キー推奨事項
+    if (avgScore < 50) {
+      insights.key_recommendations.push('コンテンツ品質の改善に重点を置きましょう');
+    }
+    if (insights.best_performing_content_type !== 'unknown') {
+      insights.key_recommendations.push(`${insights.best_performing_content_type}形式のコンテンツがよく機能しています`);
+    }
+  }
+
+  return insights;
 }
 
 // ランキング計算関数
