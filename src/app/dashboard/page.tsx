@@ -181,6 +181,11 @@ export default function DashboardPage() {
   // 現在のフォロワー数を計算
   const currentFollowers = instagramData?.profile?.followers_count || 8634;
   
+  // 使用するデータの決定
+  const postsData = instagramData?.posts || (showSampleData ? samplePosts : []);
+  const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
+  const hasRealData = instagramData !== null;
+  
   // フォロワー履歴から初期フォロワー数を取得
   const getInitialFollowers = () => {
     if (hasRealData && instagramData?.follower_history?.data && instagramData.follower_history.data.length > 0) {
@@ -190,11 +195,6 @@ export default function DashboardPage() {
   };
   
   const initialFollowers = getInitialFollowers();
-
-  // 使用するデータの決定
-  const postsData = instagramData?.posts || (showSampleData ? samplePosts : []);
-  const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
-  const hasRealData = instagramData !== null;
   
   // followerDataがnullの場合のセーフガード
   const safeFollowerData = followerData || { data: [], labels: [] };
@@ -219,24 +219,28 @@ export default function DashboardPage() {
 
   // 重要4指標の計算（完全修正版）
   const calculateMetrics = (post) => {
-    if (hasRealData && post.insights) {
-      // 実データの場合 - 厳格にチェック
-      const reach = parseInt(post.insights.reach) || 0;
-      const saves = parseInt(post.insights.saved || post.insights.saves) || 0; // savedもチェック
-      const profile_views = parseInt(post.insights.profile_visits || post.insights.profile_views) || 0; // profile_visitsもチェック
-      const follows = parseInt(post.insights.follows) || 0;
+    console.log('calculateMetrics - Input post:', { hasRealData, postKeys: Object.keys(post), post });
+    console.log('calculateMetrics - Current followers:', currentFollowers, 'Instagram data:', instagramData?.profile);
+    
+    if (hasRealData && (post.insights || post.data_7d)) {
+      // 実データの場合 - data_7dまたはinsightsから取得
+      const dataSource = post.data_7d || post.insights || {};
+      const reach = parseInt(dataSource.reach) || 0;
+      const saves = parseInt(dataSource.saved || dataSource.saves) || 0;
+      const profile_views = parseInt(dataSource.profile_visits || dataSource.profile_views) || 0;
+      const follows = parseInt(dataSource.follows) || 0;
       
-      console.log('calculateMetrics - Real data:', { reach, saves, profile_views, follows, postId: post.id });
+      console.log('calculateMetrics - Real data extracted:', { reach, saves, profile_views, follows, postId: post.id, dataSource });
       
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
       const home_rate = currentFollowers > 0 && reach > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((follows / profile_views) * 100).toFixed(1) : '0.0';
       
-      console.log('calculateMetrics - Calculated rates:', { saves_rate, home_rate, profile_access_rate, follower_conversion_rate });
+      console.log('calculateMetrics - Calculated rates:', { saves_rate, home_rate, profile_access_rate, follower_conversion_rate, currentFollowers, reach });
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
-    } else if (post.data_7d) {
+    } else if (!hasRealData && post.data_7d) {
       // サンプルデータの場合も厳格にチェック
       const reach = post.data_7d.reach || 0;
       const saves = post.data_7d.saves || 0;
@@ -268,13 +272,14 @@ export default function DashboardPage() {
     let home_reach_sum = 0;
 
     posts.forEach(post => {
-      if (hasRealData && post.insights) {
-        total_reach += parseInt(post.insights.reach) || 0;
-        total_saves += parseInt(post.insights.saves) || 0;
-        total_profile_views += parseInt(post.insights.profile_views) || 0;
-        total_follows += parseInt(post.insights.follows) || 0;
-        home_reach_sum += parseInt(post.insights.reach) || 0;
-      } else if (post.data_7d) {
+      if (hasRealData && (post.insights || post.data_7d)) {
+        const dataSource = post.data_7d || post.insights || {};
+        total_reach += parseInt(dataSource.reach) || 0;
+        total_saves += parseInt(dataSource.saved || dataSource.saves) || 0;
+        total_profile_views += parseInt(dataSource.profile_visits || dataSource.profile_views) || 0;
+        total_follows += parseInt(dataSource.follows) || 0;
+        home_reach_sum += parseInt(dataSource.reach) || 0;
+      } else if (!hasRealData && post.data_7d) {
         total_reach += post.data_7d.reach || 0;
         total_saves += post.data_7d.saves || 0;
         total_profile_views += post.data_7d.profile_views || 0;

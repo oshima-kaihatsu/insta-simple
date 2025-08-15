@@ -100,6 +100,32 @@ export async function GET(request: NextRequest) {
 
     console.log('📱 Proceeding with Instagram API call...');
 
+    // 🔍 アクセストークンの権限確認
+    try {
+      console.log('🔐 Checking access token permissions...');
+      const permissionsResponse = await fetch(
+        `https://graph.facebook.com/v21.0/me/permissions?access_token=${accessToken}`
+      );
+      const permissionsData = await permissionsResponse.json();
+      
+      if (permissionsData.data) {
+        console.log('📋 Current permissions:');
+        permissionsData.data.forEach((perm: any) => {
+          console.log(`   ${perm.status === 'granted' ? '✅' : '❌'} ${perm.permission}: ${perm.status}`);
+        });
+        
+        const hasInsightsPermission = permissionsData.data.some(
+          (perm: any) => perm.permission === 'instagram_manage_insights' && perm.status === 'granted'
+        );
+        
+        if (!hasInsightsPermission) {
+          console.warn('⚠️ instagram_manage_insights権限が付与されていません。一部のインサイトデータが取得できない可能性があります。');
+        }
+      }
+    } catch (permError) {
+      console.error('⚠️ 権限確認でエラー:', permError);
+    }
+
     // 1. Instagram Business Account情報を取得
     const userResponse = await fetch(
       `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,media_count,followers_count&access_token=${accessToken}`
@@ -275,50 +301,125 @@ export async function GET(request: NextRequest) {
     const postsWithInsights = await Promise.all(
       postsToProcess.map(async (media: any, index: number) => {
         try {
-          // Instagram Media Insights API
+          // Instagram Media Insights API - 各メトリクスを個別にテスト
+          console.log(`🔍 Fetching insights for media ${media.id}...`);
+          
+          // 1. 権限確認のため、各メトリクスを個別に取得
+          const metricsToTest = ['impressions', 'reach', 'saved', 'follows', 'profile_visits'];
+          const individualInsights: any = {};
+          
+          for (const metric of metricsToTest) {
+            try {
+              const response = await fetch(
+                `https://graph.facebook.com/v21.0/${media.id}/insights?metric=${metric}&access_token=${accessToken}`
+              );
+              const data = await response.json();
+              
+              if (data.data && data.data.length > 0) {
+                individualInsights[metric] = data.data[0].values?.[0]?.value || 0;
+                console.log(`✅ ${metric}: ${individualInsights[metric]}`);
+              } else if (data.error) {
+                console.error(`❌ ${metric}: ${data.error.message} (Code: ${data.error.code})`);
+                if (data.error.code === 10) {
+                  console.error(`   ⚠️ 権限不足: instagram_manage_insights権限が必要です`);
+                }
+                individualInsights[metric] = 0;
+              } else {
+                console.log(`⚠️ ${metric}: データなし`);
+                individualInsights[metric] = 0;
+              }
+            } catch (error) {
+              console.error(`❌ ${metric}: ネットワークエラー`, error);
+              individualInsights[metric] = 0;
+            }
+          }
+          
+          // 従来の一括取得も試行（比較用）
           const insightsResponse = await fetch(
             `https://graph.facebook.com/v21.0/${media.id}/insights?metric=reach,impressions,saved,profile_visits,follows&access_token=${accessToken}`
           );
           const insightsData = await insightsResponse.json();
+          
+          console.log(`📊 Media ${media.id} bulk insights API status:`, insightsResponse.status);
+          if (insightsData.error) {
+            console.error(`📊 Media ${media.id} bulk insights API error:`, insightsData.error);
+          } else {
+            console.log(`📊 Media ${media.id} bulk insights successful:`, insightsData.data?.length || 0, 'metrics');
+          }
 
-          // インサイトデータを整理
-          const insights: any = {};
+          // インサイトデータを整理（個別取得を優先）
+          const insights: any = { ...individualInsights };
           if (insightsData.data) {
             insightsData.data.forEach((insight: any) => {
-              insights[insight.name] = insight.values?.[0]?.value || 0;
+              // 個別取得でエラーだった場合のみ一括取得の値を使用
+              if (insights[insight.name] === 0) {
+                insights[insight.name] = insight.values?.[0]?.value || 0;
+              }
             });
           }
 
-          console.log(`Media ${media.id} insights:`, insights);
+          console.log(`📊 Media ${media.id} RAW insights response:`, insightsData);
+          console.log(`📊 Media ${media.id} processed insights:`, insights);
+
+          // インサイトデータを正規化
+          const normalizedInsights = {
+            reach: insights.reach || 0,
+            saved: insights.saved || insights.saves || 0,
+            profile_visits: insights.profile_visits || insights.profile_views || 0,
+            follows: insights.follows || 0,
+            impressions: insights.impressions || 0
+          };
+          
+          console.log(`📊 Media ${media.id} normalized insights:`, normalizedInsights);
 
           // 投稿日時を基準に24時間後と1週間後のデータを算出
           const postDate = new Date(media.timestamp);
           const now = new Date();
           const hoursElapsed = Math.floor((now.getTime() - postDate.getTime()) / (1000 * 60 * 60));
           
-          // 24時間後データ（実際のデータがある場合は24時間時点の推定値）
+          // 実際のAPIデータのみ使用（ランダム値なし）
+          const actualReach = insights.reach || 0;
+          const actualLikes = media.like_count || 0;
+          const actualSaves = insights.saved || 0;
+          const actualProfileVisits = insights.profile_visits || 0;
+          const actualFollows = insights.follows || 0;
+          
+          // 24時間後データ（実データの65%と推定）
           const data24h = {
-            reach: Math.floor((insights.reach || Math.random() * 2000 + 1000) * 0.65),
-            likes: Math.floor((media.like_count || Math.random() * 150 + 50) * 0.7),
-            saves: Math.floor((insights.saved || Math.random() * 80 + 20) * 0.6),
-            profile_views: Math.floor((insights.profile_visits || Math.random() * 60 + 30) * 0.7),
-            follows: Math.floor((insights.follows || Math.random() * 10 + 2) * 0.6)
+            reach: Math.floor(actualReach * 0.65),
+            likes: Math.floor(actualLikes * 0.7),
+            saves: Math.floor(actualSaves * 0.6),
+            profile_views: Math.floor(actualProfileVisits * 0.7),
+            follows: Math.floor(actualFollows * 0.6)
           };
 
-          // 1週間後データ（最終データ）
+          // 1週間後データ（実際のAPIデータそのまま）
           const data7d = {
-            reach: insights.reach || Math.floor(Math.random() * 3000) + 1500,
-            likes: media.like_count || Math.floor(Math.random() * 200) + 100,
-            saves: insights.saved || Math.floor(Math.random() * 120) + 30,
-            profile_views: insights.profile_visits || Math.floor(Math.random() * 80) + 40,
-            follows: insights.follows || Math.floor(Math.random() * 15) + 2
+            reach: actualReach,
+            likes: actualLikes,
+            saves: actualSaves,
+            profile_views: actualProfileVisits,
+            follows: actualFollows
           };
+          
+          console.log(`📊 Media ${media.id} data comparison:`);
+          console.log(`   - Raw API reach: ${insights.reach}`);
+          console.log(`   - Raw API likes: ${media.like_count}`);
+          console.log(`   - Raw API saves: ${insights.saved}`);
+          console.log(`   - Generated 24h: ${JSON.stringify(data24h)}`);
+          console.log(`   - Generated 7d: ${JSON.stringify(data7d)}`);
 
-          // 重要4指標を計算
+          // 重要4指標を計算（実データに基づく適正な計算）
           const saves_rate = data7d.reach > 0 ? ((data7d.saves / data7d.reach) * 100).toFixed(1) : '0.0';
-          const home_rate = Math.min(((data7d.reach * 0.7) / (userInfo.followers_count || 8634) * 100), 100).toFixed(1);
+          const home_rate = (data7d.reach / (userInfo.followers_count || 3) * 100).toFixed(1);  // 上限なし（実データ基準）
           const profile_access_rate = data7d.reach > 0 ? ((data7d.profile_views / data7d.reach) * 100).toFixed(1) : '0.0';
           const follower_conversion_rate = data7d.profile_views > 0 ? ((data7d.follows / data7d.profile_views) * 100).toFixed(1) : '0.0';
+          
+          console.log(`📊 Media ${media.id} calculated metrics:`);
+          console.log(`   - Saves Rate: ${saves_rate}%`);
+          console.log(`   - Home Rate: ${home_rate}%`);
+          console.log(`   - Profile Access Rate: ${profile_access_rate}%`);
+          console.log(`   - Follower Conversion Rate: ${follower_conversion_rate}%`);
 
           return {
             id: media.id,
@@ -339,7 +440,7 @@ export async function GET(request: NextRequest) {
         } catch (error) {
           console.error(`Failed to get insights for media ${media.id}:`, error);
           
-          // エラーの場合はダミーデータを返す
+          // エラーの場合は0値を返す（実データなし）
           const postDate = new Date(media.timestamp);
           return {
             id: media.id,
@@ -347,24 +448,31 @@ export async function GET(request: NextRequest) {
             date: postDate.toLocaleDateString('ja-JP'),
             permalink: media.permalink,
             data_24h: {
-              reach: Math.floor(Math.random() * 1500) + 800,
-              likes: Math.floor(Math.random() * 100) + 40,
-              saves: Math.floor(Math.random() * 60) + 15,
-              profile_views: Math.floor(Math.random() * 50) + 20,
-              follows: Math.floor(Math.random() * 8) + 1
+              reach: 0,
+              likes: 0,
+              saves: 0,
+              profile_views: 0,
+              follows: 0
             },
             data_7d: {
-              reach: Math.floor(Math.random() * 2500) + 1200,
-              likes: Math.floor(Math.random() * 150) + 70,
-              saves: Math.floor(Math.random() * 100) + 25,
-              profile_views: Math.floor(Math.random() * 70) + 30,
-              follows: Math.floor(Math.random() * 12) + 2
+              reach: 0,
+              likes: 0,
+              saves: 0,
+              profile_views: 0,
+              follows: 0
+            },
+            insights: {
+              reach: 0,
+              saved: 0,
+              profile_visits: 0,
+              follows: 0,
+              impressions: 0
             },
             calculated_metrics: {
-              saves_rate: parseFloat((Math.random() * 8).toFixed(1)),
-              home_rate: parseFloat((Math.random() * 60 + 20).toFixed(1)),
-              profile_access_rate: parseFloat((Math.random() * 12).toFixed(1)),
-              follower_conversion_rate: parseFloat((Math.random() * 20).toFixed(1))
+              saves_rate: 0.0,
+              home_rate: 0.0,
+              profile_access_rate: 0.0,
+              follower_conversion_rate: 0.0
             }
           };
         }
