@@ -23,7 +23,6 @@ import {
   Zap,
   Target,
   Lightbulb,
-  TrendingDown,
   AlertCircle,
   CheckCircle,
   Award,
@@ -1035,7 +1034,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 🚀 NEW: 高度なAI分析ダッシュボード */}
-        {instagramData?.advanced_engagement?.hasAdvancedData && (
+        {false && instagramData?.advanced_engagement?.hasAdvancedData && (
           <div style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 243, 0.98) 100%)',
             borderRadius: '20px',
@@ -1272,12 +1271,6 @@ export default function DashboardPage() {
                   <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
                     重要4指標
                   </th>
-                  <th style={{ padding: '16px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
-                      <Brain size={16} style={{ color: '#c79a42' }} />
-                      AI分析
-                    </div>
-                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -1407,95 +1400,11 @@ export default function DashboardPage() {
                           })()}
                         </div>
                       </td>
-                      {/* 🚀 NEW: AI分析セル */}
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px' }}>
-                          {/* AI最適化スコア */}
-                          <div style={{
-                            padding: '8px 12px',
-                            marginBottom: '8px',
-                            borderRadius: '12px',
-                            background: (post.advanced_metrics?.optimization_score || 75) >= 75 ? 
-                              'linear-gradient(135deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.1) 100%)' :
-                              (post.advanced_metrics?.optimization_score || 75) >= 50 ?
-                              'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)' :
-                              'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.1) 100%)',
-                            color: (post.advanced_metrics?.optimization_score || 75) >= 75 ? '#16a34a' :
-                                   (post.advanced_metrics?.optimization_score || 75) >= 50 ? '#d97706' : '#dc2626',
-                            fontWeight: '700',
-                            fontSize: '14px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                              <Activity size={14} />
-                              AI最適化: {post.advanced_metrics?.optimization_score || Math.floor(Math.random() * 40) + 50}/100
-                            </div>
-                          </div>
-                          
-                          {/* エンゲージメント品質 */}
-                          <div style={{
-                            padding: '6px 8px',
-                            marginBottom: '6px',
-                            borderRadius: '8px',
-                            background: 'rgba(168, 85, 247, 0.1)',
-                            color: '#7c3aed',
-                            fontWeight: '600',
-                            fontSize: '11px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                              <Star size={12} />
-                              品質: {post.advanced_metrics?.engagement_quality_score?.toFixed(1) || (Math.random() * 3 + 2).toFixed(1)}
-                            </div>
-                          </div>
-                          
-                          {/* バイラル指数 */}
-                          <div style={{
-                            padding: '6px 8px',
-                            marginBottom: '6px',
-                            borderRadius: '8px',
-                            background: 'rgba(59, 130, 246, 0.1)',
-                            color: '#2563eb',
-                            fontWeight: '600',
-                            fontSize: '11px'
-                          }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'center' }}>
-                              <Zap size={12} />
-                              バイラル: {post.advanced_metrics?.viral_index?.toFixed(0) || Math.floor(Math.random() * 100 + 50)}%
-                            </div>
-                          </div>
-                          
-                          {/* AI推奨事項 */}
-                          {post.ai_recommendations?.length > 0 && (
-                            <div style={{
-                              marginTop: '8px',
-                              padding: '6px 8px',
-                              borderRadius: '8px',
-                              background: 'rgba(199, 154, 66, 0.1)',
-                              border: '1px solid rgba(199, 154, 66, 0.2)'
-                            }}>
-                              <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: '4px', 
-                                marginBottom: '4px',
-                                color: '#b8873b',
-                                fontWeight: '600',
-                                fontSize: '10px'
-                              }}>
-                                <Lightbulb size={10} />
-                                AI提案 ({post.ai_recommendations.length}件)
-                              </div>
-                              <div style={{ fontSize: '9px', color: '#666', lineHeight: '1.2' }}>
-                                {post.ai_recommendations[0]?.message?.substring(0, 30)}...
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </td>
                     </tr>
                   );
                 }) : (
                   <tr>
-                    <td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+                    <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
                       <MessageSquare size={48} style={{ margin: '0 auto 16px', color: '#ccc' }} />
                       <p>表示する投稿データがありません</p>
                     </td>
@@ -1615,6 +1524,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 🚀 NEW: 競合分析・ベンチマーク */}
+        {false && (
         <div style={{
           background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 243, 0.98) 100%)',
           borderRadius: '20px',
@@ -1922,6 +1832,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        )}
 
       </div>
     </div>
