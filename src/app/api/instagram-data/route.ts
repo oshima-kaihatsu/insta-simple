@@ -327,6 +327,7 @@ export async function GET(request: NextRequest) {
             permalink: media.permalink,
             data_24h: data24h,
             data_7d: data7d,
+            insights: normalizedInsights,
             calculated_metrics: {
               saves_rate: parseFloat(saves_rate),
               home_rate: parseFloat(home_rate),

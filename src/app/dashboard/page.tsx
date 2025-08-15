@@ -180,6 +180,16 @@ export default function DashboardPage() {
 
   // 現在のフォロワー数を計算
   const currentFollowers = instagramData?.profile?.followers_count || 8634;
+  
+  // フォロワー履歴から初期フォロワー数を取得
+  const getInitialFollowers = () => {
+    if (hasRealData && instagramData?.follower_history?.data && instagramData.follower_history.data.length > 0) {
+      return instagramData.follower_history.data[0].followers;
+    }
+    return 8234; // サンプルデータの初期値
+  };
+  
+  const initialFollowers = getInitialFollowers();
 
   // 使用するデータの決定
   const postsData = instagramData?.posts || (showSampleData ? samplePosts : []);
@@ -212,14 +222,18 @@ export default function DashboardPage() {
     if (hasRealData && post.insights) {
       // 実データの場合 - 厳格にチェック
       const reach = parseInt(post.insights.reach) || 0;
-      const saves = parseInt(post.insights.saves) || 0;
-      const profile_views = parseInt(post.insights.profile_views) || 0;
+      const saves = parseInt(post.insights.saved || post.insights.saves) || 0; // savedもチェック
+      const profile_views = parseInt(post.insights.profile_visits || post.insights.profile_views) || 0; // profile_visitsもチェック
       const follows = parseInt(post.insights.follows) || 0;
+      
+      console.log('calculateMetrics - Real data:', { reach, saves, profile_views, follows, postId: post.id });
       
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
       const home_rate = currentFollowers > 0 && reach > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((follows / profile_views) * 100).toFixed(1) : '0.0';
+      
+      console.log('calculateMetrics - Calculated rates:', { saves_rate, home_rate, profile_access_rate, follower_conversion_rate });
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     } else if (post.data_7d) {
@@ -799,17 +813,51 @@ export default function DashboardPage() {
             </div>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '8px' }}>28日間増減</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>+{(currentFollowers - 8234).toLocaleString()}</p>
+              {(() => {
+                const change = currentFollowers - initialFollowers;
+                const isPositive = change >= 0;
+                return (
+                  <p style={{ 
+                    fontSize: '32px', 
+                    fontWeight: '700', 
+                    color: isPositive ? '#52c41a' : '#ef4444' 
+                  }}>
+                    {isPositive ? '+' : ''}{change.toLocaleString()}
+                  </p>
+                );
+              })()}
             </div>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '8px' }}>1日平均増減</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>+{Math.round((currentFollowers - 8234) / 28)}</p>
+              {(() => {
+                const dailyChange = Math.round((currentFollowers - initialFollowers) / 28);
+                const isPositive = dailyChange >= 0;
+                return (
+                  <p style={{ 
+                    fontSize: '32px', 
+                    fontWeight: '700', 
+                    color: isPositive ? '#52c41a' : '#ef4444' 
+                  }}>
+                    {isPositive ? '+' : ''}{dailyChange}
+                  </p>
+                );
+              })()}
             </div>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '8px' }}>成長率</p>
-              <p style={{ fontSize: '32px', fontWeight: '700', color: '#52c41a' }}>
-                {(((currentFollowers - 8234) / 8234) * 100).toFixed(1)}%
-              </p>
+              {(() => {
+                const growthRate = initialFollowers > 0 ? (((currentFollowers - initialFollowers) / initialFollowers) * 100).toFixed(1) : '0.0';
+                const isPositive = parseFloat(growthRate) >= 0;
+                return (
+                  <p style={{ 
+                    fontSize: '32px', 
+                    fontWeight: '700', 
+                    color: isPositive ? '#52c41a' : '#ef4444' 
+                  }}>
+                    {isPositive ? '+' : ''}{growthRate}%
+                  </p>
+                );
+              })()}
             </div>
           </div>
           
