@@ -2,6 +2,9 @@ import { NextRequest } from 'next/server';
 import { rateLimiter } from '@/utils/rateLimiter';
 import { getClientIP } from '@/utils/getClientIP';
 
+// Dynamic routeに設定
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // 🚨 レート制限チェック（connectは厳しめに制限）

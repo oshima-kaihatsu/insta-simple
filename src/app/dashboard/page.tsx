@@ -1034,7 +1034,7 @@ export default function DashboardPage() {
         </div>
 
         {/* 🚀 NEW: 高度なAI分析ダッシュボード */}
-        {false && instagramData?.advanced_engagement?.hasAdvancedData && (
+        {instagramData?.advanced_engagement?.hasAdvancedData && (
           <div style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 246, 243, 0.98) 100%)',
             borderRadius: '20px',
