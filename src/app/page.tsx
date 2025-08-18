@@ -213,17 +213,46 @@ export default function HomePage() {
 
         @media (max-width: 768px) {
           .hero h1 {
-            font-size: 48px !important;
+            font-size: 36px !important;
           }
           .hero-body {
-            font-size: 18px !important;
+            font-size: 16px !important;
           }
           .btn-primary {
             width: 100%;
             max-width: 300px;
+            padding: 14px 28px;
+            font-size: 16px;
+          }
+          .btn-secondary {
+            padding: 12px 24px;
+            font-size: 14px;
           }
           .grid-responsive {
             grid-template-columns: 1fr;
+          }
+          
+          /* ヘッダー専用のモバイル対応 */
+          .header-nav {
+            flex-direction: column !important;
+            gap: 16px !important;
+            align-items: center !important;
+          }
+          
+          .header-logo {
+            font-size: 24px !important;
+          }
+          
+          .header-buttons {
+            width: 100% !important;
+            justify-content: center !important;
+            gap: 12px !important;
+          }
+          
+          .header-buttons button,
+          .header-buttons a {
+            padding: 10px 20px !important;
+            font-size: 14px !important;
           }
         }
       `}</style>
@@ -241,7 +270,7 @@ export default function HomePage() {
           borderBottom: '1px solid rgba(199, 154, 66, 0.2)',
           boxShadow: '0 4px 20px rgba(199, 154, 66, 0.1)'
         }}>
-          <nav style={{
+          <nav className="header-nav" style={{
             maxWidth: '1200px',
             margin: '0 auto',
             padding: '0 20px',
@@ -249,7 +278,7 @@ export default function HomePage() {
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <div style={{
+            <div className="header-logo" style={{
               fontSize: '32px',
               fontWeight: '800',
               background: 'linear-gradient(135deg, #c79a42, #b8873b)',
@@ -259,7 +288,7 @@ export default function HomePage() {
             }}>
               InstaSimple Analytics
             </div>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <div className="header-buttons" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <button
                 onClick={scrollToPricing}
                 disabled={!!loading}
