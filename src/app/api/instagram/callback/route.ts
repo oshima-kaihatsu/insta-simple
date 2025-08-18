@@ -263,11 +263,17 @@ export async function GET(request) {
     }
 
     console.log('✅ Instagram connection successful');
+    console.log('Access Token:', instagramToken ? 'Present' : 'Missing');
+    console.log('Instagram User ID:', instagramUserId);
     
     // ダッシュボードにリダイレクト（アクセストークンとユーザーIDを含む）
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/dashboard?access_token=${instagramToken}&instagram_user_id=${instagramUserId}&success=true`
-    );
+    const dashboardUrl = new URL('/dashboard', process.env.NEXTAUTH_URL);
+    dashboardUrl.searchParams.set('access_token', instagramToken);
+    dashboardUrl.searchParams.set('instagram_user_id', instagramUserId);
+    dashboardUrl.searchParams.set('success', 'true');
+    
+    console.log('Redirecting to:', dashboardUrl.toString());
+    return NextResponse.redirect(dashboardUrl.toString());
 
   } catch (error) {
     console.error('Callback error:', error);
