@@ -727,14 +727,7 @@ export default function DashboardPage() {
           {!hasRealData && (
             <button 
               onClick={() => {
-                const clientId = '1776291423096614';
-                const redirectUri = encodeURIComponent('https://insta-simple.thorsync.com/api/instagram/callback');
-                const scope = encodeURIComponent('instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement,pages_manage_metadata');
-                
-                const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&response_type=code`;
-                
-                console.log('Instagram auth URL:', authUrl);
-                window.location.href = authUrl;
+                window.location.href = '/api/instagram/connect';
               }}
               style={{
                 background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
