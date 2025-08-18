@@ -3,11 +3,13 @@
 import { useSession, signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
+import { Menu, X } from 'lucide-react';
 
 export default function HomePage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pricingRef = useRef<HTMLElement>(null);
 
   // スクロールアニメーション
@@ -211,6 +213,53 @@ export default function HomePage() {
           box-shadow: 0 8px 20px rgba(199, 154, 66, 0.2);
         }
 
+        /* ハンバーガーメニュー */
+        .hamburger-menu {
+          display: none;
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 8px;
+          z-index: 1002;
+        }
+        
+        .mobile-menu {
+          position: fixed;
+          top: 0;
+          right: -100%;
+          width: 80%;
+          max-width: 320px;
+          height: 100vh;
+          background: linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 100%);
+          box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+          transition: right 0.3s ease;
+          z-index: 1001;
+          padding: 80px 20px 20px;
+          overflow-y: auto;
+        }
+        
+        .mobile-menu.open {
+          right: 0;
+        }
+        
+        .menu-overlay {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.5);
+          opacity: 0;
+          visibility: hidden;
+          transition: all 0.3s ease;
+          z-index: 1000;
+        }
+        
+        .menu-overlay.open {
+          opacity: 1;
+          visibility: visible;
+        }
+        
         @media (max-width: 768px) {
           .hero h1 {
             font-size: 36px !important;
@@ -234,25 +283,23 @@ export default function HomePage() {
           
           /* ヘッダー専用のモバイル対応 */
           .header-nav {
-            flex-direction: column !important;
-            gap: 16px !important;
-            align-items: center !important;
+            justify-content: space-between !important;
           }
           
           .header-logo {
-            font-size: 24px !important;
+            font-size: 18px !important;
+            max-width: 33% !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
           }
           
           .header-buttons {
-            width: 100% !important;
-            justify-content: center !important;
-            gap: 12px !important;
+            display: none !important;
           }
           
-          .header-buttons button,
-          .header-buttons a {
-            padding: 10px 20px !important;
-            font-size: 14px !important;
+          .hamburger-menu {
+            display: block !important;
           }
         }
       `}</style>
@@ -286,8 +333,10 @@ export default function HomePage() {
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text'
             }}>
-              InstaSimple Analytics
+              InstaSimple
             </div>
+            
+            {/* デスクトップ用ボタン */}
             <div className="header-buttons" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <button
                 onClick={scrollToPricing}
@@ -313,8 +362,120 @@ export default function HomePage() {
                 ダッシュボード
               </button>
             </div>
+            
+            {/* モバイル用ハンバーガーメニュー */}
+            <button 
+              className="hamburger-menu"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="メニュー"
+            >
+              {isMenuOpen ? <X size={28} color="#c79a42" /> : <Menu size={28} color="#c79a42" />}
+            </button>
           </nav>
         </header>
+
+        {/* モバイルメニュー */}
+        <div className={`menu-overlay ${isMenuOpen ? 'open' : ''}`} onClick={() => setIsMenuOpen(false)} />
+        <div className={`mobile-menu ${isMenuOpen ? 'open' : ''}`}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '24px'
+          }}>
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                scrollToPricing();
+              }}
+              disabled={!!loading}
+              className="btn-primary"
+              style={{ 
+                width: '100%',
+                padding: '16px 24px', 
+                fontSize: '16px'
+              }}
+            >
+              {loading ? '処理中...' : '14日間無料体験'}
+            </button>
+            
+            <button
+              onClick={() => {
+                setIsMenuOpen(false);
+                handleDashboard();
+              }}
+              className="btn-secondary"
+              style={{ 
+                width: '100%',
+                padding: '16px 24px', 
+                fontSize: '16px'
+              }}
+            >
+              ダッシュボード
+            </button>
+            
+            <div style={{
+              borderTop: '1px solid rgba(199, 154, 66, 0.2)',
+              paddingTop: '20px',
+              marginTop: '20px'
+            }}>
+              <p style={{
+                fontSize: '14px',
+                color: '#666',
+                marginBottom: '16px'
+              }}>
+                メニュー
+              </p>
+              <ul style={{
+                listStyle: 'none',
+                padding: 0,
+                margin: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <li>
+                  <a href="#features" 
+                     onClick={() => setIsMenuOpen(false)}
+                     style={{
+                       color: '#5d4e37',
+                       textDecoration: 'none',
+                       fontSize: '16px',
+                       display: 'block',
+                       padding: '8px 0'
+                     }}>
+                    機能紹介
+                  </a>
+                </li>
+                <li>
+                  <a href="#pricing" 
+                     onClick={() => setIsMenuOpen(false)}
+                     style={{
+                       color: '#5d4e37',
+                       textDecoration: 'none',
+                       fontSize: '16px',
+                       display: 'block',
+                       padding: '8px 0'
+                     }}>
+                    料金プラン
+                  </a>
+                </li>
+                <li>
+                  <a href="#about" 
+                     onClick={() => setIsMenuOpen(false)}
+                     style={{
+                       color: '#5d4e37',
+                       textDecoration: 'none',
+                       fontSize: '16px',
+                       display: 'block',
+                       padding: '8px 0'
+                     }}>
+                    お問い合わせ
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
         {/* Hero Section */}
         <section className="hero" style={{
