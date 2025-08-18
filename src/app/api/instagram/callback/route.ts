@@ -86,11 +86,42 @@ export async function GET(request) {
     console.log('User permissions:', JSON.stringify(permissionsData, null, 2));
     
     // ページを取得（詳細フィールド付き + 権限チェック）
+    // まず通常のaccountsエンドポイント
     const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account,perms&access_token=${accessToken}`);
     const pagesData = await pagesResponse.json();
     
     console.log('Pages response status:', pagesResponse.status);
     console.log('Pages response:', JSON.stringify(pagesData, null, 2));
+    
+    // ページが見つからない場合、別の方法を試す
+    if (!pagesData.data || pagesData.data.length === 0) {
+      console.log('🔍 No pages found via /me/accounts, trying /me/businesses...');
+      
+      // Business Managerから取得を試みる
+      const businessResponse = await fetch(`https://graph.facebook.com/v21.0/me/businesses?fields=id,name&access_token=${accessToken}`);
+      const businessData = await businessResponse.json();
+      console.log('Business response:', JSON.stringify(businessData, null, 2));
+      
+      // Instagram Business Accountを直接取得する試み
+      console.log('🔍 Trying direct Instagram Business Account lookup...');
+      const igBusinessResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=accounts{id,name,instagram_business_account}&access_token=${accessToken}`);
+      const igBusinessData = await igBusinessResponse.json();
+      console.log('IG Business response:', JSON.stringify(igBusinessData, null, 2));
+      
+      // Instagram User IDを直接指定する方法も試す
+      console.log('🔍 Trying with Instagram Basic Display...');
+      // Instagram Basic Display APIのユーザー情報取得
+      const igUserResponse = await fetch(`https://graph.instagram.com/me?fields=id,username,account_type&access_token=${accessToken}`);
+      const igUserData = await igUserResponse.json();
+      console.log('Instagram User response:', JSON.stringify(igUserData, null, 2));
+      
+      // もしInstagram User IDが取得できたら、それを使用
+      if (igUserData.id) {
+        console.log('✅ Found Instagram User ID via Basic Display:', igUserData.id);
+        instagramToken = accessToken;
+        instagramUserId = igUserData.id;
+      }
+    }
 
     if (pagesData.error) {
       console.error('Pages fetch failed:', pagesData.error);
