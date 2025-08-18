@@ -66,6 +66,12 @@ export async function GET(request) {
 
     const accessToken = tokenData.access_token;
 
+    // デバッグ: トークンの権限を確認
+    console.log('🔍 Checking token permissions...');
+    const debugResponse = await fetch(`https://graph.facebook.com/v21.0/debug_token?input_token=${accessToken}&access_token=${accessToken}`);
+    const debugData = await debugResponse.json();
+    console.log('Token debug info:', debugData);
+
     // Step 2: ユーザーのFacebookページ一覧を取得（追加フィールドとデバッグ情報付き）
     console.log('🔍 Fetching user pages with detailed permissions check...');
     
@@ -73,6 +79,11 @@ export async function GET(request) {
     const userResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`);
     const userData = await userResponse.json();
     console.log('Current user data:', userData);
+    
+    // ユーザーの権限を確認
+    const permissionsResponse = await fetch(`https://graph.facebook.com/v21.0/me/permissions?access_token=${accessToken}`);
+    const permissionsData = await permissionsResponse.json();
+    console.log('User permissions:', JSON.stringify(permissionsData, null, 2));
     
     // ページを取得（詳細フィールド付き + 権限チェック）
     const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account,perms&access_token=${accessToken}`);

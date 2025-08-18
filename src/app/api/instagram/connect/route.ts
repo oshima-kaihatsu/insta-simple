@@ -43,8 +43,8 @@ export async function GET(request: NextRequest) {
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
     // 新しいInstagram Graph API エンドポイント（2024年12月4日以降）
-    // 最初に動作していたシンプルなスコープに戻す
-    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,pages_show_list&response_type=code&state=instagram`;
+    // pages_manage_metadataを含む必要最小限のスコープ
+    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,pages_show_list,pages_manage_metadata&response_type=code&state=instagram`;
 
     console.log('Auth URL:', authUrl);
     return Response.redirect(authUrl);
