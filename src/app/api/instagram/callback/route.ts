@@ -74,8 +74,8 @@ export async function GET(request) {
     const userData = await userResponse.json();
     console.log('Current user data:', userData);
     
-    // ページを取得（詳細フィールド付き）
-    const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account&access_token=${accessToken}`);
+    // ページを取得（詳細フィールド付き + 権限チェック）
+    const pagesResponse = await fetch(`https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account,perms&access_token=${accessToken}`);
     const pagesData = await pagesResponse.json();
     
     console.log('Pages response status:', pagesResponse.status);
@@ -101,6 +101,8 @@ export async function GET(request) {
         console.log(`📄 Checking page: ${page.name} (ID: ${page.id})`);
         console.log(`   - Category: ${page.category}`);
         console.log(`   - Tasks: ${JSON.stringify(page.tasks)}`);
+        console.log(`   - Permissions: ${JSON.stringify(page.perms)}`);
+        console.log(`   - Has access token: ${!!page.access_token}`);
         
         // ページのInstagramアカウントを確認（Business & Creator両対応）
         const igResponse = await fetch(`https://graph.facebook.com/v21.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`);
@@ -146,13 +148,20 @@ export async function GET(request) {
       console.error('❌ No Instagram Business Account found after all attempts');
       console.error('📊 Summary:');
       console.error(`   - Facebook pages found: ${pagesData.data?.length || 0}`);
-      console.error(`   - Pages details:`, pagesData.data?.map(p => ({ name: p.name, id: p.id, category: p.category })));
+      console.error(`   - Pages details:`, pagesData.data?.map(p => ({ 
+        name: p.name, 
+        id: p.id, 
+        category: p.category,
+        hasAccessToken: !!p.access_token,
+        permissions: p.perms 
+      })));
       console.error('⚠️ Troubleshooting checklist:');
       console.error('1. Instagram account must be Business or Creator');
       console.error('2. Instagram account must be connected to Facebook page');
       console.error('3. User must have admin/editor access to the Facebook page');
-      console.error('4. Facebook app must have proper permissions');
+      console.error('4. Facebook app must have proper permissions (pages_manage_posts, etc.)');
       console.error('5. Try switching to Business account in Instagram settings');
+      console.error('6. Re-authorize with updated permissions');
       
       const errorMessage = `Instagram Business/Creator account not found. 
         Found ${pagesData.data?.length || 0} Facebook pages. 
