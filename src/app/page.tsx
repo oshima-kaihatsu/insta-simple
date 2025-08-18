@@ -194,15 +194,15 @@ export default function HomePage() {
           background: transparent;
           color: #666;
           border: 2px solid rgba(199, 154, 66, 0.3);
-          padding: 16px 32px;
+          padding: 18px 36px;
           border-radius: 50px;
-          font-size: 16px;
+          font-size: 18px;
           font-weight: 600;
           cursor: pointer;
           text-decoration: none;
           display: inline-block;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          min-width: 180px;
+          min-width: 200px;
           text-align: center;
         }
 
