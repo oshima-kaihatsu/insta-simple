@@ -137,7 +137,55 @@ export async function GET(request) {
 
     // 方法2: 直接個人のInstagramアカウントを確認（ページが見つからない場合）
     if (!instagramToken && (!pagesData.data || pagesData.data.length === 0)) {
-      console.log('🔍 No pages found, trying direct Instagram user account...');
+      console.log('🔍 No pages found, trying alternative methods...');
+      
+      // 方法2a: Instagram Business Discovery APIを試す
+      try {
+        console.log('Trying Instagram Business Discovery...');
+        
+        // Instagram IDが環境変数で指定されている場合は直接使用
+        const hardcodedInstagramId = process.env.INSTAGRAM_BUSINESS_ID;
+        if (hardcodedInstagramId) {
+          console.log('Using hardcoded Instagram Business ID:', hardcodedInstagramId);
+          // ハードコードされたIDでアカウント情報を取得
+          const igAccountResponse = await fetch(
+            `https://graph.facebook.com/v21.0/${hardcodedInstagramId}?fields=id,username,name,followers_count,media_count&access_token=${accessToken}`
+          );
+          const igAccountData = await igAccountResponse.json();
+          console.log('Hardcoded Instagram account data:', igAccountData);
+          
+          if (igAccountData.id) {
+            instagramToken = accessToken;
+            instagramUserId = igAccountData.id;
+            console.log('✅ Using hardcoded Instagram Business Account:', instagramUserId);
+          }
+        }
+        
+        // ユーザーのInstagram IDを探す
+        if (!instagramToken) {
+          const igUserSearchResponse = await fetch(
+            `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`
+          );
+          const igUserData = await igUserSearchResponse.json();
+          
+          // Instagram Business IDを使用してアカウント情報を取得
+          if (igUserData.id) {
+            // ページを作成するか、既存のページを取得する別の方法を試す
+            console.log('User Facebook ID:', igUserData.id);
+            
+            // Instagram connected accountsを確認
+            const connectedResponse = await fetch(
+              `https://graph.facebook.com/v21.0/${igUserData.id}/accounts?fields=id,name,instagram_business_account,connected_instagram_account&access_token=${accessToken}`
+            );
+            const connectedData = await connectedResponse.json();
+            console.log('Connected accounts check:', connectedData);
+          }
+        }
+      } catch (error) {
+        console.log('❌ Error with Business Discovery:', error.message);
+      }
+      
+      // 方法2b: 元の方法も維持
       try {
         // 個人のInstagramアカウント（Creator account）を確認
         const directIgResponse = await fetch(`https://graph.facebook.com/v21.0/me?fields=id,name,instagram_business_account&access_token=${accessToken}`);
