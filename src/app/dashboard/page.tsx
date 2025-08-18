@@ -29,9 +29,11 @@ import {
   Activity
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useResponsive } from '@/components/ResponsiveDashboard';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const [loading, setLoading] = useState(true);
   const [instagramData, setInstagramData] = useState(null);
   const [showSampleData, setShowSampleData] = useState(true);
@@ -667,23 +669,30 @@ export default function DashboardPage() {
         {/* ヘッダー */}
         <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '16px',
-          padding: '24px 32px',
-          marginBottom: '32px',
+          borderRadius: isMobile ? '12px' : '16px',
+          padding: isMobile ? '16px' : isTablet ? '20px 24px' : '24px 32px',
+          marginBottom: isMobile ? '20px' : '32px',
           display: 'flex',
-          alignItems: 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'flex-start' : 'center',
           justifyContent: 'space-between',
+          gap: isMobile ? '16px' : '20px',
           border: '1px solid rgba(199, 154, 66, 0.2)',
           boxShadow: '0 8px 32px rgba(199, 154, 66, 0.1)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: isMobile ? '12px' : '16px',
+            width: isMobile ? '100%' : 'auto'
+          }}>
             <button 
               onClick={() => router.push('/')}
               style={{
                 background: 'transparent',
                 border: '2px solid #c79a42',
-                borderRadius: '12px',
-                padding: '12px',
+                borderRadius: isMobile ? '8px' : '12px',
+                padding: isMobile ? '10px' : '12px',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -703,9 +712,9 @@ export default function DashboardPage() {
             >
               <ArrowLeft size={20} style={{ color: '#c79a42' }} />
             </button>
-            <div>
+            <div style={{ flex: 1 }}>
               <h1 style={{ 
-                fontSize: '28px', 
+                fontSize: isMobile ? '20px' : isTablet ? '24px' : '28px', 
                 fontWeight: '700', 
                 margin: 0,
                 background: 'linear-gradient(135deg, #c79a42, #b8873b)',
@@ -715,7 +724,7 @@ export default function DashboardPage() {
                 Instagram分析ダッシュボード
               </h1>
               <p style={{ 
-                fontSize: '14px', 
+                fontSize: isMobile ? '12px' : '14px', 
                 color: '#8b7355', 
                 margin: '4px 0 0 0' 
               }}>
@@ -732,15 +741,17 @@ export default function DashboardPage() {
               style={{
                 background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
                 color: '#fcfbf8',
-                padding: '16px 32px',
+                padding: isMobile ? '12px 20px' : '16px 32px',
                 border: 'none',
-                borderRadius: '12px',
-                fontSize: '16px',
+                borderRadius: isMobile ? '8px' : '12px',
+                fontSize: isMobile ? '14px' : '16px',
                 fontWeight: '600',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px',
+                width: isMobile ? '100%' : 'auto',
+                justifyContent: 'center',
                 transition: 'all 0.2s',
                 boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
               }}
@@ -827,7 +838,12 @@ export default function DashboardPage() {
             フォロワー推移
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '24px', marginBottom: '32px' }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
+            gap: isMobile ? '12px' : '24px', 
+            marginBottom: isMobile ? '20px' : '32px' 
+          }}>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '14px', color: '#8b7355', marginBottom: '8px' }}>現在のフォロワー</p>
               <p style={{ fontSize: '32px', fontWeight: '700', color: '#c79a42' }}>{currentFollowers.toLocaleString()}</p>
@@ -956,7 +972,13 @@ export default function DashboardPage() {
             重要4指標スコア
           </h2>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', position: 'relative', zIndex: 1 }}>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
+            gap: isMobile ? '12px' : '20px', 
+            position: 'relative', 
+            zIndex: 1 
+          }}>
             {[
               { key: 'saves_rate', title: '保存率', value: averages.avg_saves_rate, target: 3.0, formula: '保存数 ÷ リーチ数', note: '' },
               { key: 'home_rate', title: 'ホーム率', value: averages.avg_home_rate, target: 50.0, formula: 'ホーム数 ÷ フォロワー数', note: 'ホーム数：実データ取得不可のため推定値' },
