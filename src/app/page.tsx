@@ -11,6 +11,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pricingRef = useRef<HTMLElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
 
   // スクロールアニメーション
   useEffect(() => {
@@ -262,7 +263,10 @@ export default function HomePage() {
         
         @media (max-width: 768px) {
           .hero h1 {
-            font-size: 36px !important;
+            font-size: 48px !important;
+            line-height: 1.1 !important;
+            margin-bottom: 30px !important;
+            letter-spacing: -2px !important;
           }
           .hero-body {
             font-size: 16px !important;
@@ -270,12 +274,13 @@ export default function HomePage() {
           .btn-primary {
             width: 100%;
             max-width: 300px;
-            padding: 14px 28px;
-            font-size: 16px;
+            padding: 18px 36px;
+            font-size: 18px;
           }
           .btn-secondary {
-            padding: 12px 24px;
-            font-size: 14px;
+            padding: 18px 36px;
+            font-size: 18px;
+            min-width: 200px;
           }
           .grid-responsive {
             grid-template-columns: 1fr;
@@ -382,6 +387,24 @@ export default function HomePage() {
             flexDirection: 'column',
             gap: '24px'
           }}>
+            {/* ロゴマーク */}
+            <div style={{
+              textAlign: 'center',
+              paddingBottom: '20px',
+              borderBottom: '1px solid rgba(199, 154, 66, 0.2)'
+            }}>
+              <div style={{
+                fontSize: '24px',
+                fontWeight: '800',
+                background: 'linear-gradient(135deg, #c79a42, #b8873b)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text'
+              }}>
+                InstaSimple
+              </div>
+            </div>
+
             <button
               onClick={() => {
                 setIsMenuOpen(false);
@@ -391,11 +414,12 @@ export default function HomePage() {
               className="btn-primary"
               style={{ 
                 width: '100%',
-                padding: '16px 24px', 
-                fontSize: '16px'
+                padding: '18px 36px', 
+                fontSize: '18px',
+                minWidth: '200px'
               }}
             >
-              {loading ? '処理中...' : '14日間無料体験'}
+              {loading ? '処理中...' : '14日間無料で体験する'}
             </button>
             
             <button
@@ -406,11 +430,12 @@ export default function HomePage() {
               className="btn-secondary"
               style={{ 
                 width: '100%',
-                padding: '16px 24px', 
-                fontSize: '16px'
+                padding: '18px 36px', 
+                fontSize: '18px',
+                minWidth: '200px'
               }}
             >
-              ダッシュボード
+              ダッシュボードサンプル
             </button>
             
             <div style={{
@@ -418,13 +443,6 @@ export default function HomePage() {
               paddingTop: '20px',
               marginTop: '20px'
             }}>
-              <p style={{
-                fontSize: '14px',
-                color: '#666',
-                marginBottom: '16px'
-              }}>
-                メニュー
-              </p>
               <ul style={{
                 listStyle: 'none',
                 padding: 0,
@@ -435,7 +453,11 @@ export default function HomePage() {
               }}>
                 <li>
                   <a href="#features" 
-                     onClick={() => setIsMenuOpen(false)}
+                     onClick={(e) => {
+                       e.preventDefault();
+                       setIsMenuOpen(false);
+                       featuresRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }}
                      style={{
                        color: '#5d4e37',
                        textDecoration: 'none',
@@ -448,7 +470,11 @@ export default function HomePage() {
                 </li>
                 <li>
                   <a href="#pricing" 
-                     onClick={() => setIsMenuOpen(false)}
+                     onClick={(e) => {
+                       e.preventDefault();
+                       setIsMenuOpen(false);
+                       pricingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                     }}
                      style={{
                        color: '#5d4e37',
                        textDecoration: 'none',
@@ -457,19 +483,6 @@ export default function HomePage() {
                        padding: '8px 0'
                      }}>
                     料金プラン
-                  </a>
-                </li>
-                <li>
-                  <a href="#about" 
-                     onClick={() => setIsMenuOpen(false)}
-                     style={{
-                       color: '#5d4e37',
-                       textDecoration: 'none',
-                       fontSize: '16px',
-                       display: 'block',
-                       padding: '8px 0'
-                     }}>
-                    お問い合わせ
                   </a>
                 </li>
               </ul>
@@ -563,7 +576,7 @@ export default function HomePage() {
         </section>
 
         {/* Metrics Section */}
-        <section style={{ 
+        <section ref={featuresRef} style={{ 
           padding: '80px 20px',
           background: 'rgba(252, 251, 248, 1)',
           position: 'relative'
