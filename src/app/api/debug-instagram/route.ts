@@ -32,8 +32,10 @@ export async function GET(request: NextRequest) {
     console.log('🔑 Token Permissions Status:', tokenResponse.status);
     console.log('🔑 Token Permissions:', JSON.stringify(tokenData, null, 2));
 
-    // 3. Pages APIを直接テスト
+    // 3. Pages APIを複数の方法でテスト
     console.log('📄 Step 3: Testing Pages API...');
+    
+    // 3a. 標準のaccountsエンドポイント
     const pagesResponse = await fetch(
       `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
     );
@@ -41,6 +43,22 @@ export async function GET(request: NextRequest) {
     console.log('📄 Pages Response Status:', pagesResponse.status);
     console.log('📄 Pages Response Headers:', Object.fromEntries(pagesResponse.headers.entries()));
     console.log('📄 Full Pages Data:', JSON.stringify(pagesData, null, 2));
+
+    // 3b. 代替のpagesエンドポイント
+    const pagesAltResponse = await fetch(
+      `https://graph.facebook.com/v21.0/me/pages?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
+    );
+    const pagesAltData = await pagesAltResponse.json();
+    console.log('📄 Alt Pages Response Status:', pagesAltResponse.status);
+    console.log('📄 Alt Pages Data:', JSON.stringify(pagesAltData, null, 2));
+
+    // 3c. ページのIDを直接指定してテスト（もしページIDがわかる場合）
+    const businessResponse = await fetch(
+      `https://graph.facebook.com/v21.0/me/businesses?fields=id,name&access_token=${accessToken}`
+    );
+    const businessData = await businessResponse.json();
+    console.log('🏢 Business Response Status:', businessResponse.status);
+    console.log('🏢 Business Data:', JSON.stringify(businessData, null, 2));
 
     // 4. App情報を確認
     console.log('🎯 Step 4: Checking app info...');
@@ -63,15 +81,31 @@ export async function GET(request: NextRequest) {
           data: tokenData
         },
         pages: {
-          status: pagesResponse.status,
-          data: pagesData,
-          headers: Object.fromEntries(pagesResponse.headers.entries())
+          accounts: {
+            status: pagesResponse.status,
+            data: pagesData,
+            headers: Object.fromEntries(pagesResponse.headers.entries())
+          },
+          pages_alt: {
+            status: pagesAltResponse.status,
+            data: pagesAltData
+          },
+          business: {
+            status: businessResponse.status,
+            data: businessData
+          }
         },
         app: {
           status: appResponse.status,
           data: appData
         }
-      }
+      },
+      recommendations: [
+        "1. Facebook開発者コンソールでアプリのPages Management権限を確認",
+        "2. アプリレビューが必要な権限がないか確認", 
+        "3. Facebookページの所有者が正しいFacebookアカウントか確認",
+        "4. Business Managerを使用している場合は、個人アカウントではなくBusiness Managerアカウントでログイン"
+      ]
     });
 
   } catch (error) {
