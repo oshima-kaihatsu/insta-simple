@@ -527,9 +527,30 @@ export default function DashboardPage() {
             console.log('📝 Posts count:', data?.posts?.length || 0);
             console.log('👤 Profile data:', data?.profile);
             
-            setInstagramData(data);
-            setShowSampleData(false);
-            console.log('✅ Real Instagram data loaded successfully');
+            // APIからエラーレスポンスが返された場合の処理
+            if (!data.connected || data.error) {
+              console.log('⚠️ Instagram API returned error:', data.error);
+              
+              // 具体的なエラーメッセージを設定
+              let userMessage = 'Instagram連携でエラーが発生しました。';
+              
+              if (data.error === 'NO_FACEBOOK_PAGE') {
+                userMessage = 'Instagram Business Accountを利用するには、Facebookページが必要です。';
+              } else if (data.error === 'NO_INSTAGRAM_CONNECTION') {
+                userMessage = 'Facebookページは見つかりましたが、Instagramアカウントが連携されていません。';
+              }
+              
+              setErrorMessage(userMessage);
+              setShowSampleData(true);
+              setInstagramData(null);
+            } else {
+              // 正常にデータが取得できた場合
+              setInstagramData(data);
+              setShowSampleData(false);
+              setErrorMessage(null);
+              console.log('✅ Real Instagram data loaded successfully');
+            }
+            
             // URLパラメーターをクリア
             window.history.replaceState({}, document.title, window.location.pathname);
           } else {
@@ -817,13 +838,29 @@ export default function DashboardPage() {
                 {errorMessage}
               </h3>
               <p style={{ fontSize: '14px', color: '#7f1d1d', margin: '0 0 12px 0' }}>
-                サンプルデータを表示中です。Instagram連携をするには以下を確認してください：
+                Instagram Business Accountのデータを取得するには、以下の手順が必要です：
               </p>
-              <ul style={{ fontSize: '13px', color: '#7f1d1d', margin: 0, paddingLeft: '20px' }}>
-                <li>Instagramアカウントがビジネスまたはクリエイターアカウントであること</li>
-                <li>FacebookページとInstagramアカウントが連携されていること</li>
-                <li>必要な権限をすべて許可していること</li>
-              </ul>
+              <ol style={{ fontSize: '13px', color: '#7f1d1d', margin: 0, paddingLeft: '20px', lineHeight: '1.5' }}>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>Facebookページを作成</strong><br/>
+                  <a href="https://www.facebook.com/pages/create" target="_blank" rel="noopener noreferrer" 
+                     style={{ color: '#dc2626', textDecoration: 'underline' }}>
+                    Facebookページ作成ページ
+                  </a> でビジネス用のページを作成してください
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>Instagramをビジネスアカウントに変更</strong><br/>
+                  Instagramアプリ → 設定 → アカウント → プロアカウントに切り替える
+                </li>
+                <li style={{ marginBottom: '8px' }}>
+                  <strong>InstagramとFacebookページを連携</strong><br/>
+                  Facebookページの設定 → Instagram → アカウントをリンク
+                </li>
+                <li>
+                  <strong>再度Instagram連携を実行</strong><br/>
+                  上記の設定完了後、もう一度「Instagram連携」ボタンをクリックしてください
+                </li>
+              </ol>
             </div>
             <button
               onClick={() => setErrorMessage(null)}
