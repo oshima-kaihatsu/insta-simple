@@ -515,8 +515,9 @@ export default function DashboardPage() {
         console.log('Instagram user ID:', instagramUserId);
         
         try {
-          const apiUrl = `/api/instagram-business-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`;
-          console.log('📡 Making API request to:', apiUrl);
+          const apiUrl = `/api/instagram-business-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}&_t=${Date.now()}`;
+          console.log('📡 Making API request to NEW ENDPOINT:', apiUrl);
+          console.log('🔥 Using instagram-business-data endpoint with cache buster');
           
           const res = await fetch(apiUrl);
           console.log('📊 API response status:', res.status);
