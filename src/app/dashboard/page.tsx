@@ -515,11 +515,18 @@ export default function DashboardPage() {
         console.log('Instagram user ID:', instagramUserId);
         
         try {
-          const apiUrl = `/api/instagram-business-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}&_t=${Date.now()}`;
+          const apiUrl = `/api/instagram-business-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}&_v=2024&_cache_bust=${Math.random()}`;
           console.log('📡 Making API request to NEW ENDPOINT:', apiUrl);
           console.log('🔥 Using instagram-business-data endpoint with cache buster');
           
-          const res = await fetch(apiUrl);
+          const res = await fetch(apiUrl, {
+            method: 'GET',
+            cache: 'no-cache',
+            headers: {
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
+            }
+          });
           console.log('📊 API response status:', res.status);
           
           if (res.ok) {
