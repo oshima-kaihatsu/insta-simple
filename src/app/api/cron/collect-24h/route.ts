@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`📊 Processing Instagram user: ${connection.username}`);
 
-        // Instagram APIから最新の投稿を取得
+        // Facebook Pages APIを使用してInstagram Business Accountのメディアを取得
         const mediaResponse = await fetch(
           `https://graph.facebook.com/v21.0/${connection.instagram_user_id}/media?fields=id,caption,timestamp,media_type&limit=50&access_token=${connection.access_token}`
         );
@@ -75,12 +75,12 @@ export async function POST(request: NextRequest) {
         // 各投稿のインサイトを取得
         for (const post of targetPosts) {
           try {
-            // Instagram Business Accountの場合のみインサイト取得
+            // Instagram Business Accountのインサイト取得（実際のメトリクスのみ）
             const insightsResponse = await fetch(
-              `https://graph.facebook.com/v21.0/${post.id}/insights?metric=reach,impressions,saved,profile_visits&access_token=${connection.access_token}`
+              `https://graph.facebook.com/v21.0/${post.id}/insights?metric=reach,impressions,saved,engagement&access_token=${connection.access_token}`
             );
 
-            let insights = {};
+            let insights: any = {};
             if (insightsResponse.ok) {
               const insightsData = await insightsResponse.json();
               if (!insightsData.error) {
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
                 reach: insights.reach || 0,
                 impressions: insights.impressions || 0,
                 saved: insights.saved || 0,
-                profile_visits: insights.profile_visits || 0,
+                engagement: insights.engagement || 0,
                 collected_at: new Date().toISOString()
               },
               data_7d: null // 7日後に更新

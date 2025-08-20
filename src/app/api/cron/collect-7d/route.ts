@@ -51,9 +51,9 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`📊 Processing 7-day data for post: ${postRecord.post_id}`);
 
-        // Instagram APIからインサイトを取得
+        // Instagram Business Accountからインサイトを取得（実際のメトリクスのみ）
         const insightsResponse = await fetch(
-          `https://graph.facebook.com/v21.0/${postRecord.post_id}/insights?metric=reach,impressions,saved,profile_visits&access_token=${postRecord.instagram_connections.access_token}`
+          `https://graph.facebook.com/v21.0/${postRecord.post_id}/insights?metric=reach,impressions,saved,engagement&access_token=${postRecord.instagram_connections.access_token}`
         );
 
         if (!insightsResponse.ok) {
@@ -67,17 +67,17 @@ export async function POST(request: NextRequest) {
         }
 
         // インサイトデータを整形
-        const insights = {};
+        const insights: any = {};
         insightsData.data?.forEach((metric: any) => {
           insights[metric.name] = metric.values?.[0]?.value || 0;
         });
 
-        // data_7dを更新
+        // data_7dを更新（実際のデータのみ）
         const data7d = {
           reach: insights.reach || 0,
           impressions: insights.impressions || 0,
           saved: insights.saved || 0,
-          profile_visits: insights.profile_visits || 0,
+          engagement: insights.engagement || 0,
           collected_at: new Date().toISOString()
         };
 

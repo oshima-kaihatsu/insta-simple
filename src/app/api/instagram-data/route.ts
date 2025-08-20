@@ -18,102 +18,74 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Step 1: Facebookページを通じてInstagram Business Accountを見つける
-    console.log('🔍 Step 1: Finding Instagram Business Account...');
+    // Facebook Graph API を使用（Instagram Business Account用）
+    console.log('🔍 Step 1: Fetching Facebook Pages...');
     
+    // まずFacebookページを取得
     const pagesResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
+      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
     );
     const pagesData = await pagesResponse.json();
     
-    console.log('📄 Pages API Response Status:', pagesResponse.status);
-    console.log('📄 Full Pages API Response:', JSON.stringify(pagesData, null, 2));
+    console.log('📄 Pages Response Status:', pagesResponse.status);
     console.log('📄 Pages found:', pagesData.data?.length || 0);
     
-    // エラーレスポンスの詳細チェック
     if (pagesData.error) {
       console.error('❌ Pages API Error:', pagesData.error);
       return NextResponse.json({
         connected: false,
         error: 'PAGES_API_ERROR',
         message: `Facebook Pages APIエラー: ${pagesData.error.message}`,
-        details: pagesData.error,
-        debug_info: {
-          error_code: pagesData.error.code,
-          error_type: pagesData.error.type,
-          error_subcode: pagesData.error.error_subcode
-        }
+        details: pagesData.error
       });
     }
     
     if (!pagesData.data || pagesData.data.length === 0) {
-      console.log('⚠️ No Facebook Pages found, trying Instagram Basic Display API...');
-      
-      // Facebook Pages APIが使用できない場合、Instagram Basic Display APIにフォールバック
-      try {
-        const basicApiResponse = await fetch(
-          `${request.nextUrl.origin}/api/instagram-basic?access_token=${accessToken}&instagram_user_id=${instagramUserId}`
-        );
-        
-        if (basicApiResponse.ok) {
-          const basicData = await basicApiResponse.json();
-          console.log('✅ Successfully retrieved data via Instagram Basic Display API');
-          return NextResponse.json(basicData);
-        } else {
-          console.error('❌ Instagram Basic Display API also failed');
-        }
-      } catch (basicApiError) {
-        console.error('❌ Error calling Instagram Basic Display API:', basicApiError);
-      }
-      
       return NextResponse.json({
         connected: false,
         error: 'NO_FACEBOOK_PAGE',
-        message: 'Instagram Business Accountが利用できません。Personal Accountとして接続を試行しましたが失敗しました。',
-        debug_info: {
-          response_status: pagesResponse.status,
-          has_data: !!pagesData.data,
-          data_length: pagesData.data?.length || 0,
-          access_token_exists: !!accessToken,
-          access_token_length: accessToken?.length || 0
-        },
-        instructions: {
-          step1: 'Instagramアカウントをビジネスアカウントに変更',
-          step2: 'Facebookページを作成してInstagramと連携',
-          step3: 'または個人アカウントとして限定的なデータ表示を受け入れる'
-        }
+        message: 'Facebookページが見つかりません。Instagram Business Accountを使用するにはFacebookページが必要です。'
       });
     }
 
-    // Instagram Business Accountが連携されているページを探す
-    let instagramBusinessId = null;
-    let pageAccessToken = null;
+    // ページのアクセストークンを取得
+    const page = pagesData.data[0];
+    const pageAccessToken = page.access_token;
     
-    for (const page of pagesData.data) {
-      if (page.instagram_business_account) {
-        instagramBusinessId = page.instagram_business_account.id;
-        pageAccessToken = page.access_token || accessToken;
-        console.log('✅ Found Instagram Business Account:', instagramBusinessId);
-        console.log('Page:', page.name);
-        break;
-      }
+    console.log('📄 Using page:', page.name);
+
+    // Instagram Business Accountを取得
+    console.log('🔍 Step 2: Checking Instagram Business Account connection...');
+    const igRes = await fetch(
+      `https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`
+    );
+    const igData = await igRes.json();
+
+    if (igData.error) {
+      console.error('❌ Instagram Business Account check error:', igData.error);
+      return NextResponse.json({
+        connected: false,
+        error: 'IG_BUSINESS_ERROR',
+        message: `Instagram Business Account確認エラー: ${igData.error.message}`
+      });
     }
 
-    if (!instagramBusinessId) {
+    if (!igData.instagram_business_account) {
       return NextResponse.json({
         connected: false,
         error: 'NO_INSTAGRAM_CONNECTION',
-        message: 'Facebookページは見つかりましたが、Instagramアカウントが連携されていません',
-        pages: pagesData.data.map(p => ({ id: p.id, name: p.name })),
-        instructions: 'Facebookページの設定 → Instagram → アカウントをリンク'
+        message: 'InstagramがFacebookページに接続されていません。Facebookページの設定でInstagramアカウントを連携してください。'
       });
     }
+
+    const igBusinessId = igData.instagram_business_account.id;
+    console.log('📱 Instagram Business Account ID:', igBusinessId);
 
     // Step 2: Instagram Business Accountのプロフィール情報を取得
     console.log('📊 Step 2: Fetching Instagram profile...');
     
     const profileResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${instagramBusinessId}?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v21.0/${igBusinessId}?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url&access_token=${pageAccessToken}`
     );
     const profileData = await profileResponse.json();
     
@@ -136,7 +108,7 @@ export async function GET(request: NextRequest) {
     console.log('📈 Step 3: Fetching posts with insights...');
     
     const mediaResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${instagramBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(reach,impressions,saved,engagement,shares,plays,total_interactions)&limit=28&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v21.0/${igBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(reach,impressions,saved,engagement,shares,plays,total_interactions)&limit=28&access_token=${pageAccessToken}`
     );
     const mediaData = await mediaResponse.json();
     
@@ -171,10 +143,6 @@ export async function GET(request: NextRequest) {
       const impressions = insights.impressions || 0;
       const engagement = insights.engagement || 0;
       
-      // プロフィール訪問数とフォロー数を推定（APIで直接取得できない場合）
-      const profile_views = Math.floor(reach * 0.03); // リーチの3%と仮定
-      const follows = Math.floor(profile_views * 0.08); // プロフィール訪問の8%と仮定
-
       return {
         id: post.id,
         caption: post.caption || '',
@@ -188,20 +156,20 @@ export async function GET(request: NextRequest) {
         like_count: likes,
         comments_count: post.comments_count || 0,
         
-        // ダッシュボードが期待する形式
+        // 実際のデータのみ使用（推定値は使用しない）
         data_24h: {
-          reach: Math.floor(reach * 0.7),
-          likes: Math.floor(likes * 0.8),
-          saves: Math.floor(saves * 0.8),
-          profile_views: Math.floor(profile_views * 0.8),
-          follows: Math.floor(follows * 0.8)
+          reach: reach,
+          likes: likes,
+          saves: saves,
+          impressions: impressions,
+          engagement: engagement
         },
         data_7d: {
           reach: reach,
           likes: likes,
           saves: saves,
-          profile_views: profile_views,
-          follows: follows
+          impressions: impressions,
+          engagement: engagement
         },
         
         // 実際のインサイトデータ
@@ -215,13 +183,13 @@ export async function GET(request: NextRequest) {
           total_interactions: insights.total_interactions || engagement
         },
         
-        // パフォーマンスランキング（全投稿との比較）
+        // パフォーマンスランキング（実際のデータに基づく）
         rankings: calculateRankings(post, mediaData.data, insights)
       };
     });
 
-    // Step 5: フォロワー推移（過去のデータがないため現在値から推定）
-    const followerHistory = generateFollowerHistory(profileData.followers_count);
+    // Step 5: フォロワー推移（データベースから取得、なければ現在値のみ）
+    const followerHistory = await getFollowerHistory(igBusinessId, profileData.followers_count);
 
     // 成功レスポンス
     return NextResponse.json({
@@ -298,26 +266,41 @@ function calculateRankings(post: any, allPosts: any[], insights: any) {
   return {
     saves_rate: savesRateRank || 1,
     home_rate: reachRank || 1,
-    profile_access_rate: Math.min(allPosts.length, Math.max(1, Math.floor(Math.random() * allPosts.length) + 1)),
-    follower_conversion_rate: Math.min(allPosts.length, Math.max(1, Math.floor(Math.random() * allPosts.length) + 1))
+    profile_access_rate: reachRank || 1,
+    follower_conversion_rate: savesRateRank || 1
   };
 }
 
-// フォロワー履歴生成（現在値から推定）
-function generateFollowerHistory(currentFollowers: number) {
-  const history = [];
-  const dailyGrowth = 7; // 1日平均7人増加と仮定
-  
-  for (let i = 4; i >= 0; i--) {
-    const daysAgo = i * 7;
-    const date = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-    const followers = currentFollowers - (daysAgo * dailyGrowth);
-    
-    history.push({
-      date: `${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`,
-      followers: Math.max(0, followers)
-    });
+// フォロワー履歴取得（データベースから実際のデータを取得）
+async function getFollowerHistory(instagramUserId: string, currentFollowers: number) {
+  // データベースから履歴を取得（Supabase利用時）
+  try {
+    if (typeof window === 'undefined') { // サーバーサイドでのみ実行
+      const { supabase } = await import('@/lib/supabase');
+      
+      if (supabase) {
+        const { data: history } = await supabase
+          .from('follower_history')
+          .select('date, follower_count')
+          .eq('instagram_user_id', instagramUserId)
+          .order('date', { ascending: true })
+          .limit(30);
+          
+        if (history && history.length > 0) {
+          return history.map(h => ({
+            date: new Date(h.date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
+            followers: h.follower_count
+          }));
+        }
+      }
+    }
+  } catch (error) {
+    console.log('Could not fetch follower history from database, using current value only');
   }
   
-  return history;
+  // フォールバック: 現在の値のみ
+  return [{
+    date: new Date().toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
+    followers: currentFollowers
+  }];
 }
