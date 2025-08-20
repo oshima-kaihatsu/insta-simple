@@ -47,10 +47,29 @@ export async function GET(request: NextRequest) {
     }
     
     if (!pagesData.data || pagesData.data.length === 0) {
+      console.log('⚠️ No Facebook Pages found, trying Instagram Basic Display API...');
+      
+      // Facebook Pages APIが使用できない場合、Instagram Basic Display APIにフォールバック
+      try {
+        const basicApiResponse = await fetch(
+          `${request.nextUrl.origin}/api/instagram-basic?access_token=${accessToken}&instagram_user_id=${instagramUserId}`
+        );
+        
+        if (basicApiResponse.ok) {
+          const basicData = await basicApiResponse.json();
+          console.log('✅ Successfully retrieved data via Instagram Basic Display API');
+          return NextResponse.json(basicData);
+        } else {
+          console.error('❌ Instagram Basic Display API also failed');
+        }
+      } catch (basicApiError) {
+        console.error('❌ Error calling Instagram Basic Display API:', basicApiError);
+      }
+      
       return NextResponse.json({
         connected: false,
         error: 'NO_FACEBOOK_PAGE',
-        message: 'Facebookページが見つかりません。ページが作成済みの場合、アクセス権限の問題の可能性があります。',
+        message: 'Instagram Business Accountが利用できません。Personal Accountとして接続を試行しましたが失敗しました。',
         debug_info: {
           response_status: pagesResponse.status,
           has_data: !!pagesData.data,
@@ -59,9 +78,9 @@ export async function GET(request: NextRequest) {
           access_token_length: accessToken?.length || 0
         },
         instructions: {
-          step1: 'アプリの権限設定を確認（pages_show_list, pages_read_engagementが必要）',
-          step2: 'Facebookページの役割（管理者・編集者）を確認',
-          step3: 'Instagram連携の再実行'
+          step1: 'Instagramアカウントをビジネスアカウントに変更',
+          step2: 'Facebookページを作成してInstagramと連携',
+          step3: 'または個人アカウントとして限定的なデータ表示を受け入れる'
         }
       });
     }
