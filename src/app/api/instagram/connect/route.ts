@@ -43,8 +43,17 @@ export async function GET(request: NextRequest) {
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
     // Instagram Graph API エンドポイント
-    // 動作確認済みのスコープに戻す
-    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,pages_show_list,instagram_manage_insights&response_type=code&state=instagram`;
+    // Instagram Business Account APIに必要なスコープを修正
+    const scope = [
+      'instagram_basic',
+      'pages_show_list', 
+      'pages_read_engagement',
+      'instagram_manage_insights'
+    ].join(',');
+    
+    const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=instagram`;
+    
+    console.log('Scope used:', scope);
 
     console.log('Auth URL:', authUrl);
     return Response.redirect(authUrl);

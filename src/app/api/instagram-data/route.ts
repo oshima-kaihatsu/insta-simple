@@ -26,17 +26,42 @@ export async function GET(request: NextRequest) {
     );
     const pagesData = await pagesResponse.json();
     
-    console.log('Pages found:', pagesData.data?.length || 0);
+    console.log('📄 Pages API Response Status:', pagesResponse.status);
+    console.log('📄 Full Pages API Response:', JSON.stringify(pagesData, null, 2));
+    console.log('📄 Pages found:', pagesData.data?.length || 0);
+    
+    // エラーレスポンスの詳細チェック
+    if (pagesData.error) {
+      console.error('❌ Pages API Error:', pagesData.error);
+      return NextResponse.json({
+        connected: false,
+        error: 'PAGES_API_ERROR',
+        message: `Facebook Pages APIエラー: ${pagesData.error.message}`,
+        details: pagesData.error,
+        debug_info: {
+          error_code: pagesData.error.code,
+          error_type: pagesData.error.type,
+          error_subcode: pagesData.error.error_subcode
+        }
+      });
+    }
     
     if (!pagesData.data || pagesData.data.length === 0) {
       return NextResponse.json({
         connected: false,
         error: 'NO_FACEBOOK_PAGE',
-        message: 'Instagram Business Accountを利用するには、以下の手順が必要です：\n1. Facebookページを作成\n2. InstagramアカウントをBusinessまたはCreatorに変更\n3. InstagramとFacebookページを連携',
+        message: 'Facebookページが見つかりません。ページが作成済みの場合、アクセス権限の問題の可能性があります。',
+        debug_info: {
+          response_status: pagesResponse.status,
+          has_data: !!pagesData.data,
+          data_length: pagesData.data?.length || 0,
+          access_token_exists: !!accessToken,
+          access_token_length: accessToken?.length || 0
+        },
         instructions: {
-          step1: 'https://www.facebook.com/pages/create でFacebookページを作成',
-          step2: 'Instagramアプリ → 設定 → アカウント → プロアカウントに切り替える',
-          step3: 'Facebookページ設定 → Instagram → アカウントをリンク'
+          step1: 'アプリの権限設定を確認（pages_show_list, pages_read_engagementが必要）',
+          step2: 'Facebookページの役割（管理者・編集者）を確認',
+          step3: 'Instagram連携の再実行'
         }
       });
     }

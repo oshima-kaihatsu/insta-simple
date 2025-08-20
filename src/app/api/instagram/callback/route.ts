@@ -81,7 +81,14 @@ export async function GET(request: NextRequest) {
         `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
       );
       const pagesData = await pagesResponse.json();
-      console.log('Pages data:', pagesData);
+      console.log('📄 Callback Pages API Status:', pagesResponse.status);
+      console.log('📄 Callback Pages data:', JSON.stringify(pagesData, null, 2));
+      
+      // エラーレスポンスをチェック
+      if (pagesData.error) {
+        console.error('❌ Callback Pages API Error:', pagesData.error);
+        console.log('⚠️ Continuing with simplified connection due to pages error');
+      }
 
       if (pagesData.data && pagesData.data.length > 0) {
         // Facebookページが存在する場合
