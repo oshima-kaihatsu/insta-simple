@@ -515,7 +515,7 @@ export default function DashboardPage() {
         console.log('Instagram user ID:', instagramUserId);
         
         try {
-          const apiUrl = `/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`;
+          const apiUrl = `/api/instagram-business-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`;
           console.log('📡 Making API request to:', apiUrl);
           
           const res = await fetch(apiUrl);
