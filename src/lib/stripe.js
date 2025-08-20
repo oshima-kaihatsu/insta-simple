@@ -1,8 +1,10 @@
 import Stripe from 'stripe';
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2023-10-16',
-});
+export const stripe = process.env.STRIPE_SECRET_KEY 
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16',
+    })
+  : null;
 
 export const getStripe = () => {
   if (typeof window !== 'undefined') {
@@ -90,6 +92,10 @@ export function checkPlanLimits(userPlan, action, currentUsage = {}) {
 
 // Stripe Customer作成
 export async function createCustomer(userEmail, userName) {
+  if (!stripe) {
+    console.error('Stripe is not configured');
+    return { customer: null, error: 'Stripe not configured' };
+  }
   try {
     const customer = await stripe.customers.create({
       email: userEmail,
@@ -115,6 +121,10 @@ export async function createCheckoutSession({
   customerId,
   trialDays = 14
 }) {
+  if (!stripe) {
+    console.error('Stripe is not configured');
+    return { session: null, error: 'Stripe not configured' };
+  }
   try {
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -176,6 +186,10 @@ export async function cancelSubscription(subscriptionId) {
 
 // Webhook署名検証
 export function verifyWebhookSignature(payload, signature) {
+  if (!stripe) {
+    console.error('Stripe is not configured');
+    return { event: null, error: 'Stripe not configured' };
+  }
   try {
     const event = stripe.webhooks.constructEvent(
       payload,
