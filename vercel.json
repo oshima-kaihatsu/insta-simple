@@ -2,11 +2,25 @@
     "functions": {
       "src/app/api/cron/trial-notifications/route.js": {
         "maxDuration": 60
+      },
+      "src/app/api/cron/collect-24h/route.ts": {
+        "maxDuration": 300
+      },
+      "src/app/api/cron/collect-7d/route.ts": {
+        "maxDuration": 300
       }
     },
     "crons": [
       {
         "path": "/api/cron/trial-notifications",
+        "schedule": "0 9 * * *"
+      },
+      {
+        "path": "/api/cron/collect-24h",
+        "schedule": "0 9 * * *"
+      },
+      {
+        "path": "/api/cron/collect-7d",
         "schedule": "0 9 * * *"
       }
     ]

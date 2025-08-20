@@ -133,7 +133,33 @@ export async function GET(request: NextRequest) {
       accessToken: '***' // セキュリティのため非表示
     });
 
-    // Step 6: ダッシュボードにリダイレクト
+    // Step 6: データベースに接続情報を保存
+    try {
+      const { saveInstagramConnection } = await import('@/lib/supabase');
+      
+      // セッションからユーザーIDを取得（仮実装 - 実際はセッション管理が必要）
+      // 本来はNextAuthのセッションから取得すべき
+      const connectionData = {
+        user_id: 'temp_user_id', // TODO: 実際のユーザーIDに置き換え
+        instagram_user_id: instagramUserId,
+        access_token: accessToken,
+        username: instagramUsername,
+        followers_count: 0 // 後で更新
+      };
+      
+      const { data: savedConnection, error: saveError } = await saveInstagramConnection(connectionData);
+      
+      if (saveError) {
+        console.error('Failed to save Instagram connection:', saveError);
+      } else {
+        console.log('✅ Instagram connection saved to database');
+      }
+    } catch (dbError) {
+      console.error('Database save error:', dbError);
+      // データベースエラーでも接続は継続
+    }
+
+    // Step 7: ダッシュボードにリダイレクト
     const dashboardUrl = new URL('/dashboard', request.url);
     dashboardUrl.searchParams.set('success', 'true');
     dashboardUrl.searchParams.set('access_token', accessToken);
