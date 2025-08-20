@@ -55,7 +55,46 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to get access token');
     }
 
-    const accessToken = tokenData.access_token;
+    const shortTermToken = tokenData.access_token;
+
+    // Step 1.5: 短期トークンを長期トークンに交換
+    console.log('🔄 Converting short-term token to long-term token...');
+    const longTermTokenUrl = 'https://graph.facebook.com/v21.0/oauth/access_token';
+    const longTermParams = new URLSearchParams({
+      grant_type: 'fb_exchange_token',
+      client_id: process.env.INSTAGRAM_CLIENT_ID!,
+      client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
+      fb_exchange_token: shortTermToken
+    });
+
+    const longTermResponse = await fetch(`${longTermTokenUrl}?${longTermParams.toString()}`, {
+      method: 'GET',
+    });
+
+    console.log('Long-term token response status:', longTermResponse.status);
+    const longTermData = await longTermResponse.json();
+    console.log('Long-term token response:', longTermData);
+
+    const accessToken = longTermData.access_token || shortTermToken; // フォールバック
+    const tokenExpiresIn = longTermData.expires_in || 'unknown';
+    
+    console.log('✅ Using access token type:', longTermData.access_token ? 'Long-term (60 days)' : 'Short-term (1 hour)');
+    console.log('Token expires in:', tokenExpiresIn, 'seconds');
+
+    // Step 1.6: トークンの権限とスコープを確認
+    console.log('🔍 Checking token permissions...');
+    try {
+      const debugTokenUrl = `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${accessToken}`;
+      const debugResponse = await fetch(debugTokenUrl);
+      const debugData = await debugResponse.json();
+      console.log('📋 Token debug info:', debugData);
+      
+      if (debugData.data?.scopes) {
+        console.log('✅ Token scopes:', debugData.data.scopes);
+      }
+    } catch (debugError) {
+      console.log('⚠️ Could not debug token:', debugError.message);
+    }
 
     // Step 2: ユーザー情報を取得
     console.log('🔍 Fetching user information...');
