@@ -211,6 +211,15 @@ export default function DashboardPage() {
   const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
   const hasRealData = instagramData !== null;
   
+  // デバッグログ
+  console.log('📊 Dashboard Data Status:');
+  console.log('- instagramData exists:', !!instagramData);
+  console.log('- instagramData.posts length:', instagramData?.posts?.length || 0);
+  console.log('- showSampleData:', showSampleData);
+  console.log('- hasRealData:', hasRealData);
+  console.log('- postsData length:', postsData.length);
+  console.log('- Using data type:', hasRealData ? 'REAL' : 'SAMPLE');
+  
   // フォロワー履歴から初期フォロワー数を取得
   const getInitialFollowers = () => {
     if (hasRealData && instagramData?.follower_history?.data && instagramData.follower_history.data.length > 0) {
@@ -501,21 +510,38 @@ export default function DashboardPage() {
 
       // 成功パラメーターがある場合の処理
       if (success === 'true' && accessToken && instagramUserId) {
-        console.log('Instagram connection successful, fetching data...');
+        console.log('🚀 Instagram connection successful, fetching data...');
+        console.log('Access token exists:', !!accessToken);
+        console.log('Instagram user ID:', instagramUserId);
+        
         try {
-          const res = await fetch(`/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`);
+          const apiUrl = `/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`;
+          console.log('📡 Making API request to:', apiUrl);
+          
+          const res = await fetch(apiUrl);
+          console.log('📊 API response status:', res.status);
+          
           if (res.ok) {
             const data = await res.json();
+            console.log('✅ Instagram data received:', data);
+            console.log('📝 Posts count:', data?.posts?.length || 0);
+            console.log('👤 Profile data:', data?.profile);
+            
             setInstagramData(data);
             setShowSampleData(false);
+            console.log('✅ Real Instagram data loaded successfully');
             // URLパラメーターをクリア
             window.history.replaceState({}, document.title, window.location.pathname);
           } else {
-            console.error('Failed to fetch Instagram data');
+            const errorText = await res.text();
+            console.error('❌ Failed to fetch Instagram data, status:', res.status);
+            console.error('❌ Error response:', errorText);
+            setErrorMessage(`Instagram データの取得に失敗しました (${res.status}): ${errorText}`);
             setShowSampleData(true);
           }
         } catch (error) {
-          console.error('Error fetching Instagram data:', error);
+          console.error('❌ Error fetching Instagram data:', error);
+          setErrorMessage(`Instagram データの取得中にエラーが発生しました: ${error.message}`);
           setShowSampleData(true);
         }
       } else {
