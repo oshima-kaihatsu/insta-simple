@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 本番環境で確実にHTTPSのURLを使用
-    const clientId = '1776291423096614';
+    const clientId = process.env.INSTAGRAM_CLIENT_ID!;
     const redirectUri = 'https://insta-simple.thorsync.com/api/instagram/callback';
 
     console.log('=== Instagram Graph API Connect (New API) ===');
