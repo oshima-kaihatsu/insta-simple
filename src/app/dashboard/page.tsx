@@ -253,8 +253,10 @@ export default function DashboardPage() {
 
   // 重要4指標の計算（完全修正版）
   const calculateMetrics = (post) => {
-    console.log('calculateMetrics - Input post:', { hasRealData, postKeys: Object.keys(post), post });
-    console.log('calculateMetrics - Current followers:', currentFollowers, 'Instagram data:', instagramData?.profile);
+    // デバッグログを簡略化してパフォーマンス改善
+    if (process.env.NODE_ENV === 'development') {
+      console.log('calculateMetrics - Post ID:', post.id, 'hasRealData:', hasRealData);
+    }
     
     if (hasRealData && (post.insights || post.data_7d)) {
       // 実データの場合 - data_7dまたはinsightsから取得
@@ -264,14 +266,10 @@ export default function DashboardPage() {
       const profile_views = parseInt(dataSource.profile_visits || dataSource.profile_views) || 0;
       const follows = parseInt(dataSource.follows) || 0;
       
-      console.log('calculateMetrics - Real data extracted:', { reach, saves, profile_views, follows, postId: post.id, dataSource });
-      
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
       const home_rate = currentFollowers > 0 && reach > 0 ? ((reach / currentFollowers) * 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((follows / profile_views) * 100).toFixed(1) : '0.0';
-      
-      console.log('calculateMetrics - Calculated rates:', { saves_rate, home_rate, profile_access_rate, follower_conversion_rate, currentFollowers, reach });
       
       return { saves_rate, home_rate, profile_access_rate, follower_conversion_rate };
     } else if (!hasRealData && post.data_7d) {
