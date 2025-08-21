@@ -75,11 +75,34 @@ export async function GET(request: NextRequest) {
     const longTermData = await longTermResponse.json();
     console.log('Long-term token response:', longTermData);
 
-    const accessToken = longTermData.access_token || shortTermToken; // フォールバック
-    const tokenExpiresIn = longTermData.expires_in || 'unknown';
+    let accessToken = shortTermToken; // デフォルトは短期トークン
+    let tokenExpiresIn = 'unknown';
+    let tokenType = 'short-term';
     
-    console.log('✅ Using access token type:', longTermData.access_token ? 'Long-term (60 days)' : 'Short-term (1 hour)');
+    if (longTermData.access_token && !longTermData.error) {
+      accessToken = longTermData.access_token;
+      tokenExpiresIn = longTermData.expires_in || 'unknown';
+      tokenType = 'long-term';
+      console.log('✅ Successfully obtained long-term token');
+    } else {
+      console.warn('⚠️ Long-term token exchange failed, using short-term token');
+      if (longTermData.error) {
+        console.warn('Long-term token error:', longTermData.error);
+      }
+      // 短期トークンの期限（通常1時間）
+      tokenExpiresIn = 3600;
+      tokenType = 'short-term';
+    }
+    
+    console.log(`✅ Using ${tokenType} access token`);
     console.log('Token expires in:', tokenExpiresIn, 'seconds');
+    
+    // トークンタイプも追加情報として記録
+    const tokenInfo = {
+      type: tokenType,
+      expires_in: tokenExpiresIn,
+      created_at: new Date().toISOString()
+    };
 
     // Step 1.6: トークンの権限とスコープを確認
     console.log('🔍 Checking token permissions...');
@@ -89,11 +112,50 @@ export async function GET(request: NextRequest) {
       const debugData = await debugResponse.json();
       console.log('📋 Token debug info:', debugData);
       
+      // トークンの有効性チェック
+      if (debugData.error) {
+        console.error('❌ Token validation failed:', debugData.error);
+        throw new Error(`Token validation failed: ${debugData.error.message}`);
+      }
+      
+      if (!debugData.data || !debugData.data.is_valid) {
+        console.error('❌ Token is invalid');
+        throw new Error('Access token is invalid');
+      }
+      
       if (debugData.data?.scopes) {
         console.log('✅ Token scopes:', debugData.data.scopes);
+        
+        // 必要な権限があるかチェック
+        const requiredScopes = ['instagram_basic', 'pages_show_list'];
+        const grantedScopes = debugData.data.scopes;
+        const missingScopes = requiredScopes.filter(scope => !grantedScopes.includes(scope));
+        
+        if (missingScopes.length > 0) {
+          console.warn('⚠️ Missing required scopes:', missingScopes);
+          // 必要に応じてエラーにするか、警告として扱うかを決める
+        }
       }
+      
+      // トークンの有効期限をチェック
+      if (debugData.data?.expires_at) {
+        const expiresAt = new Date(debugData.data.expires_at * 1000);
+        console.log('⏰ Token expires at:', expiresAt.toISOString());
+        
+        // 1時間以内に期限切れの場合は警告
+        const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
+        if (expiresAt < oneHourFromNow) {
+          console.warn('⚠️ Token will expire soon:', expiresAt);
+        }
+      }
+      
     } catch (debugError) {
-      console.log('⚠️ Could not debug token:', debugError.message);
+      console.error('❌ Token validation error:', debugError.message);
+      // トークンが無効な場合はエラー画面にリダイレクト
+      const errorUrl = new URL('/dashboard', request.url);
+      errorUrl.searchParams.set('error', 'token_invalid');
+      errorUrl.searchParams.set('message', 'アクセストークンが無効です。再度認証してください。');
+      return NextResponse.redirect(errorUrl);
     }
 
     // Step 2: ユーザー情報を取得
@@ -205,6 +267,7 @@ export async function GET(request: NextRequest) {
       userName: userData.name,
       connectionType: hasValidPageToken ? 'business' : 'simplified',
       hasPageToken: hasValidPageToken,
+      tokenInfo: tokenInfo, // トークン詳細情報
       timestamp: new Date().toISOString()
     };
 
@@ -213,9 +276,31 @@ export async function GET(request: NextRequest) {
       accessToken: '***' // セキュリティのため非表示
     });
 
-    // Step 6: データベースに接続情報を保存（一時的に無効化）
-    // TODO: Supabaseのテーブル構造を修正後に有効化
-    console.log('⚠️ Database save temporarily disabled - table structure needs update');
+    // Step 6: データベースに接続情報を保存を試行
+    try {
+      console.log('💾 Attempting to save connection to database...');
+      const { saveInstagramConnection } = await import('@/lib/supabase');
+      
+      const connectionData = {
+        user_id: userData.id,
+        instagram_user_id: instagramUserId,
+        access_token: pageAccessToken || accessToken,
+        username: instagramUsername,
+        followers_count: 0, // プロフィール取得後に更新
+        connected_at: new Date().toISOString()
+      };
+      
+      const saveResult = await saveInstagramConnection(connectionData);
+      if (saveResult.error) {
+        console.warn('⚠️ Database save failed:', saveResult.error);
+        console.log('Continuing without database save...');
+      } else {
+        console.log('✅ Connection saved to database successfully');
+      }
+    } catch (dbError) {
+      console.warn('⚠️ Database save error:', dbError.message);
+      console.log('Continuing without database save...');
+    }
 
     // Step 7: ダッシュボードにリダイレクト
     const dashboardUrl = new URL('/dashboard', request.url);
@@ -224,6 +309,8 @@ export async function GET(request: NextRequest) {
     dashboardUrl.searchParams.set('instagram_user_id', instagramUserId);
     dashboardUrl.searchParams.set('connection_type', hasValidPageToken ? 'business' : 'simplified');
     dashboardUrl.searchParams.set('has_page_token', hasValidPageToken.toString());
+    dashboardUrl.searchParams.set('token_type', tokenType);
+    dashboardUrl.searchParams.set('expires_in', tokenExpiresIn.toString());
     
     console.log('✅ Instagram connection successful!');
     console.log('Redirecting to dashboard...');

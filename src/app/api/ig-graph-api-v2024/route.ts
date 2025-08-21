@@ -13,8 +13,47 @@ export async function GET(request: NextRequest) {
   if (!accessToken || !instagramUserId) {
     return NextResponse.json({ 
       connected: false, 
-      error: 'Missing parameters' 
+      error: 'MISSING_PARAMETERS',
+      message: 'アクセストークンまたはInstagram User IDが不足しています。' 
     }, { status: 400 });
+  }
+
+  // まずアクセストークンの有効性をチェック
+  console.log('🔍 Step 0: Validating access token...');
+  try {
+    const tokenValidationRes = await fetch(
+      `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${accessToken}`
+    );
+    const tokenValidationData = await tokenValidationRes.json();
+    
+    console.log('🔍 Token validation result:', tokenValidationData);
+    
+    if (tokenValidationData.error || !tokenValidationData.data?.is_valid) {
+      console.error('❌ Invalid access token:', tokenValidationData);
+      return NextResponse.json({
+        connected: false,
+        error: 'INVALID_TOKEN',
+        message: 'アクセストークンが無効です。再認証が必要です。',
+        details: tokenValidationData.error?.message || 'Token validation failed',
+        action: {
+          type: 'reconnect',
+          url: '/api/instagram/connect'
+        }
+      }, { status: 401 });
+    }
+    
+    console.log('✅ Access token is valid');
+  } catch (tokenError) {
+    console.error('❌ Token validation failed:', tokenError);
+    return NextResponse.json({
+      connected: false,
+      error: 'TOKEN_VALIDATION_FAILED',
+      message: 'アクセストークンの検証に失敗しました。再認証してください。',
+      action: {
+        type: 'reconnect',
+        url: '/api/instagram/connect'
+      }
+    }, { status: 401 });
   }
 
   try {

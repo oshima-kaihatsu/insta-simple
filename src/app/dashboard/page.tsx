@@ -537,20 +537,39 @@ export default function DashboardPage() {
             
             // APIからエラーレスポンスが返された場合の処理
             if (!data.connected || data.error) {
-              console.log('⚠️ Instagram API returned error:', data.error);
+              console.log('⚠️ Instagram API returned error:', data.error, data);
               
               // 具体的なエラーメッセージを設定
               let userMessage = 'Instagram連携でエラーが発生しました。';
+              let showReconnectButton = false;
               
-              if (data.error === 'NO_FACEBOOK_PAGE') {
+              if (data.error === 'INVALID_TOKEN' || data.error === 'TOKEN_VALIDATION_FAILED') {
+                userMessage = 'アクセストークンが無効になりました。再度Instagram連携を行ってください。';
+                showReconnectButton = true;
+              } else if (data.error === 'NO_FACEBOOK_PAGE') {
                 userMessage = 'Instagram Business Accountを利用するには、Facebookページが必要です。';
               } else if (data.error === 'NO_INSTAGRAM_CONNECTION') {
                 userMessage = 'Facebookページは見つかりましたが、Instagramアカウントが連携されていません。';
+              } else if (data.error === 'PAGES_API_ERROR') {
+                userMessage = 'Facebook Pages APIでエラーが発生しました。しばらく時間をおいて再試行してください。';
+                showReconnectButton = true;
+              } else if (data.message) {
+                userMessage = data.message;
+              }
+              
+              // エラーの詳細も表示
+              if (data.details) {
+                userMessage += ` 詳細: ${data.details}`;
               }
               
               setErrorMessage(userMessage);
               setShowSampleData(true);
               setInstagramData(null);
+              
+              // 再認証ボタンの表示フラグを設定（必要に応じて）
+              if (showReconnectButton && typeof setShowReconnectButton !== 'undefined') {
+                setShowReconnectButton(true);
+              }
             } else {
               // 正常にデータが取得できた場合
               setInstagramData(data);
