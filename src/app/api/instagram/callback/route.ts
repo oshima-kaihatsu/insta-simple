@@ -117,7 +117,7 @@ export async function GET(request: NextRequest) {
     // Step 4: Facebookページを確認（オプション）
     try {
       const pagesResponse = await fetch(
-        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
+        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
       );
       const pagesData = await pagesResponse.json();
       console.log('📄 Callback Pages API Status:', pagesResponse.status);
@@ -150,7 +150,23 @@ export async function GET(request: NextRequest) {
           }
         }
       } else {
-        console.log('⚠️ No Facebook pages found, using simplified connection');
+        console.log('⚠️ No Facebook pages found, trying alternative approach...');
+        
+        // 代替手段: 直接Instagram Business Accountを検索
+        try {
+          const directIgResponse = await fetch(
+            `https://graph.facebook.com/v21.0/me?fields=instagram_business_account&access_token=${accessToken}`
+          );
+          const directIgData = await directIgResponse.json();
+          console.log('🔍 Direct Instagram Business Account check:', directIgData);
+          
+          if (directIgData.instagram_business_account) {
+            instagramUserId = directIgData.instagram_business_account.id;
+            console.log('✅ Found Instagram Business Account via direct method:', instagramUserId);
+          }
+        } catch (directError) {
+          console.log('⚠️ Direct Instagram check also failed:', directError.message);
+        }
       }
     } catch (pageError) {
       console.log('⚠️ Could not fetch pages, continuing with basic connection:', pageError.message);
