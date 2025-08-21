@@ -789,30 +789,66 @@ export default function DashboardPage() {
           </div>
           
           {!hasRealData && (
-            <button 
-              onClick={() => {
-                window.location.href = '/api/instagram/connect';
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
-                color: '#fcfbf8',
-                padding: isMobile ? '12px 20px' : '16px 32px',
-                border: 'none',
-                borderRadius: isMobile ? '8px' : '12px',
-                fontSize: isMobile ? '14px' : '16px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                width: isMobile ? '100%' : 'auto',
-                justifyContent: 'center',
-                transition: 'all 0.2s',
-                boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
-              }}
-            >
-              Instagram連携
-            </button>
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => {
+                  window.location.href = '/api/instagram/connect';
+                }}
+                style={{
+                  background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+                  color: '#fcfbf8',
+                  padding: isMobile ? '12px 20px' : '16px 32px',
+                  border: 'none',
+                  borderRadius: isMobile ? '8px' : '12px',
+                  fontSize: isMobile ? '14px' : '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  width: isMobile ? '100%' : 'auto',
+                  justifyContent: 'center',
+                  transition: 'all 0.2s',
+                  boxShadow: '0 4px 12px rgba(199, 154, 66, 0.3)'
+                }}
+              >
+                Instagram連携
+              </button>
+              
+              {/* デバッグボタン（アクセストークンがある場合のみ表示） */}
+              {typeof window !== 'undefined' && window.location.search.includes('access_token') && (
+                <button 
+                  onClick={async () => {
+                    const params = new URLSearchParams(window.location.search);
+                    const token = params.get('access_token');
+                    if (token) {
+                      const res = await fetch(`/api/debug-facebook?access_token=${encodeURIComponent(token)}`);
+                      const data = await res.json();
+                      console.log('🔍 Facebook Debug Results:', data);
+                      alert(`デバッグ結果をコンソールで確認してください。\nページ数: ${data.summary?.pages_count || 0}\n権限数: ${data.summary?.permissions_count || 0}`);
+                    }
+                  }}
+                  style={{
+                    background: '#4267B2',
+                    color: 'white',
+                    padding: isMobile ? '12px 20px' : '16px 32px',
+                    border: 'none',
+                    borderRadius: isMobile ? '8px' : '12px',
+                    fontSize: isMobile ? '14px' : '16px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    width: isMobile ? '100%' : 'auto',
+                    justifyContent: 'center',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  🔍 Facebookデバッグ
+                </button>
+              )}
+            </div>
           )}
         </div>
 
