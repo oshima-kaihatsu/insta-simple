@@ -43,12 +43,14 @@ export async function GET(request: NextRequest) {
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
     // Instagram Graph API エンドポイント
-    // Instagram Business Account APIに必要なスコープ
+    // Instagram Business Account APIに必要なスコープ（管理権限を明示）
     const scope = [
       'instagram_basic',
-      'pages_show_list', 
-      'pages_read_engagement',
-      'instagram_manage_insights'
+      'instagram_manage_insights',
+      'pages_show_list',
+      'pages_read_engagement', 
+      'pages_manage_metadata',
+      'pages_read_user_content'
     ].join(',');
     
     const authUrl = `https://www.facebook.com/v21.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=instagram`;

@@ -118,9 +118,8 @@ export async function saveInstagramConnection(connectionData) {
         instagram_user_id: connectionData.instagram_user_id,
         access_token: connectionData.access_token,
         username: connectionData.username,
-        followers_count: connectionData.followers_count,
-        connected_at: new Date().toISOString(),
-        last_synced_at: new Date().toISOString()
+        followers_count: connectionData.followers_count || 0,
+        connected_at: new Date().toISOString()
       }])
       .select()
       .single()
