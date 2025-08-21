@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     console.log('2. 👤 Fetching user info...');
     try {
       const userRes = await fetch(
-        `https://graph.facebook.com/v21.0/me?fields=id,name,email&access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me?fields=id,name,email&access_token=${accessToken}`
       );
       results.user = await userRes.json();
       console.log('User info:', results.user);
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     console.log('3. 🔐 Checking permissions...');
     try {
       const permissionsRes = await fetch(
-        `https://graph.facebook.com/v21.0/me/permissions?access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me/permissions?access_token=${accessToken}`
       );
       results.permissions = await permissionsRes.json();
       console.log('Permissions:', results.permissions);
@@ -54,39 +54,39 @@ export async function GET(request: NextRequest) {
     console.log('4. 📄 Testing Facebook Pages API with multiple versions...');
     results.pages = {};
     
-    // v21.0
+    // v23.0 (詳細)
     try {
-      const pagesV21Res = await fetch(
-        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account{id,username,name}&access_token=${accessToken}`
+      const pagesV23DetailedRes = await fetch(
+        `https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token,category,tasks,instagram_business_account{id,username,name}&access_token=${accessToken}`
       );
-      results.pages.v21 = {
-        status: pagesV21Res.status,
-        data: await pagesV21Res.json()
+      results.pages.v23_detailed = {
+        status: pagesV23DetailedRes.status,
+        data: await pagesV23DetailedRes.json()
       };
-      console.log('Pages v21.0:', results.pages.v21);
+      console.log('Pages v23.0 (detailed):', results.pages.v23_detailed);
     } catch (error) {
-      results.pages.v21 = { error: error.message };
+      results.pages.v23_detailed = { error: error.message };
     }
 
-    // v18.0
+    // v23.0 (シンプル)
     try {
-      const pagesV18Res = await fetch(
-        `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+      const pagesV23SimpleRes = await fetch(
+        `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
       );
-      results.pages.v18 = {
-        status: pagesV18Res.status,
-        data: await pagesV18Res.json()
+      results.pages.v23_simple = {
+        status: pagesV23SimpleRes.status,
+        data: await pagesV23SimpleRes.json()
       };
-      console.log('Pages v18.0:', results.pages.v18);
+      console.log('Pages v23.0 (simple):', results.pages.v23_simple);
     } catch (error) {
-      results.pages.v18 = { error: error.message };
+      results.pages.v23_simple = { error: error.message };
     }
 
     // 5. 管理しているビジネス
     console.log('5. 🏢 Checking businesses...');
     try {
       const businessesRes = await fetch(
-        `https://graph.facebook.com/v21.0/me/businesses?access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me/businesses?access_token=${accessToken}`
       );
       results.businesses = await businessesRes.json();
       console.log('Businesses:', results.businesses);
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     console.log('6. 📱 Direct Instagram Business Account check...');
     try {
       const directIgRes = await fetch(
-        `https://graph.facebook.com/v21.0/me?fields=instagram_business_account&access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me?fields=instagram_business_account&access_token=${accessToken}`
       );
       results.direct_instagram = await directIgRes.json();
       console.log('Direct Instagram:', results.direct_instagram);
@@ -110,7 +110,7 @@ export async function GET(request: NextRequest) {
     console.log('7. 📱 App info...');
     try {
       const appRes = await fetch(
-        `https://graph.facebook.com/v21.0/app?access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/app?access_token=${accessToken}`
       );
       results.app_info = await appRes.json();
       console.log('App info:', results.app_info);
@@ -126,8 +126,8 @@ export async function GET(request: NextRequest) {
       token_scopes: results.token_debug?.data?.scopes || [],
       user_id: results.user?.id || 'unknown',
       permissions_granted: results.permissions?.data?.filter((p: any) => p.status === 'granted').map((p: any) => p.permission) || [],
-      pages_found_v21: results.pages?.v21?.data?.data?.length || 0,
-      pages_found_v18: results.pages?.v18?.data?.data?.length || 0,
+      pages_found_detailed: results.pages?.v23_detailed?.data?.data?.length || 0,
+      pages_found_simple: results.pages?.v23_simple?.data?.data?.length || 0,
       has_instagram_permission: results.permissions?.data?.some((p: any) => p.permission.includes('instagram') && p.status === 'granted') || false,
       has_pages_permission: results.permissions?.data?.some((p: any) => p.permission.includes('pages') && p.status === 'granted') || false,
       direct_instagram_found: !!results.direct_instagram?.instagram_business_account,
@@ -165,7 +165,7 @@ function generateRecommendations(analysis: any, results: any) {
     });
   }
 
-  if (analysis.pages_found_v21 === 0 && analysis.pages_found_v18 === 0) {
+  if (analysis.pages_found_detailed === 0 && analysis.pages_found_simple === 0) {
     recommendations.push({
       type: 'warning',
       message: 'Facebookページが見つかりません。',
@@ -193,7 +193,7 @@ function generateRecommendations(analysis: any, results: any) {
     });
   }
 
-  if (results.pages?.v21?.data?.error?.code === 200) {
+  if (results.pages?.v23_detailed?.data?.error?.code === 200) {
     recommendations.push({
       type: 'info',
       message: 'Facebook App Reviewが必要な可能性があります。',

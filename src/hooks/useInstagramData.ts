@@ -28,7 +28,7 @@ export class InstagramAPIClient {
   // ユーザーの基本情報を取得
   async getUserInfo(): Promise<any> {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/me?fields=id,username,account_type,media_count,followers_count&access_token=${this.accessToken}`
+      `https://graph.facebook.com/v23.0/me?fields=id,username,account_type,media_count,followers_count&access_token=${this.accessToken}`
     );
     return response.json();
   }
@@ -36,7 +36,7 @@ export class InstagramAPIClient {
   // 投稿データを取得
   async getUserMedia(limit: number = 25): Promise<any> {
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/me/media?fields=id,media_type,media_url,permalink,timestamp,caption,comments_count,like_count&limit=${limit}&access_token=${this.accessToken}`
+      `https://graph.facebook.com/v23.0/me/media?fields=id,media_type,media_url,permalink,timestamp,caption,comments_count,like_count&limit=${limit}&access_token=${this.accessToken}`
     );
     return response.json();
   }
@@ -55,7 +55,7 @@ export class InstagramAPIClient {
     ];
     
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/${mediaId}/insights?metric=${metrics.join(',')}&access_token=${this.accessToken}`
+      `https://graph.facebook.com/v23.0/${mediaId}/insights?metric=${metrics.join(',')}&access_token=${this.accessToken}`
     );
     return response.json();
   }
@@ -70,7 +70,7 @@ export class InstagramAPIClient {
     ];
 
     const response = await fetch(
-      `https://graph.facebook.com/v18.0/me/insights?metric=${metrics.join(',')}&period=${period}&access_token=${this.accessToken}`
+      `https://graph.facebook.com/v23.0/me/insights?metric=${metrics.join(',')}&period=${period}&access_token=${this.accessToken}`
     );
     return response.json();
   }

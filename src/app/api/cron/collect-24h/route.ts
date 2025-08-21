@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
         // Facebook Pages APIを使用してInstagram Business Accountのメディアを取得
         const mediaResponse = await fetch(
-          `https://graph.facebook.com/v21.0/${connection.instagram_user_id}/media?fields=id,caption,timestamp,media_type&limit=50&access_token=${connection.access_token}`
+          `https://graph.facebook.com/v23.0/${connection.instagram_user_id}/media?fields=id,caption,timestamp,media_type&limit=50&access_token=${connection.access_token}`
         );
 
         if (!mediaResponse.ok) {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           try {
             // Instagram Business Accountのインサイト取得（実際のメトリクスのみ）
             const insightsResponse = await fetch(
-              `https://graph.facebook.com/v21.0/${post.id}/insights?metric=reach,impressions,saved,engagement&access_token=${connection.access_token}`
+              `https://graph.facebook.com/v23.0/${post.id}/insights?metric=reach,impressions,saved,engagement&access_token=${connection.access_token}`
             );
 
             let insights: any = {};

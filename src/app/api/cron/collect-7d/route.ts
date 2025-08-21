@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
 
         // Instagram Business Accountからインサイトを取得（実際のメトリクスのみ）
         const insightsResponse = await fetch(
-          `https://graph.facebook.com/v21.0/${postRecord.post_id}/insights?metric=reach,impressions,saved,engagement&access_token=${postRecord.instagram_connections.access_token}`
+          `https://graph.facebook.com/v23.0/${postRecord.post_id}/insights?metric=reach,impressions,saved,engagement&access_token=${postRecord.instagram_connections.access_token}`
         );
 
         if (!insightsResponse.ok) {

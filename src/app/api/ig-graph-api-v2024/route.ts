@@ -24,19 +24,19 @@ export async function GET(request: NextRequest) {
     // 複数のAPIバージョンで試行
     let pagesResponse, pagesData;
     
-    // まずv21.0で試行
+    // まずv23.0で試行
     try {
-      console.log('📄 Trying v21.0...');
+      console.log('📄 Trying v23.0...');
       pagesResponse = await fetch(
-        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name}&access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name}&access_token=${accessToken}`
       );
       pagesData = await pagesResponse.json();
       
-      // エラーまたは空データの場合、v18.0で再試行
+      // エラーまたは空データの場合、フォールバックで再試行
       if (pagesData.error || !pagesData.data || pagesData.data.length === 0) {
-        console.log('📄 Retrying with v18.0...');
+        console.log('📄 Retrying with fallback approach...');
         pagesResponse = await fetch(
-          `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+          `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
         );
         pagesData = await pagesResponse.json();
       }
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     // Instagram Business Accountを取得
     console.log('🔍 Step 2: Checking Instagram Business Account connection...');
     const igRes = await fetch(
-      `https://graph.facebook.com/v18.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v23.0/${page.id}?fields=instagram_business_account&access_token=${pageAccessToken}`
     );
     const igData = await igRes.json();
 
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     console.log('📊 Step 2: Fetching Instagram profile...');
     
     const profileResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${igBusinessId}?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v23.0/${igBusinessId}?fields=id,username,name,biography,followers_count,follows_count,media_count,profile_picture_url&access_token=${pageAccessToken}`
     );
     const profileData = await profileResponse.json();
     
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
     console.log('📈 Step 3: Fetching posts with insights...');
     
     const mediaResponse = await fetch(
-      `https://graph.facebook.com/v21.0/${igBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(reach,impressions,saved,engagement,shares,plays,total_interactions)&limit=28&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v23.0/${igBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(reach,impressions,saved,engagement,shares,plays,total_interactions)&limit=28&access_token=${pageAccessToken}`
     );
     const mediaData = await mediaResponse.json();
     

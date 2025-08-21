@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
     // 1. ユーザー情報を確認
     console.log('📋 Step 1: Checking user info...');
     const userResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me?fields=id,name,email&access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me?fields=id,name,email&access_token=${accessToken}`
     );
     const userData = await userResponse.json();
     console.log('👤 User Response Status:', userResponse.status);
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     // 2. アクセストークンの詳細を確認
     console.log('🔑 Step 2: Checking access token details...');
     const tokenResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/permissions?access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me/permissions?access_token=${accessToken}`
     );
     const tokenData = await tokenResponse.json();
     console.log('🔑 Token Permissions Status:', tokenResponse.status);
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     
     // 3a. 標準のaccountsエンドポイント
     const pagesResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
     );
     const pagesData = await pagesResponse.json();
     console.log('📄 Pages Response Status:', pagesResponse.status);
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 
     // 3b. 代替のpagesエンドポイント
     const pagesAltResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/pages?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me/pages?fields=id,name,access_token,instagram_business_account&access_token=${accessToken}`
     );
     const pagesAltData = await pagesAltResponse.json();
     console.log('📄 Alt Pages Response Status:', pagesAltResponse.status);
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
     // 3c. ページのIDを直接指定してテスト（もしページIDがわかる場合）
     const businessResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me/businesses?fields=id,name&access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me/businesses?fields=id,name&access_token=${accessToken}`
     );
     const businessData = await businessResponse.json();
     console.log('🏢 Business Response Status:', businessResponse.status);
@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
     // 4. App情報を確認
     console.log('🎯 Step 4: Checking app info...');
     const appResponse = await fetch(
-      `https://graph.facebook.com/v21.0/app?access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/app?access_token=${accessToken}`
     );
     const appData = await appResponse.json();
     console.log('🎯 App Response Status:', appResponse.status);

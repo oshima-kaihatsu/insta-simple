@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     console.log('Using Redirect URI:', redirectUri);
 
     // Step 1: アクセストークン取得
-    const tokenUrl = 'https://graph.facebook.com/v21.0/oauth/access_token';
+    const tokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
     const tokenParams = new URLSearchParams({
       client_id: process.env.INSTAGRAM_CLIENT_ID!,
       client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     // Step 1.5: 短期トークンを長期トークンに交換
     console.log('🔄 Converting short-term token to long-term token...');
-    const longTermTokenUrl = 'https://graph.facebook.com/v21.0/oauth/access_token';
+    const longTermTokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
     const longTermParams = new URLSearchParams({
       grant_type: 'fb_exchange_token',
       client_id: process.env.INSTAGRAM_CLIENT_ID!,
@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
     // Step 2: ユーザー情報を取得
     console.log('🔍 Fetching user information...');
     const userResponse = await fetch(
-      `https://graph.facebook.com/v21.0/me?fields=id,name&access_token=${accessToken}`
+      `https://graph.facebook.com/v23.0/me?fields=id,name&access_token=${accessToken}`
     );
     const userData = await userResponse.json();
     console.log('User data:', userData);
@@ -119,18 +119,18 @@ export async function GET(request: NextRequest) {
     let hasValidPageToken = false;
     
     try {
-      // まずv21.0で試行
-      console.log('📄 Trying Facebook Pages API v21.0...');
+      // まずv23.0で試行
+      console.log('📄 Trying Facebook Pages API v23.0...');
       let pagesResponse = await fetch(
-        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
+        `https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
       );
       let pagesData = await pagesResponse.json();
       
-      // v21.0でエラーまたは空の場合、v18.0で再試行
+      // v23.0でエラーまたは空の場合、フォールバックで再試行
       if (pagesData.error || !pagesData.data || pagesData.data.length === 0) {
-        console.log('📄 Retrying with Facebook Pages API v18.0...');
+        console.log('📄 Retrying with fallback approach...');
         pagesResponse = await fetch(
-          `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+          `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
         );
         pagesData = await pagesResponse.json();
       }
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
             // Instagram Business Accountの詳細を取得（ページトークンを使用）
             const tokenToUse = pageAccessToken || accessToken;
             const igResponse = await fetch(
-              `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,name,followers_count,media_count&access_token=${tokenToUse}`
+              `https://graph.facebook.com/v23.0/${instagramUserId}?fields=id,username,name,followers_count,media_count&access_token=${tokenToUse}`
             );
             const igData = await igResponse.json();
             
@@ -178,7 +178,7 @@ export async function GET(request: NextRequest) {
         // 代替手段: 直接Instagram Business Accountを検索
         try {
           const directIgResponse = await fetch(
-            `https://graph.facebook.com/v21.0/me?fields=instagram_business_account&access_token=${accessToken}`
+            `https://graph.facebook.com/v23.0/me?fields=instagram_business_account&access_token=${accessToken}`
           );
           const directIgData = await directIgResponse.json();
           console.log('🔍 Direct Instagram Business Account check:', directIgData);
