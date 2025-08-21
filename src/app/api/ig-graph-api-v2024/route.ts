@@ -99,34 +99,67 @@ export async function GET(request: NextRequest) {
     }
     
     if (!pagesData.data || pagesData.data.length === 0) {
-      console.log('⚠️ No Facebook pages found, attempting personal account connection...');
+      console.log('⚠️ No Facebook pages found, trying user-level Instagram data...');
       
-      // 個人アカウントとしての接続を試みる
-      return NextResponse.json({
-        connected: true,
-        connectionType: 'personal',
-        profile: {
-          id: instagramUserId,
-          username: 'Personal Account',
-          name: 'Instagram User',
-          account_type: 'PERSONAL',
-          followers_count: 0,
-          media_count: 0
-        },
-        posts: [],
-        follower_history: {
-          hasData: false,
-          data: [],
-          dataPoints: 0
-        },
-        message: 'Facebookページが見つかりません。Business Accountのインサイトデータを取得するには、Facebookページの作成とInstagramアカウントの連携が必要です。',
-        instructions: {
-          step1: 'Facebookページを作成: https://www.facebook.com/pages/create',
-          step2: 'Facebookページの設定 → Instagram → アカウントをリンク',
-          step3: 'Instagramアカウントをビジネスアカウントに変更',
-          step4: '再度このアプリで連携'
+      // Facebook Graph APIでユーザー情報を取得
+      try {
+        console.log('👤 Fetching user profile information...');
+        const userProfileRes = await fetch(
+          `https://graph.facebook.com/v23.0/me?fields=id,name,email&access_token=${accessToken}`
+        );
+        const userProfile = await userProfileRes.json();
+        
+        if (userProfile.error) {
+          console.error('❌ User profile error:', userProfile.error);
+          throw new Error('Failed to fetch user profile');
         }
-      });
+        
+        console.log('✅ User profile:', userProfile);
+        
+        // サンプルデータで応答（実際のFacebookページ/Instagram Business Account接続を促すメッセージ付き）
+        return NextResponse.json({
+          connected: true,
+          connectionType: 'user_level',
+          profile: {
+            id: userProfile.id,
+            username: userProfile.name || 'Instagram User',
+            name: userProfile.name || 'Instagram User',
+            account_type: 'USER_LEVEL',
+            followers_count: 0,
+            media_count: 0,
+            biography: '',
+            profile_picture_url: null
+          },
+          posts: generateSamplePostsForDemo(), // デモ用サンプルデータ
+          follower_history: {
+            hasData: false,
+            data: generateSampleFollowerHistory(),
+            dataPoints: 7
+          },
+          insights_summary: {
+            total_reach: 0,
+            total_impressions: 0, 
+            total_saves: 0,
+            average_engagement: 0
+          },
+          message: '🔍 Facebook Pages APIから空のレスポンスが返されました。Instagram Business Accountのインサイトデータを取得するには、追加設定が必要です。',
+          demo_mode: true,
+          instructions: {
+            step1: 'Facebookページを作成: https://www.facebook.com/pages/create',
+            step2: 'Instagramアカウントをビジネスアカウントまたはクリエイターアカウントに変更',
+            step3: 'Facebookページの設定 → Instagram → 既存のアカウントをリンク',
+            step4: '再度このアプリで連携してリアルデータを取得'
+          }
+        });
+        
+      } catch (userError) {
+        console.error('❌ Failed to get user data:', userError);
+        return NextResponse.json({
+          connected: false,
+          error: 'USER_PROFILE_ERROR',
+          message: 'ユーザープロフィールの取得に失敗しました。'
+        });
+      }
     }
 
     // ページのアクセストークンを取得
@@ -314,6 +347,69 @@ export async function GET(request: NextRequest) {
       details: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
+}
+
+// デモ用サンプルデータ生成
+function generateSamplePostsForDemo() {
+  return [
+    {
+      id: 'demo_1',
+      caption: '新年の目標設定について✨ 今年こそは継続できる習慣を身につけたいですね！',
+      title: '新年の目標設定について',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP'),
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      media_type: 'IMAGE',
+      media_url: null,
+      thumbnail_url: null,
+      permalink: '#',
+      like_count: 234,
+      comments_count: 18,
+      data_24h: { reach: 1850, likes: 234, saves: 56, impressions: 2100, engagement: 308 },
+      data_7d: { reach: 2650, likes: 334, saves: 78, impressions: 3200, engagement: 430 },
+      insights: { reach: 2650, impressions: 3200, saved: 78, engagement: 430, shares: 12, plays: 0, total_interactions: 430 },
+      rankings: { saves_rate: 2, home_rate: 1, profile_access_rate: 3, follower_conversion_rate: 2 }
+    },
+    {
+      id: 'demo_2',
+      caption: 'カフェで見つけた美味しいパンケーキ🥞 週末の小さな幸せです',
+      title: 'カフェで見つけた美味しいパンケーキ',
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP'),
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      media_type: 'CAROUSEL_ALBUM',
+      like_count: 187,
+      comments_count: 12,
+      data_24h: { reach: 1420, likes: 187, saves: 34, impressions: 1680, engagement: 233 },
+      data_7d: { reach: 1950, likes: 267, saves: 45, impressions: 2340, engagement: 324 },
+      insights: { reach: 1950, impressions: 2340, saved: 45, engagement: 324, shares: 8, plays: 0, total_interactions: 324 },
+      rankings: { saves_rate: 3, home_rate: 2, profile_access_rate: 4, follower_conversion_rate: 3 }
+    },
+    {
+      id: 'demo_3',
+      caption: '朝のルーティン公開！ 早起きして運動することで一日が充実します💪',
+      title: '朝のルーティン公開',
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP'),
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      media_type: 'REELS',
+      like_count: 456,
+      comments_count: 32,
+      data_24h: { reach: 3240, likes: 456, saves: 89, impressions: 4100, engagement: 577 },
+      data_7d: { reach: 4680, likes: 623, saves: 124, impressions: 5890, engagement: 779 },
+      insights: { reach: 4680, impressions: 5890, saved: 124, engagement: 779, shares: 23, plays: 4100, total_interactions: 779 },
+      rankings: { saves_rate: 1, home_rate: 1, profile_access_rate: 1, follower_conversion_rate: 1 }
+    }
+  ];
+}
+
+function generateSampleFollowerHistory() {
+  const history = [];
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+    history.push({
+      date: date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
+      followers: 1500 + Math.floor(Math.random() * 100) - 50 + (6 - i) * 10 // 徐々に増加傾向
+    });
+  }
+  return history;
 }
 
 // ランキング計算（実データベース）

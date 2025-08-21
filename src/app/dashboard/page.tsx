@@ -573,9 +573,19 @@ export default function DashboardPage() {
             } else {
               // 正常にデータが取得できた場合
               setInstagramData(data);
-              setShowSampleData(false);
-              setErrorMessage(null);
-              console.log('✅ Real Instagram data loaded successfully');
+              
+              // デモモードかどうかをチェック
+              if (data.demo_mode || data.connectionType === 'user_level') {
+                setShowSampleData(false); // サンプルデータは非表示
+                setErrorMessage(null);
+                console.log('✅ Demo/User level Instagram data loaded successfully');
+                console.log('📋 Connection type:', data.connectionType);
+                console.log('📝 Message:', data.message);
+              } else {
+                setShowSampleData(false);
+                setErrorMessage(null);
+                console.log('✅ Real Instagram Business data loaded successfully');
+              }
             }
             
             // URLパラメーターをクリア

@@ -276,31 +276,15 @@ export async function GET(request: NextRequest) {
       accessToken: '***' // セキュリティのため非表示
     });
 
-    // Step 6: データベースに接続情報を保存を試行
-    try {
-      console.log('💾 Attempting to save connection to database...');
-      const { saveInstagramConnection } = await import('@/lib/supabase');
-      
-      const connectionData = {
-        user_id: userData.id,
-        instagram_user_id: instagramUserId,
-        access_token: pageAccessToken || accessToken,
-        username: instagramUsername,
-        followers_count: 0, // プロフィール取得後に更新
-        connected_at: new Date().toISOString()
-      };
-      
-      const saveResult = await saveInstagramConnection(connectionData);
-      if (saveResult.error) {
-        console.warn('⚠️ Database save failed:', saveResult.error);
-        console.log('Continuing without database save...');
-      } else {
-        console.log('✅ Connection saved to database successfully');
-      }
-    } catch (dbError) {
-      console.warn('⚠️ Database save error:', dbError.message);
-      console.log('Continuing without database save...');
-    }
+    // Step 6: データベースに接続情報を保存（スキップ - テーブル構造の問題のため）
+    console.log('⚠️ Database save temporarily skipped due to table structure issues');
+    console.log('💾 Connection data would be:', {
+      user_id: userData.id,
+      instagram_user_id: instagramUserId,
+      access_token: '***', // セキュリティのため非表示
+      username: instagramUsername,
+      connection_type: hasValidPageToken ? 'business' : 'simplified'
+    });
 
     // Step 7: ダッシュボードにリダイレクト
     const dashboardUrl = new URL('/dashboard', request.url);
