@@ -513,9 +513,9 @@ export default function DashboardPage() {
         console.log('Instagram user ID:', instagramUserId);
         
         try {
-          const apiUrl = `/api/ig-graph-api-v2024?access_token=${accessToken}&instagram_user_id=${instagramUserId}&_v=2024&_cache_bust=${Math.random()}`;
-          console.log('📡 Making API request to NEW ENDPOINT:', apiUrl);
-          console.log('🔥 Using IG-GRAPH-API-V2024 endpoint - COMPLETELY NEW!');
+          const apiUrl = `/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`;
+          console.log('📡 Making API request to REAL DATA ENDPOINT:', apiUrl);
+          console.log('🔥 Using INSTAGRAM-DATA endpoint - REAL DATA!');
           
           const res = await fetch(apiUrl, {
             method: 'GET',
