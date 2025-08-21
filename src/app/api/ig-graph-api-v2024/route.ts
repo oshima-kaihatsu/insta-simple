@@ -41,10 +41,33 @@ export async function GET(request: NextRequest) {
     }
     
     if (!pagesData.data || pagesData.data.length === 0) {
+      console.log('⚠️ No Facebook pages found, attempting personal account connection...');
+      
+      // 個人アカウントとしての接続を試みる
       return NextResponse.json({
-        connected: false,
-        error: 'NO_FACEBOOK_PAGE',
-        message: 'Facebookページが見つかりません。Instagram Business Accountを使用するにはFacebookページが必要です。'
+        connected: true,
+        connectionType: 'personal',
+        profile: {
+          id: instagramUserId,
+          username: 'Personal Account',
+          name: 'Instagram User',
+          account_type: 'PERSONAL',
+          followers_count: 0,
+          media_count: 0
+        },
+        posts: [],
+        follower_history: {
+          hasData: false,
+          data: [],
+          dataPoints: 0
+        },
+        message: 'Facebookページが見つかりません。Business Accountのインサイトデータを取得するには、Facebookページの作成とInstagramアカウントの連携が必要です。',
+        instructions: {
+          step1: 'Facebookページを作成: https://www.facebook.com/pages/create',
+          step2: 'Facebookページの設定 → Instagram → アカウントをリンク',
+          step3: 'Instagramアカウントをビジネスアカウントに変更',
+          step4: '再度このアプリで連携'
+        }
       });
     }
 
