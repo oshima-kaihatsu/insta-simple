@@ -19,16 +19,35 @@ export async function GET(request: NextRequest) {
 
   try {
     // Facebook Graph API を使用（Instagram Business Account用）
-    console.log('🔍 Step 1: Fetching Facebook Pages...');
+    console.log('🔍 Step 1: Fetching Facebook Pages with multiple API versions...');
     
-    // まずFacebookページを取得
-    const pagesResponse = await fetch(
-      `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
-    );
-    const pagesData = await pagesResponse.json();
+    // 複数のAPIバージョンで試行
+    let pagesResponse, pagesData;
+    
+    // まずv21.0で試行
+    try {
+      console.log('📄 Trying v21.0...');
+      pagesResponse = await fetch(
+        `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name}&access_token=${accessToken}`
+      );
+      pagesData = await pagesResponse.json();
+      
+      // エラーまたは空データの場合、v18.0で再試行
+      if (pagesData.error || !pagesData.data || pagesData.data.length === 0) {
+        console.log('📄 Retrying with v18.0...');
+        pagesResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+        );
+        pagesData = await pagesResponse.json();
+      }
+    } catch (error) {
+      console.error('❌ Pages API network error:', error);
+      pagesData = { error: { message: 'Network error' } };
+    }
     
     console.log('📄 Pages Response Status:', pagesResponse.status);
     console.log('📄 Pages found:', pagesData.data?.length || 0);
+    console.log('📄 Full pages response:', JSON.stringify(pagesData, null, 2));
     
     if (pagesData.error) {
       console.error('❌ Pages API Error:', pagesData.error);

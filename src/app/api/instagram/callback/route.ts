@@ -114,30 +114,53 @@ export async function GET(request: NextRequest) {
     let instagramUserId = userData.id; // FacebookユーザーIDを使用
     let instagramUsername = userData.name || 'Instagram User';
 
-    // Step 4: Facebookページを確認（オプション）
+    // Step 4: Facebookページを確認（複数のAPIバージョンで試行）
+    let pageAccessToken = null;
+    let hasValidPageToken = false;
+    
     try {
-      const pagesResponse = await fetch(
+      // まずv21.0で試行
+      console.log('📄 Trying Facebook Pages API v21.0...');
+      let pagesResponse = await fetch(
         `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
       );
-      const pagesData = await pagesResponse.json();
+      let pagesData = await pagesResponse.json();
+      
+      // v21.0でエラーまたは空の場合、v18.0で再試行
+      if (pagesData.error || !pagesData.data || pagesData.data.length === 0) {
+        console.log('📄 Retrying with Facebook Pages API v18.0...');
+        pagesResponse = await fetch(
+          `https://graph.facebook.com/v18.0/me/accounts?access_token=${accessToken}`
+        );
+        pagesData = await pagesResponse.json();
+      }
+      
       console.log('📄 Callback Pages API Status:', pagesResponse.status);
       console.log('📄 Callback Pages data:', JSON.stringify(pagesData, null, 2));
       
       // エラーレスポンスをチェック
       if (pagesData.error) {
         console.error('❌ Callback Pages API Error:', pagesData.error);
-        console.log('⚠️ Continuing with simplified connection due to pages error');
+        console.log('⚠️ Continuing with user token due to pages error');
       }
 
       if (pagesData.data && pagesData.data.length > 0) {
         // Facebookページが存在する場合
         for (const page of pagesData.data) {
+          // ページアクセストークンを保存
+          if (page.access_token) {
+            pageAccessToken = page.access_token;
+            hasValidPageToken = true;
+            console.log('✅ Got page access token for:', page.name);
+          }
+          
           if (page.instagram_business_account) {
             instagramUserId = page.instagram_business_account.id;
             
-            // Instagram Business Accountの詳細を取得
+            // Instagram Business Accountの詳細を取得（ページトークンを使用）
+            const tokenToUse = pageAccessToken || accessToken;
             const igResponse = await fetch(
-              `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,name,followers_count,media_count&access_token=${accessToken}`
+              `https://graph.facebook.com/v21.0/${instagramUserId}?fields=id,username,name,followers_count,media_count&access_token=${tokenToUse}`
             );
             const igData = await igResponse.json();
             
@@ -174,12 +197,14 @@ export async function GET(request: NextRequest) {
 
     // Step 5: セッションデータを準備
     const sessionData = {
-      accessToken: accessToken,
+      accessToken: pageAccessToken || accessToken, // ページトークンを優先
+      userAccessToken: accessToken, // ユーザートークンも保存
       instagramUserId: instagramUserId,
       instagramUsername: instagramUsername,
       userId: userData.id,
       userName: userData.name,
-      connectionType: 'simplified', // 簡略化された接続を示す
+      connectionType: hasValidPageToken ? 'business' : 'simplified',
+      hasPageToken: hasValidPageToken,
       timestamp: new Date().toISOString()
     };
 
@@ -195,9 +220,10 @@ export async function GET(request: NextRequest) {
     // Step 7: ダッシュボードにリダイレクト
     const dashboardUrl = new URL('/dashboard', request.url);
     dashboardUrl.searchParams.set('success', 'true');
-    dashboardUrl.searchParams.set('access_token', accessToken);
+    dashboardUrl.searchParams.set('access_token', pageAccessToken || accessToken);
     dashboardUrl.searchParams.set('instagram_user_id', instagramUserId);
-    dashboardUrl.searchParams.set('connection_type', 'simplified');
+    dashboardUrl.searchParams.set('connection_type', hasValidPageToken ? 'business' : 'simplified');
+    dashboardUrl.searchParams.set('has_page_token', hasValidPageToken.toString());
     
     console.log('✅ Instagram connection successful!');
     console.log('Redirecting to dashboard...');
