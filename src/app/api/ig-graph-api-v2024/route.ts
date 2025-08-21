@@ -116,8 +116,15 @@ export async function GET(request: NextRequest) {
         
         console.log('✅ User profile:', userProfile);
         
+        // デモ用投稿データを生成
+        const demoPosts = generateSamplePostsForDemo();
+        const demoFollowerHistory = generateSampleFollowerHistory();
+        
+        console.log('🎭 Generated demo posts:', demoPosts.length);
+        console.log('📈 Generated follower history:', demoFollowerHistory.length);
+        
         // サンプルデータで応答（実際のFacebookページ/Instagram Business Account接続を促すメッセージ付き）
-        return NextResponse.json({
+        const responseData = {
           connected: true,
           connectionType: 'user_level',
           profile: {
@@ -130,11 +137,11 @@ export async function GET(request: NextRequest) {
             biography: '',
             profile_picture_url: null
           },
-          posts: generateSamplePostsForDemo(), // デモ用サンプルデータ
+          posts: demoPosts, // 生成したデモデータを使用
           follower_history: {
-            hasData: false,
-            data: generateSampleFollowerHistory(),
-            dataPoints: 7
+            hasData: true,
+            data: demoFollowerHistory,
+            dataPoints: demoFollowerHistory.length
           },
           insights_summary: {
             total_reach: 0,
@@ -150,7 +157,17 @@ export async function GET(request: NextRequest) {
             step3: 'Facebookページの設定 → Instagram → 既存のアカウントをリンク',
             step4: '再度このアプリで連携してリアルデータを取得'
           }
+        };
+        
+        console.log('📤 Final API Response Debug:', {
+          connected: responseData.connected,
+          connectionType: responseData.connectionType,
+          posts_count: responseData.posts?.length || 0,
+          demo_mode: responseData.demo_mode,
+          response_keys: Object.keys(responseData)
         });
+        
+        return NextResponse.json(responseData);
         
       } catch (userError) {
         console.error('❌ Failed to get user data:', userError);

@@ -535,6 +535,18 @@ export default function DashboardPage() {
             console.log('📝 Posts count:', data?.posts?.length || 0);
             console.log('👤 Profile data:', data?.profile);
             
+            // 詳細デバッグ情報
+            console.log('🔍 Full API Response Debug:', {
+              connected: data.connected,
+              connectionType: data.connectionType,
+              demo_mode: data.demo_mode,
+              posts_array: data.posts,
+              posts_type: typeof data.posts,
+              posts_length: Array.isArray(data.posts) ? data.posts.length : 'not array',
+              message: data.message,
+              instructions: data.instructions
+            });
+            
             // APIからエラーレスポンスが返された場合の処理
             if (!data.connected || data.error) {
               console.log('⚠️ Instagram API returned error:', data.error, data);
