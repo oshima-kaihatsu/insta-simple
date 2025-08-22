@@ -50,22 +50,34 @@ export default function DashboardPage() {
           
           if (response.ok) {
             const data = await response.json();
-            console.log('✅ Real Instagram data loaded:', data);
+            console.log('✅ Instagram API response:', data);
             
-            if (data.connected && data.posts) {
+            if (data.connected && data.posts && data.connectionType !== 'demo') {
+              // Real Instagram Business Account data
               setInstagramData(data);
               setShowSampleData(false);
-              console.log('✅ Set Instagram data with', data.posts.length, 'posts');
+              console.log('✅ Set real Instagram data with', data.posts.length, 'posts');
               // URLパラメータをクリア
               window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (data.demo_mode || data.connectionType === 'demo') {
+              // Demo data returned by API
+              console.log('⚠️ API returned demo data, showing sample data instead');
+              setShowSampleData(true);
+              setInstagramData(null);
             } else {
               console.error('❌ Data not connected or no posts:', data);
-              setShowSampleData(true); // エラー時はサンプルに戻す
+              setShowSampleData(true);
             }
           } else {
             const errorData = await response.json();
             console.error('❌ Failed to fetch Instagram data:', errorData);
-            setShowSampleData(true); // エラー時はサンプルに戻す
+            
+            if (errorData.error === 'NO_FACEBOOK_PAGES') {
+              console.log('📝 No Facebook pages found - user needs to create page and connect Instagram Business Account');
+              // Show specific error message instead of sample data
+              alert('Instagram Business Accountが見つかりません。\n\n1. Facebookページを作成してください\n2. そのページにInstagramアカウントを連携してください\n3. 再度接続をお試しください');
+            }
+            setShowSampleData(true);
           }
         } catch (error) {
           console.error('📊 Error fetching Instagram data:', error);
@@ -573,7 +585,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-                    @{hasRealData ? instagramData.profile?.username : 'sample_account'} • {dateRangeText} • {postsData.length}件の投稿を分析
+                    @{hasRealData ? instagramData.profile?.username : 'sample_account'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
                     <span style={{ 
                       color: hasRealData ? '#22c55e' : '#f59e0b', 
                       fontSize: '14px', 
@@ -583,97 +595,6 @@ export default function DashboardPage() {
                       {hasRealData ? '✅ リアルデータ' : '📋 サンプルデータ'}
                     </span>
                   </p>
-                  
-                  {/* 投稿データソース切り替え */}
-                  <div style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
-                    {/* 期間フィルター */}
-                    <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(252, 251, 248, 0.5)', padding: '4px', borderRadius: '8px' }}>
-                      <button
-                        onClick={() => setPostsPeriod('7d')}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: postsPeriod === '7d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
-                          color: postsPeriod === '7d' ? '#fcfbf8' : '#5d4e37',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: postsPeriod === '7d' ? '600' : '500',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        過去7日
-                      </button>
-                      <button
-                        onClick={() => setPostsPeriod('14d')}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: postsPeriod === '14d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
-                          color: postsPeriod === '14d' ? '#fcfbf8' : '#5d4e37',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: postsPeriod === '14d' ? '600' : '500',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        過去14日
-                      </button>
-                      <button
-                        onClick={() => setPostsPeriod('28d')}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: postsPeriod === '28d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
-                          color: postsPeriod === '28d' ? '#fcfbf8' : '#5d4e37',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: postsPeriod === '28d' ? '600' : '500',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        過去28日
-                      </button>
-                    </div>
-                    
-                    {/* データソース */}
-                    <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(252, 251, 248, 0.5)', padding: '4px', borderRadius: '8px' }}>
-                      <button
-                        onClick={() => setPostsDataSource('24h')}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: postsDataSource === '24h' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
-                          color: postsDataSource === '24h' ? '#fcfbf8' : '#5d4e37',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: postsDataSource === '24h' ? '600' : '500',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        24時間後
-                      </button>
-                      <button
-                        onClick={() => setPostsDataSource('7d')}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '6px',
-                          border: 'none',
-                          background: postsDataSource === '7d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
-                          color: postsDataSource === '7d' ? '#fcfbf8' : '#5d4e37',
-                          cursor: 'pointer',
-                          fontSize: '14px',
-                          fontWeight: postsDataSource === '7d' ? '600' : '500',
-                          transition: 'all 0.2s ease'
-                        }}
-                      >
-                        1週間後
-                      </button>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1003,9 +924,38 @@ export default function DashboardPage() {
               投稿別詳細分析
             </h2>
             
-            <button 
-              onClick={downloadCSV}
-              style={{
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {/* 期間ソートボタン */}
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {['7', '14', '28', 'all'].map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setPostsPeriod(period)}
+                    style={{
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s',
+                      background: postsPeriod === period 
+                        ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)'
+                        : 'rgba(199, 154, 66, 0.1)',
+                      color: postsPeriod === period ? '#fcfbf8' : '#5d4e37',
+                      boxShadow: postsPeriod === period 
+                        ? '0 2px 8px rgba(199, 154, 66, 0.3)' 
+                        : 'none'
+                    }}
+                  >
+                    {period === 'all' ? '全期間' : `${period}日間`}
+                  </button>
+                ))}
+              </div>
+              
+              <button 
+                onClick={downloadCSV}
+                style={{
                 background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
                 color: '#fcfbf8',
                 padding: '16px 32px',
@@ -1024,6 +974,7 @@ export default function DashboardPage() {
               <Download size={18} />
               CSV出力
             </button>
+            </div>
           </div>
 
           <div style={{ overflowX: 'auto' }}>
@@ -1037,7 +988,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {postsData.map((post, index) => {
+                {filteredPosts.map((post, index) => {
                   const metrics24h = hasRealData ? calculateMetrics(post) : calculateMetrics({ data_7d: post.data_24h });
                   const metrics7d = calculateMetrics(post);
                   const title = hasRealData ? (post.caption?.substring(0, 50) + '...' || '投稿') : post.title;

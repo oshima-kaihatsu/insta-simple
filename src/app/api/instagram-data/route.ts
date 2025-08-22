@@ -41,24 +41,49 @@ export async function GET(request: NextRequest) {
     }
     
     if (!pagesData.data || pagesData.data.length === 0) {
-      // Facebookページがない場合はユーザーレベルでデモデータを返す
-      console.log('⚠️ No Facebook pages found, returning demo data...');
+      console.log('⚠️ No Facebook pages found, trying user-level Instagram connection...');
       
-      // デモ用投稿データを生成
+      // ユーザーレベルでInstagram Basic Display APIを試す
+      try {
+        const userMediaResponse = await fetch(
+          `https://graph.facebook.com/v23.0/me?fields=id,name&access_token=${accessToken}`
+        );
+        const userMediaData = await userMediaResponse.json();
+        
+        if (userMediaData.id) {
+          console.log('✅ User-level connection available, but returning empty data as no Instagram Business Account found');
+          
+          return NextResponse.json({
+            connected: false,
+            error: 'NO_FACEBOOK_PAGES',
+            message: 'Facebookページが見つかりません。Instagram Business Accountを使用するには、まずFacebookページを作成し、Instagramアカウントを連携してください。',
+            user_info: {
+              id: userMediaData.id,
+              name: userMediaData.name
+            }
+          });
+        }
+      } catch (userError) {
+        console.error('User-level connection failed:', userError);
+      }
+      
+      // フォールバック: デモデータを返す（開発時のみ）
+      console.log('⚠️ Returning demo data as fallback...');
+      
       const demoPosts = generateSamplePostsForDemo();
       const demoFollowerHistory = generateSampleFollowerHistory();
       
       return NextResponse.json({
         connected: true,
-        connectionType: 'user_level',
+        connectionType: 'demo',
         profile: {
           id: 'demo_user',
-          username: 'Instagram User',
-          name: 'Instagram User',
-          account_type: 'USER_LEVEL',
+          username: 'Demo User',
+          name: 'Demo User',
+          account_type: 'DEMO',
           followers_count: 8634,
           media_count: 15,
-          biography: '',
+          biography: 'This is demo data - please connect your Instagram Business Account',
           profile_picture_url: null
         },
         posts: demoPosts,
@@ -74,7 +99,7 @@ export async function GET(request: NextRequest) {
           average_engagement: demoPosts.length > 0 ? 
             demoPosts.reduce((sum, p) => sum + (p.data_7d?.likes || 0) + (p.data_7d?.saves || 0), 0) / demoPosts.length : 0
         },
-        message: '🔍 Facebook Pages APIから空のレスポンスが返されました。デモデータを表示しています。',
+        message: '⚠️ デモデータを表示中 - Instagram Business Accountを接続してください',
         demo_mode: true
       });
     }
