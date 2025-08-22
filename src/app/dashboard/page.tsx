@@ -26,6 +26,7 @@ export default function DashboardPage() {
   const [showSampleData, setShowSampleData] = useState(true);
   const [aiComments, setAiComments] = useState({});
   const [postsDataSource, setPostsDataSource] = useState('7d');
+  const [postsPeriod, setPostsPeriod] = useState('28d');
 
   useEffect(() => {
     const checkForRealData = async () => {
@@ -41,20 +42,29 @@ export default function DashboardPage() {
         
         try {
           console.log('🚀 Fetching real Instagram data...');
+          console.log('Token:', accessToken);
+          console.log('User ID:', instagramUserId);
           
           const response = await fetch(`/api/instagram-data?access_token=${accessToken}&instagram_user_id=${instagramUserId}`);
+          console.log('Response status:', response.status);
           
           if (response.ok) {
             const data = await response.json();
             console.log('✅ Real Instagram data loaded:', data);
             
-            if (data.connected) {
+            if (data.connected && data.posts) {
               setInstagramData(data);
+              setShowSampleData(false);
+              console.log('✅ Set Instagram data with', data.posts.length, 'posts');
               // URLパラメータをクリア
               window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+              console.error('❌ Data not connected or no posts:', data);
+              setShowSampleData(true); // エラー時はサンプルに戻す
             }
           } else {
-            console.error('❌ Failed to fetch Instagram data');
+            const errorData = await response.json();
+            console.error('❌ Failed to fetch Instagram data:', errorData);
             setShowSampleData(true); // エラー時はサンプルに戻す
           }
         } catch (error) {
@@ -63,6 +73,8 @@ export default function DashboardPage() {
         } finally {
           setLoading(false);
         }
+      } else {
+        console.log('No URL parameters for Instagram connection');
       }
     };
 
@@ -218,8 +230,17 @@ export default function DashboardPage() {
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
   
-  // フィルタリング処理
-  const filteredPosts = postsData;
+  // 期間フィルタリング処理
+  const filteredPosts = postsData.filter((post) => {
+    if (postsPeriod === 'all') return true;
+    
+    const postDate = hasRealData ? new Date(post.timestamp) : new Date(post.date);
+    const now = new Date();
+    const daysAgo = parseInt(postsPeriod);
+    const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+    
+    return postDate >= cutoffDate;
+  });
 
   // 重要4指標の計算（修正版 - 整合性確保）
   const calculateMetrics = (post) => {
@@ -564,7 +585,60 @@ export default function DashboardPage() {
                   </p>
                   
                   {/* 投稿データソース切り替え */}
-                  <div style={{ marginTop: '12px' }}>
+                  <div style={{ marginTop: '12px', display: 'flex', gap: '16px' }}>
+                    {/* 期間フィルター */}
+                    <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(252, 251, 248, 0.5)', padding: '4px', borderRadius: '8px' }}>
+                      <button
+                        onClick={() => setPostsPeriod('7d')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: postsPeriod === '7d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
+                          color: postsPeriod === '7d' ? '#fcfbf8' : '#5d4e37',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: postsPeriod === '7d' ? '600' : '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        過去7日
+                      </button>
+                      <button
+                        onClick={() => setPostsPeriod('14d')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: postsPeriod === '14d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
+                          color: postsPeriod === '14d' ? '#fcfbf8' : '#5d4e37',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: postsPeriod === '14d' ? '600' : '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        過去14日
+                      </button>
+                      <button
+                        onClick={() => setPostsPeriod('28d')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: postsPeriod === '28d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
+                          color: postsPeriod === '28d' ? '#fcfbf8' : '#5d4e37',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: postsPeriod === '28d' ? '600' : '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        過去28日
+                      </button>
+                    </div>
+                    
+                    {/* データソース */}
                     <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(252, 251, 248, 0.5)', padding: '4px', borderRadius: '8px' }}>
                       <button
                         onClick={() => setPostsDataSource('24h')}
