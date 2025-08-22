@@ -25,6 +25,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false);
   const [showSampleData, setShowSampleData] = useState(true);
   const [aiComments, setAiComments] = useState({});
+  const [postsDataSource, setPostsDataSource] = useState('7d');
 
   useEffect(() => {
     const checkForRealData = async () => {
@@ -216,6 +217,9 @@ export default function DashboardPage() {
   const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
+  
+  // フィルタリング処理
+  const filteredPosts = postsData;
 
   // 重要4指標の計算（修正版 - 整合性確保）
   const calculateMetrics = (post) => {
@@ -357,10 +361,10 @@ export default function DashboardPage() {
   };
 
   useEffect(() => {
-    if (postsData.length > 0) {
+    if (filteredPosts.length > 0) {
       generateAIComments();
     }
-  }, [postsData, hasRealData]);
+  }, [filteredPosts, hasRealData]);
 
   const getGradeColor = (grade) => {
     if (!grade) return '#c79a42';
@@ -558,6 +562,44 @@ export default function DashboardPage() {
                       {hasRealData ? '✅ リアルデータ' : '📋 サンプルデータ'}
                     </span>
                   </p>
+                  
+                  {/* 投稿データソース切り替え */}
+                  <div style={{ marginTop: '12px' }}>
+                    <div style={{ display: 'inline-flex', gap: '8px', background: 'rgba(252, 251, 248, 0.5)', padding: '4px', borderRadius: '8px' }}>
+                      <button
+                        onClick={() => setPostsDataSource('24h')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: postsDataSource === '24h' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
+                          color: postsDataSource === '24h' ? '#fcfbf8' : '#5d4e37',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: postsDataSource === '24h' ? '600' : '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        24時間後
+                      </button>
+                      <button
+                        onClick={() => setPostsDataSource('7d')}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: postsDataSource === '7d' ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)' : 'transparent',
+                          color: postsDataSource === '7d' ? '#fcfbf8' : '#5d4e37',
+                          cursor: 'pointer',
+                          fontSize: '14px',
+                          fontWeight: postsDataSource === '7d' ? '600' : '500',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        1週間後
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

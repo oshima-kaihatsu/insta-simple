@@ -35,9 +35,12 @@ export async function GET(request: NextRequest) {
 
     // Step 1: アクセストークン取得
     const tokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
+    const clientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
+    const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a';
+    
     const tokenParams = new URLSearchParams({
-      client_id: process.env.INSTAGRAM_CLIENT_ID!,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
+      client_id: clientId,
+      client_secret: clientSecret,
       grant_type: 'authorization_code',
       redirect_uri: redirectUri,
       code: code,
@@ -62,8 +65,8 @@ export async function GET(request: NextRequest) {
     const longTermTokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
     const longTermParams = new URLSearchParams({
       grant_type: 'fb_exchange_token',
-      client_id: process.env.INSTAGRAM_CLIENT_ID!,
-      client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
+      client_id: clientId,
+      client_secret: clientSecret,
       fb_exchange_token: shortTermToken
     });
 
