@@ -34,8 +34,16 @@ export async function GET(request: NextRequest) {
 
     // Step 2: Pagesを取得してInstagram Business Accountを探す
     console.log('🎯 Getting user pages and Instagram accounts...');
+    
+    // まずデバッグ用にトークン情報を詳細に確認
+    const debugTokenUrl = `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${accessToken}`;
+    const debugResponse = await fetch(debugTokenUrl);
+    const debugData = await debugResponse.json();
+    console.log('🔍 Token Debug Info:', debugData);
+    
+    // 全てのフィールドを含む詳細なページ情報を取得
     const pagesResponse = await fetch(
-      `https://graph.facebook.com/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
+      `https://graph.facebook.com/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,biography,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
     );
 
     console.log('Pages API response status:', pagesResponse.status);
@@ -52,15 +60,38 @@ export async function GET(request: NextRequest) {
     }
 
     const pagesData = await pagesResponse.json();
-    console.log('📋 Pages data:', pagesData);
+    console.log('📋 Full Pages data:', JSON.stringify(pagesData, null, 2));
+    
+    // 各ページの詳細をログ出力
+    if (pagesData.data && pagesData.data.length > 0) {
+      pagesData.data.forEach((page, index) => {
+        console.log(`\n📄 Page ${index + 1}: ${page.name}`);
+        console.log(`  - Page ID: ${page.id}`);
+        console.log(`  - Has Instagram: ${!!page.instagram_business_account}`);
+        if (page.instagram_business_account) {
+          console.log(`  - Instagram ID: ${page.instagram_business_account.id}`);
+          console.log(`  - Instagram Username: ${page.instagram_business_account.username}`);
+          console.log(`  - Followers: ${page.instagram_business_account.followers_count}`);
+          console.log(`  - Media Count: ${page.instagram_business_account.media_count}`);
+        }
+      });
+    } else {
+      console.log('⚠️ No pages found in response');
+    }
 
     // Instagram Business Accountを探す
     const instagramPage = pagesData.data?.find(page => page.instagram_business_account);
     
     if (!instagramPage) {
-      console.log('⚠️ No Instagram Business Account found, trying direct Instagram API...');
+      console.log('⚠️ No Instagram Business Account found in pages');
+      console.log('🔍 Checking if this is an Instagram-scoped token...');
+      
+      // トークンがInstagram用か確認
+      const scopesFromDebug = debugData?.data?.scopes || [];
+      console.log('Token scopes:', scopesFromDebug);
       
       // 直接Instagram APIを試す（個人アカウントの場合）
+      console.log('🎯 Trying direct Instagram Graph API...');
       const instagramResponse = await fetch(
         `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&limit=10&access_token=${accessToken}`
       );
