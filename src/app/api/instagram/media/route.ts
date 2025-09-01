@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('🔍 Instagram Media API - Server-side request');
+    console.log('🔍 Instagram Media API - Server-side request (New Instagram Graph API)');
     console.log('Token preview:', accessToken.substring(0, 20) + '...');
 
     // Step 1: まずユーザー情報を取得（Facebook Graph API）
@@ -32,42 +32,103 @@ export async function GET(request: NextRequest) {
     const userData = await userResponse.json();
     console.log('✅ User data obtained:', userData);
 
-    // Step 2: Instagram Basic Display API でメディア取得を試行
-    console.log('🎯 Trying Instagram Basic Display API...');
-    const instagramResponse = await fetch(
-      `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&limit=10&access_token=${accessToken}`
+    // Step 2: Pagesを取得してInstagram Business Accountを探す
+    console.log('🎯 Getting user pages and Instagram accounts...');
+    const pagesResponse = await fetch(
+      `https://graph.facebook.com/me/accounts?fields=id,name,instagram_business_account&access_token=${accessToken}`
     );
 
-    console.log('Instagram API response status:', instagramResponse.status);
+    console.log('Pages API response status:', pagesResponse.status);
+    
+    if (!pagesResponse.ok) {
+      const pagesError = await pagesResponse.json();
+      console.error('Pages API error:', pagesError);
+      return NextResponse.json({
+        success: false,
+        error: 'Failed to get pages',
+        details: pagesError,
+        profile: { id: userData.id, name: userData.name }
+      }, { status: pagesResponse.status });
+    }
 
-    if (instagramResponse.ok) {
-      const instagramData = await instagramResponse.json();
-      console.log('✅ Instagram media data:', instagramData);
+    const pagesData = await pagesResponse.json();
+    console.log('📋 Pages data:', pagesData);
+
+    // Instagram Business Accountを探す
+    const instagramPage = pagesData.data?.find(page => page.instagram_business_account);
+    
+    if (!instagramPage) {
+      console.log('⚠️ No Instagram Business Account found, trying direct Instagram API...');
+      
+      // 直接Instagram APIを試す（個人アカウントの場合）
+      const instagramResponse = await fetch(
+        `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&limit=10&access_token=${accessToken}`
+      );
+      
+      if (instagramResponse.ok) {
+        const instagramData = await instagramResponse.json();
+        console.log('✅ Instagram personal media data:', instagramData);
+        
+        return NextResponse.json({
+          success: true,
+          data: instagramData,
+          profile: { id: userData.id, name: userData.name },
+          account_type: 'personal'
+        });
+      } else {
+        const instagramError = await instagramResponse.json();
+        console.error('❌ Instagram personal API error:', instagramError);
+        
+        return NextResponse.json({
+          success: false,
+          error: 'No Instagram account found',
+          details: instagramError,
+          profile: { id: userData.id, name: userData.name },
+          suggestion: 'Please connect a Facebook Page with an Instagram Business Account, or ensure your personal Instagram account has proper permissions.'
+        }, { status: 400 });
+      }
+    }
+
+    // Step 3: Instagram Business Accountのメディアを取得
+    const instagramAccountId = instagramPage.instagram_business_account.id;
+    console.log('🎯 Getting Instagram Business media for account:', instagramAccountId);
+    
+    const mediaResponse = await fetch(
+      `https://graph.facebook.com/${instagramAccountId}/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&limit=10&access_token=${accessToken}`
+    );
+
+    console.log('Instagram Business media response status:', mediaResponse.status);
+
+    if (mediaResponse.ok) {
+      const mediaData = await mediaResponse.json();
+      console.log('✅ Instagram Business media data:', mediaData);
       
       return NextResponse.json({
         success: true,
-        data: instagramData,
+        data: mediaData,
         profile: {
           id: userData.id,
-          name: userData.name
-        }
+          name: userData.name,
+          instagram_account_id: instagramAccountId,
+          page_name: instagramPage.name
+        },
+        account_type: 'business'
       });
     } else {
-      const instagramError = await instagramResponse.json();
-      console.error('❌ Instagram API error:', instagramError);
+      const mediaError = await mediaResponse.json();
+      console.error('❌ Instagram Business media error:', mediaError);
       
-      // Step 3: Instagram APIが失敗した場合、詳細なエラー情報を返す
       return NextResponse.json({
         success: false,
-        error: 'Instagram API failed',
-        details: instagramError,
+        error: 'Failed to get Instagram Business media',
+        details: mediaError,
         profile: {
           id: userData.id,
-          name: userData.name
+          name: userData.name,
+          instagram_account_id: instagramAccountId
         },
-        // 代替手段の提案
-        suggestion: 'This might be due to Instagram Basic Display API limitations. Consider using Instagram Graph API for business accounts or check if your app is properly configured.'
-      }, { status: instagramResponse.status });
+        suggestion: 'Instagram Business Account found but media access failed. Check permissions and account status.'
+      }, { status: mediaResponse.status });
     }
 
   } catch (error) {

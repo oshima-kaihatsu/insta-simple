@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
 
     // Step 1: アクセストークン取得（Facebook Graph API）
     const tokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
-    const clientId = process.env.INSTAGRAM_CLIENT_ID || '1776291423096614';
+    // InstagramアプリのIDを使用
+    const clientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
     const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a';
     
     const tokenParams = new URLSearchParams({
