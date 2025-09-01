@@ -70,10 +70,25 @@ export default function DashboardPage() {
           const tokenTestData = await tokenTestResponse.json();
           console.log('🧪 Token test results:', tokenTestData);
           
-          // 直接Instagram Graph APIから取得を試行
-          console.log('🚀 Attempting direct Instagram Graph API call...');
-          console.log('🔗 API URL:', `https://graph.instagram.com/me?fields=id,account_type,media.limit(10)%7Bid,caption,media_type,media_url,timestamp%7D&access_token=${instagramToken.substring(0, 20)}...`);
-          const response = await fetch(`https://graph.instagram.com/me?fields=id,account_type,media.limit(10)%7Bid,caption,media_type,media_url,timestamp%7D&access_token=${instagramToken}`);
+          // Instagram Basic Display API から取得を試行
+          console.log('🚀 Attempting Instagram Basic Display API call...');
+          
+          // まずユーザー情報を取得
+          const userResponse = await fetch(`https://graph.instagram.com/me?fields=id,username&access_token=${instagramToken}`);
+          console.log('User response status:', userResponse.status);
+          
+          if (!userResponse.ok) {
+            const userError = await userResponse.json();
+            console.error('User API error:', userError);
+            throw new Error(`User API failed: ${userError.error?.message || 'Unknown error'}`);
+          }
+          
+          const userData = await userResponse.json();
+          console.log('User data:', userData);
+          
+          // メディア情報を取得
+          console.log('🔗 API URL:', `https://graph.instagram.com/${userData.id}/media?fields=id,caption,media_type,media_url,timestamp&limit=10&access_token=${instagramToken.substring(0, 20)}...`);
+          const response = await fetch(`https://graph.instagram.com/${userData.id}/media?fields=id,caption,media_type,media_url,timestamp&limit=10&access_token=${instagramToken}`);
           console.log('Response status:', response.status);
           
           if (response.ok) {
@@ -84,6 +99,10 @@ export default function DashboardPage() {
               // データを適切な形式に変換
               const transformedData = {
                 connected: true,
+                profile: {
+                  username: userData.username,
+                  user_id: userData.id
+                },
                 posts: data.data.map(item => ({
                   id: item.id,
                   caption: item.caption || 'No caption',
@@ -132,7 +151,15 @@ export default function DashboardPage() {
           setShowSampleData(false);
           
           try {
-            const response = await fetch(`https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,timestamp&access_token=${storedToken}`);
+            // まずユーザー情報を取得
+            const userResponse = await fetch(`https://graph.instagram.com/me?fields=id,username&access_token=${storedToken}`);
+            if (!userResponse.ok) {
+              throw new Error('User info fetch failed');
+            }
+            const userData = await userResponse.json();
+            
+            // メディア情報を取得
+            const response = await fetch(`https://graph.instagram.com/${userData.id}/media?fields=id,caption,media_type,media_url,timestamp&access_token=${storedToken}`);
             
             if (response.ok) {
               const data = await response.json();
@@ -140,6 +167,10 @@ export default function DashboardPage() {
               if (data.data && data.data.length > 0) {
                 const transformedData = {
                   connected: true,
+                  profile: {
+                    username: userData.username,
+                    user_id: userData.id
+                  },
                   posts: data.data.map(item => ({
                     id: item.id,
                     caption: item.caption || 'No caption',
