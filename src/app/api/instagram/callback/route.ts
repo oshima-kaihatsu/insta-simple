@@ -33,9 +33,9 @@ export async function GET(request: NextRequest) {
     const redirectUri = `${baseUrl}/api/instagram/callback`;
     console.log('Using Redirect URI:', redirectUri);
 
-    // Step 1: アクセストークン取得
+    // Step 1: アクセストークン取得（Facebook Graph API）
     const tokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
-    const clientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
+    const clientId = process.env.INSTAGRAM_CLIENT_ID || '1776291423096614';
     const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a';
     
     const tokenParams = new URLSearchParams({
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     const shortTermToken = tokenData.access_token;
 
-    // Step 1.5: 短期トークンを長期トークンに交換
+    // Step 1.5: 短期トークンを長期トークンに交換（Facebook Graph API）
     console.log('🔄 Converting short-term token to long-term token...');
     const longTermTokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
     const longTermParams = new URLSearchParams({
@@ -161,7 +161,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(errorUrl);
     }
 
-    // Step 2: ユーザー情報を取得
+    // Step 2: ユーザー情報を取得（Facebook Graph API）
     console.log('🔍 Fetching user information...');
     const userResponse = await fetch(
       `https://graph.facebook.com/v23.0/me?fields=id,name&access_token=${accessToken}`
@@ -173,134 +173,22 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to get user ID');
     }
 
-    // Step 3: Instagram Business Account IDを直接設定
-    // 注: 実際のプロダクション環境では、ユーザーごとのInstagram IDを
-    // データベースに保存し、適切に管理する必要があります
-    let instagramUserId = userData.id; // FacebookユーザーIDを使用
-    let instagramUsername = userData.name || 'Instagram User';
+    // Step 3: User ID設定（シンプル）
+    let instagramUserId = userData.id;
+    let instagramUsername = userData.name || 'Facebook User';
 
-    // Step 4: Facebookページを確認（複数のAPIバージョンで試行）
-    let pageAccessToken = null;
-    let hasValidPageToken = false;
+    // Step 4: Facebook Graph API - ローカルストレージに保存してリダイレクト  
+    console.log('📄 Using Facebook Graph API - storing token for frontend use');
     
-    try {
-      // まずv23.0で試行
-      console.log('📄 Trying Facebook Pages API v23.0...');
-      let pagesResponse = await fetch(
-        `https://graph.facebook.com/v23.0/me/accounts?fields=id,name,access_token,instagram_business_account{id,username,name,profile_picture_url,followers_count,media_count}&access_token=${accessToken}`
-      );
-      let pagesData = await pagesResponse.json();
-      
-      // v23.0でエラーまたは空の場合、フォールバックで再試行
-      if (pagesData.error || !pagesData.data || pagesData.data.length === 0) {
-        console.log('📄 Retrying with fallback approach...');
-        pagesResponse = await fetch(
-          `https://graph.facebook.com/v23.0/me/accounts?access_token=${accessToken}`
-        );
-        pagesData = await pagesResponse.json();
-      }
-      
-      console.log('📄 Callback Pages API Status:', pagesResponse.status);
-      console.log('📄 Callback Pages data:', JSON.stringify(pagesData, null, 2));
-      
-      // エラーレスポンスをチェック
-      if (pagesData.error) {
-        console.error('❌ Callback Pages API Error:', pagesData.error);
-        console.log('⚠️ Continuing with user token due to pages error');
-      }
-
-      if (pagesData.data && pagesData.data.length > 0) {
-        // Facebookページが存在する場合
-        for (const page of pagesData.data) {
-          // ページアクセストークンを保存
-          if (page.access_token) {
-            pageAccessToken = page.access_token;
-            hasValidPageToken = true;
-            console.log('✅ Got page access token for:', page.name);
-          }
-          
-          if (page.instagram_business_account) {
-            instagramUserId = page.instagram_business_account.id;
-            
-            // Instagram Business Accountの詳細を取得（ページトークンを使用）
-            const tokenToUse = pageAccessToken || accessToken;
-            const igResponse = await fetch(
-              `https://graph.facebook.com/v23.0/${instagramUserId}?fields=id,username,name,followers_count,media_count&access_token=${tokenToUse}`
-            );
-            const igData = await igResponse.json();
-            
-            if (igData.username) {
-              instagramUsername = igData.username;
-            }
-            
-            console.log('✅ Found Instagram Business Account:', instagramUserId);
-            break;
-          }
-        }
-      } else {
-        console.log('⚠️ No Facebook pages found, trying alternative approach...');
-        
-        // 代替手段: 直接Instagram Business Accountを検索
-        try {
-          const directIgResponse = await fetch(
-            `https://graph.facebook.com/v23.0/me?fields=instagram_business_account&access_token=${accessToken}`
-          );
-          const directIgData = await directIgResponse.json();
-          console.log('🔍 Direct Instagram Business Account check:', directIgData);
-          
-          if (directIgData.instagram_business_account) {
-            instagramUserId = directIgData.instagram_business_account.id;
-            console.log('✅ Found Instagram Business Account via direct method:', instagramUserId);
-          }
-        } catch (directError) {
-          console.log('⚠️ Direct Instagram check also failed:', directError.message);
-        }
-      }
-    } catch (pageError) {
-      console.log('⚠️ Could not fetch pages, continuing with basic connection:', pageError.message);
-    }
-
-    // Step 5: セッションデータを準備
-    const sessionData = {
-      accessToken: pageAccessToken || accessToken, // ページトークンを優先
-      userAccessToken: accessToken, // ユーザートークンも保存
-      instagramUserId: instagramUserId,
-      instagramUsername: instagramUsername,
-      userId: userData.id,
-      userName: userData.name,
-      connectionType: hasValidPageToken ? 'business' : 'simplified',
-      hasPageToken: hasValidPageToken,
-      tokenInfo: tokenInfo, // トークン詳細情報
-      timestamp: new Date().toISOString()
-    };
-
-    console.log('📊 Session data prepared:', {
-      ...sessionData,
-      accessToken: '***' // セキュリティのため非表示
-    });
-
-    // Step 6: データベースに接続情報を保存（スキップ - テーブル構造の問題のため）
-    console.log('⚠️ Database save temporarily skipped due to table structure issues');
-    console.log('💾 Connection data would be:', {
-      user_id: userData.id,
-      instagram_user_id: instagramUserId,
-      access_token: '***', // セキュリティのため非表示
-      username: instagramUsername,
-      connection_type: hasValidPageToken ? 'business' : 'simplified'
-    });
-
-    // Step 7: ダッシュボードにリダイレクト
+    // ダッシュボードでローカルストレージに保存させる
     const dashboardUrl = new URL('/dashboard', request.url);
     dashboardUrl.searchParams.set('success', 'true');
-    dashboardUrl.searchParams.set('access_token', pageAccessToken || accessToken);
+    dashboardUrl.searchParams.set('instagram_token', accessToken);
     dashboardUrl.searchParams.set('instagram_user_id', instagramUserId);
-    dashboardUrl.searchParams.set('connection_type', hasValidPageToken ? 'business' : 'simplified');
-    dashboardUrl.searchParams.set('has_page_token', hasValidPageToken.toString());
-    dashboardUrl.searchParams.set('token_type', tokenType);
-    dashboardUrl.searchParams.set('expires_in', tokenExpiresIn.toString());
+    dashboardUrl.searchParams.set('instagram_username', instagramUsername);
     
-    console.log('✅ Instagram connection successful!');
-    console.log('Redirecting to dashboard...');
+    console.log('✅ Instagram Basic Display connection successful!');
+    console.log('Redirecting to dashboard with token...');
     
     return NextResponse.redirect(dashboardUrl);
 

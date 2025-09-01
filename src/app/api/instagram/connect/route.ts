@@ -33,8 +33,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 本番環境で確実にHTTPSのURLを使用
-    const clientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
-    const redirectUri = 'https://insta-simple.thorsync.com/api/instagram/callback';
+    const clientId = process.env.INSTAGRAM_CLIENT_ID || '1776291423096614';
+    const baseUrl = process.env.NEXTAUTH_URL || 'https://insta-simple.thorsync.com';
+    const redirectUri = `${baseUrl}/api/instagram/callback`;
 
     console.log('=== Instagram Graph API Connect (New API) ===');
     console.log('Client ID:', clientId);
@@ -43,16 +44,8 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
-    // Instagram Graph API エンドポイント
-    // Instagram Business Account APIに必要なスコープ（管理権限を明示）
-    const scope = [
-      'instagram_basic',
-      'instagram_manage_insights',
-      'pages_show_list',
-      'pages_read_engagement', 
-      'pages_manage_metadata',
-      'pages_read_user_content'
-    ].join(',');
+    // Facebook Graph API エンドポイント（Instagram Basic Display APIのため）
+    const scope = 'instagram_basic,pages_show_list';
     
     const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=instagram`;
     
