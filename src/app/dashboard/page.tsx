@@ -73,91 +73,52 @@ export default function DashboardPage() {
           // Instagram Basic Display API から取得を試行
           console.log('🚀 Attempting Instagram Basic Display API call...');
           
-          // Facebook Graph API を使用（Instagram Basic Display APIのため）
-          // まずユーザー情報を取得
-          const userResponse = await fetch(`https://graph.facebook.com/me?fields=id,name&access_token=${instagramToken}`);
-          console.log('User response status:', userResponse.status);
-          
-          if (!userResponse.ok) {
-            const userError = await userResponse.json();
-            console.error('User API error:', userError);
-            throw new Error(`User API failed: ${userError.error?.message || 'Unknown error'}`);
-          }
-          
-          const userData = await userResponse.json();
-          console.log('User data:', userData);
-          
-          // Instagramアカウントを取得（pages_show_listスコープを使用）
-          const pagesResponse = await fetch(`https://graph.facebook.com/me/accounts?access_token=${instagramToken}`);
-          console.log('Pages response status:', pagesResponse.status);
-          
-          if (!pagesResponse.ok) {
-            const pagesError = await pagesResponse.json();
-            console.error('Pages API error:', pagesError);
-            throw new Error(`Pages API failed: ${pagesError.error?.message || 'Unknown error'}`);
-          }
-          
-          const pagesData = await pagesResponse.json();
-          console.log('Pages data:', pagesData);
-          
-          // Instagram Basic Display APIで直接メディアを取得してみる
-          console.log('🔗 Trying Instagram Basic Display API directly...');
-          const directResponse = await fetch(`https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,timestamp&access_token=${instagramToken}`);
-          console.log('Direct Instagram API response status:', directResponse.status);
-          
-          let response = directResponse;
-          if (!directResponse.ok) {
-            // 失敗した場合、サンプルデータにフォールバック
-            console.warn('⚠️ Instagram Basic Display API failed, falling back to sample data');
-            const directError = await directResponse.json();
-            console.error('Direct Instagram API error:', directError);
-            throw new Error(`Instagram API failed: ${directError.error?.message || 'Unknown error'}`);
-          }
+          // 🚀 サーバーサイドAPIでInstagramデータを取得（CORS回避）
+          console.log('🚀 Using server-side Instagram API...');
+          const response = await fetch(`/api/instagram/media?access_token=${instagramToken}`);
           console.log('Response status:', response.status);
           
-          if (response.ok) {
-            const data = await response.json();
-            console.log('✅ Instagram Graph API response:', data);
+          console.log('Server API response status:', response.status);
+          const responseData = await response.json();
+          console.log('Server API response:', responseData);
+          
+          if (response.ok && responseData.success && responseData.data?.data) {
+            // サーバーサイドから成功レスポンス
+            const transformedData = {
+              connected: true,
+              profile: {
+                username: responseData.profile.name,
+                user_id: responseData.profile.id
+              },
+              posts: responseData.data.data.map(item => ({
+                id: item.id,
+                caption: item.caption || 'No caption',
+                media_type: item.media_type,
+                media_url: item.media_url,
+                thumbnail_url: item.thumbnail_url,
+                timestamp: item.timestamp,
+                permalink: item.permalink,
+                // Instagram Basic Display APIではインサイトデータは取得できないため、ランダム値を設定
+                insights: {
+                  reach: Math.floor(Math.random() * 2000) + 500,
+                  likes: Math.floor(Math.random() * 100) + 20,
+                  saves: Math.floor(Math.random() * 50) + 5,
+                  comments: Math.floor(Math.random() * 20) + 2
+                }
+              }))
+            };
             
-            if (data.data && data.data.length > 0) {
-              // データを適切な形式に変換
-              const transformedData = {
-                connected: true,
-                profile: {
-                  username: userData.name,
-                  user_id: userData.id
-                },
-                posts: data.data.map(item => ({
-                  id: item.id,
-                  caption: item.caption || 'No caption',
-                  media_type: item.media_type,
-                  media_url: item.media_url,
-                  timestamp: item.timestamp,
-                  // Basic Display APIではインサイトデータは取得できないため、ランダム値を設定
-                  insights: {
-                    reach: Math.floor(Math.random() * 2000) + 500,
-                    likes: Math.floor(Math.random() * 100) + 20,
-                    saves: Math.floor(Math.random() * 50) + 5,
-                    comments: Math.floor(Math.random() * 20) + 2
-                  }
-                }))
-              };
-              
-              setInstagramData(transformedData);
-              setShowSampleData(false);
-              console.log('✅ Set real Instagram data with', transformedData.posts.length, 'posts');
-            } else {
-              console.log('⚠️ No media found in response, showing sample data');
-              setShowSampleData(true);
-            }
+            setInstagramData(transformedData);
+            setShowSampleData(false);
+            console.log('✅ Set real Instagram data with', transformedData.posts.length, 'posts');
           } else {
-            console.error('❌ Failed to fetch from Instagram Graph API, status:', response.status);
-            try {
-              const errorData = await response.json();
-              console.error('Error details:', errorData);
-            } catch (e) {
-              console.error('Could not parse error response');
+            // サーバーサイドエラーまたはデータなし
+            console.error('❌ Server-side Instagram API failed:', responseData);
+            
+            if (responseData.suggestion) {
+              console.log('💡 Suggestion:', responseData.suggestion);
             }
+            
             setShowSampleData(true);
           }
         } catch (error) {
@@ -175,42 +136,39 @@ export default function DashboardPage() {
           setShowSampleData(false);
           
           try {
-            // Instagram Basic Display APIで直接メディアを取得
-            const response = await fetch(`https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,timestamp&access_token=${storedToken}`);
+            // サーバーサイドAPIでメディアを取得
+            const response = await fetch(`/api/instagram/media?access_token=${storedToken}`);
+            const responseData = await response.json();
             
-            if (response.ok) {
-              const data = await response.json();
+            if (response.ok && responseData.success && responseData.data?.data) {
+              const transformedData = {
+                connected: true,
+                profile: {
+                  username: responseData.profile.name,
+                  user_id: responseData.profile.id
+                },
+                posts: responseData.data.data.map(item => ({
+                  id: item.id,
+                  caption: item.caption || 'No caption',
+                  media_type: item.media_type,
+                  media_url: item.media_url,
+                  thumbnail_url: item.thumbnail_url,
+                  timestamp: item.timestamp,
+                  permalink: item.permalink,
+                  insights: {
+                    reach: Math.floor(Math.random() * 2000) + 500,
+                    likes: Math.floor(Math.random() * 100) + 20,
+                    saves: Math.floor(Math.random() * 50) + 5,
+                    comments: Math.floor(Math.random() * 20) + 2
+                  }
+                }))
+              };
               
-              if (data.data && data.data.length > 0) {
-                const transformedData = {
-                  connected: true,
-                  profile: {
-                    username: 'Instagram User',
-                    user_id: 'instagram_user'
-                  },
-                  posts: data.data.map(item => ({
-                    id: item.id,
-                    caption: item.caption || 'No caption',
-                    media_type: item.media_type,
-                    media_url: item.media_url,
-                    timestamp: item.timestamp,
-                    insights: {
-                      reach: Math.floor(Math.random() * 2000) + 500,
-                      likes: Math.floor(Math.random() * 100) + 20,
-                      saves: Math.floor(Math.random() * 50) + 5,
-                      comments: Math.floor(Math.random() * 20) + 2
-                    }
-                  }))
-                };
-                
-                setInstagramData(transformedData);
-                setShowSampleData(false);
-                console.log('✅ Loaded Instagram data from stored token');
-              } else {
-                setShowSampleData(true);
-              }
+              setInstagramData(transformedData);
+              setShowSampleData(false);
+              console.log('✅ Loaded Instagram data from stored token via server API');
             } else {
-              console.error('Stored token invalid, clearing and showing sample data');
+              console.error('Stored token invalid or no data, clearing and showing sample data');
               localStorage.removeItem('instagram_token');
               localStorage.removeItem('instagram_user_id');
               localStorage.removeItem('instagram_username');
@@ -218,6 +176,9 @@ export default function DashboardPage() {
             }
           } catch (error) {
             console.error('Error with stored token:', error);
+            localStorage.removeItem('instagram_token');
+            localStorage.removeItem('instagram_user_id');
+            localStorage.removeItem('instagram_username');
             setShowSampleData(true);
           } finally {
             setLoading(false);
