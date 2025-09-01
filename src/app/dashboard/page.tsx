@@ -119,7 +119,21 @@ export default function DashboardPage() {
               console.log('💡 Suggestion:', responseData.suggestion);
             }
             
-            setShowSampleData(true);
+            // Instagram連携成功だが投稿データが取得できない場合
+            if (responseData.error === 'No Instagram account found') {
+              // 連携成功だが設定不完全の状態として表示
+              setInstagramData({
+                connected: true,
+                setup_incomplete: true,
+                profile: responseData.profile,
+                error_message: responseData.suggestion,
+                posts: []
+              });
+              setShowSampleData(false);
+              console.log('⚠️ Instagram connected but setup incomplete');
+            } else {
+              setShowSampleData(true);
+            }
           }
         } catch (error) {
           console.error('📊 Error fetching Instagram data:', error);
@@ -1337,8 +1351,59 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* 連携成功メッセージ（実データ表示時のみ） */}
-        {hasRealData && (
+        {/* Instagram連携状況の表示 */}
+        {instagramData && instagramData.setup_incomplete ? (
+          <div style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            borderRadius: '16px',
+            padding: '32px',
+            textAlign: 'center',
+            color: '#fcfbf8',
+            boxShadow: '0 8px 32px rgba(245, 158, 11, 0.3)',
+            marginBottom: '32px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                background: 'rgba(255, 255, 255, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginRight: '16px'
+              }}>
+                ⚠️
+              </div>
+              <h3 style={{ fontSize: '24px', fontWeight: '600', margin: 0 }}>
+                Instagram連携の設定が必要です
+              </h3>
+            </div>
+            <p style={{ fontSize: '16px', marginBottom: '24px', opacity: 0.9, margin: '0 0 24px 0' }}>
+              認証は成功しましたが、FacebookページとInstagramアカウントの連携が完了していません。
+            </p>
+            <p style={{ fontSize: '14px', marginBottom: '24px', opacity: 0.8, margin: '0 0 24px 0' }}>
+              {instagramData.error_message}
+            </p>
+            <div style={{ fontSize: '14px', opacity: 0.9, textAlign: 'left', lineHeight: '1.6' }}>
+              <p style={{ margin: '0 0 12px 0', fontWeight: '600' }}>
+                📋 設定手順:
+              </p>
+              <p style={{ margin: '0 0 8px 0' }}>
+                1. Facebook Business Managerでページを作成
+              </p>
+              <p style={{ margin: '0 0 8px 0' }}>
+                2. Instagramをビジネスアカウントにアップグレード  
+              </p>
+              <p style={{ margin: '0 0 8px 0' }}>
+                3. FacebookページとInstagramアカウントを連携
+              </p>
+              <p style={{ margin: '0' }}>
+                4. 再度Instagram連携を実行
+              </p>
+            </div>
+          </div>
+        ) : hasRealData ? (
           <div style={{
             background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
             borderRadius: '16px',
