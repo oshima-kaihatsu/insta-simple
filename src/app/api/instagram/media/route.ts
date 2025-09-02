@@ -192,6 +192,9 @@ export async function GET(request: NextRequest) {
           instagram_account_id: instagramAccountId,
           page_name: instagramPage.name
         },
+        instagram_username: instagramPage.instagram_business_account.username,
+        followers_count: instagramPage.instagram_business_account.followers_count || 0,
+        media_count: instagramPage.instagram_business_account.media_count || 0,
         account_type: 'business'
       });
     } else {

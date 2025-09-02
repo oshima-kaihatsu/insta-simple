@@ -8,7 +8,8 @@
       "Bash(npx eslint:*)",
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

@@ -96,7 +96,7 @@ export default function DashboardPage() {
             if (responseData.profile?.instagram_account_id) {
               // ビジネスアカウントの場合
               instagramProfile = {
-                username: responseData.instagram_username || responseData.profile.page_name || responseData.profile.name,
+                username: responseData.instagram_username || responseData.profile.instagram_username || responseData.profile.page_name || `user_${responseData.profile.instagram_account_id}`,
                 user_id: responseData.profile.instagram_account_id,
                 account_type: accountType,
                 followers_count: responseData.followers_count || 0,
@@ -106,7 +106,7 @@ export default function DashboardPage() {
             } else {
               // 個人アカウントまたは基本情報の場合
               instagramProfile = {
-                username: responseData.instagram_username || responseData.profile.instagram_username || responseData.profile.name.replace(/\s+/g, '_').toLowerCase(), // Instagram名優先、なければFacebook名をInstagram風に変換
+                username: responseData.instagram_username || responseData.profile.instagram_username || `user_${responseData.profile.id}`, // Instagram名優先、なければユーザーID
                 user_id: responseData.profile.id,
                 account_type: accountType,
                 followers_count: responseData.followers_count || 0,
@@ -221,7 +221,7 @@ export default function DashboardPage() {
               const transformedData = {
                 connected: true,
                 profile: {
-                  username: responseData.profile.instagram_username || responseData.profile.username || responseData.profile.name,
+                  username: responseData.profile.instagram_username || responseData.profile.username || `user_${responseData.profile.id}`,
                   user_id: responseData.profile.id,
                   followers_count: responseData.profile.followers_count || 0,
                   media_count: responseData.profile.media_count || 0,
