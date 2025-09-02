@@ -1069,11 +1069,8 @@ export default function DashboardPage() {
               border: '1px solid rgba(199, 154, 66, 0.2)'
             }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>ホーム率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
                 ホーム表示 ÷ フォロワー数
-              </div>
-              <div style={{ fontSize: '10px', color: '#999', marginBottom: '8px', fontStyle: 'italic' }}>
-                ※ホーム数は推定値（APIで取得できないため）
               </div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
                 {averages.home_rate}%
@@ -1081,9 +1078,13 @@ export default function DashboardPage() {
               <div style={{ 
                 fontSize: '12px', 
                 color: parseFloat(averages.home_rate) >= 50.0 ? '#22c55e' : '#ef4444',
-                fontWeight: '600'
+                fontWeight: '600',
+                marginBottom: '6px'
               }}>
                 目標: 50.0%以上 • {parseFloat(averages.home_rate) >= 50.0 ? '✅ 達成' : '❌ 要改善'}
+              </div>
+              <div style={{ fontSize: '10px', color: '#999', fontStyle: 'italic' }}>
+                ※ホーム数は推定値（APIで取得できないため）
               </div>
             </div>
 
