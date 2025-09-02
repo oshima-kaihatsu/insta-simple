@@ -174,9 +174,34 @@ export async function GET(request: NextRequest) {
       throw new Error('Failed to get user ID');
     }
 
-    // Step 3: User ID設定（シンプル）
+    // Step 3: Instagram Business Accountの情報を取得
     let instagramUserId = userData.id;
     let instagramUsername = userData.name || 'Facebook User';
+    
+    // Instagram Business Accountのユーザー名を取得する
+    try {
+      console.log('🎯 Attempting to get Instagram Business Account info...');
+      const pagesResponse = await fetch(
+        `https://graph.facebook.com/me/accounts?fields=id,name,instagram_business_account{id,username,name}&access_token=${accessToken}`
+      );
+      
+      if (pagesResponse.ok) {
+        const pagesData = await pagesResponse.json();
+        console.log('📋 Pages data for Instagram username:', pagesData);
+        
+        // Instagram Business Accountが接続されているページを探す
+        const instagramPage = pagesData.data?.find(page => page.instagram_business_account);
+        if (instagramPage && instagramPage.instagram_business_account.username) {
+          instagramUsername = instagramPage.instagram_business_account.username;
+          instagramUserId = instagramPage.instagram_business_account.id;
+          console.log('✅ Found Instagram Business Account:', instagramUsername);
+        } else {
+          console.warn('⚠️ No Instagram Business Account found, using Facebook name as fallback');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to get Instagram Business Account info:', error);
+    }
 
     // Step 4: Facebook Graph API - ローカルストレージに保存してリダイレクト  
     console.log('📄 Using Facebook Graph API - storing token for frontend use');
