@@ -21,12 +21,17 @@ import { useRouter } from 'next/navigation';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [instagramData, setInstagramData] = useState(null);
+  const [instagramAccounts, setInstagramAccounts] = useState([]); // 複数アカウント管理
+  const [activeAccountIndex, setActiveAccountIndex] = useState(0); // アクティブアカウント
   const [loading, setLoading] = useState(false);
   const [showSampleData, setShowSampleData] = useState(true);
   const [aiComments, setAiComments] = useState({});
   const [postsDataSource, setPostsDataSource] = useState('7d');
   const [postsPeriod, setPostsPeriod] = useState('28d');
+  const [userPlan, setUserPlan] = useState('basic'); // basic, pro, enterprise
+  
+  // アクティブなInstagramアカウントデータ
+  const instagramData = instagramAccounts[activeAccountIndex] || null;
 
   useEffect(() => {
     const checkForRealData = async () => {
@@ -83,34 +88,91 @@ export default function DashboardPage() {
           console.log('Server API response:', responseData);
           
           if (response.ok && responseData.success && responseData.data?.data) {
-            // サーバーサイドから成功レスポンス
+            // サーバーサイドから成功レスポンス - Instagram Graph APIデータを正しく変換
+            const accountType = responseData.account_type || 'business';
+            
+            // Instagram用の正しいプロファイル情報を取得
+            let instagramProfile = {};
+            if (responseData.profile?.instagram_account_id) {
+              // ビジネスアカウントの場合
+              instagramProfile = {
+                username: responseData.instagram_username || responseData.profile.page_name || responseData.profile.name,
+                user_id: responseData.profile.instagram_account_id,
+                account_type: accountType,
+                followers_count: responseData.followers_count || 0,
+                media_count: responseData.media_count || responseData.data.data.length,
+                profile_picture_url: responseData.profile_picture_url || null
+              };
+            } else {
+              // 個人アカウントまたは基本情報の場合
+              instagramProfile = {
+                username: responseData.instagram_username || responseData.profile.instagram_username || responseData.profile.name.replace(/\s+/g, '_').toLowerCase(), // Instagram名優先、なければFacebook名をInstagram風に変換
+                user_id: responseData.profile.id,
+                account_type: accountType,
+                followers_count: responseData.followers_count || 0,
+                media_count: responseData.media_count || responseData.data.data.length,
+                profile_picture_url: responseData.profile_picture_url || null
+              };
+            }
+
             const transformedData = {
               connected: true,
-              profile: {
-                username: responseData.profile.name,
-                user_id: responseData.profile.id
-              },
+              account_type: accountType,
+              profile: instagramProfile,
+              raw_profile: responseData.profile, // デバッグ用
               posts: responseData.data.data.map(item => ({
                 id: item.id,
-                caption: item.caption || 'No caption',
+                caption: item.caption || 'キャプションなし',
                 media_type: item.media_type,
                 media_url: item.media_url,
                 thumbnail_url: item.thumbnail_url,
                 timestamp: item.timestamp,
                 permalink: item.permalink,
-                // Instagram Basic Display APIではインサイトデータは取得できないため、ランダム値を設定
+                like_count: item.like_count || 0,
+                comments_count: item.comments_count || 0,
+                // 実際のインサイトデータ（取得できない場合は推定値）
                 insights: {
-                  reach: Math.floor(Math.random() * 2000) + 500,
-                  likes: Math.floor(Math.random() * 100) + 20,
-                  saves: Math.floor(Math.random() * 50) + 5,
-                  comments: Math.floor(Math.random() * 20) + 2
+                  reach: item.insights?.reach || 0, // 実データが無い場合は0
+                  impressions: item.insights?.impressions || 0,
+                  saves: item.insights?.saves || 0,
+                  profile_views: item.insights?.profile_views || 0,
+                  website_clicks: item.insights?.website_clicks || 0,
+                  engagement: item.like_count + (item.comments_count || 0),
+                  data_available: !!item.insights // インサイトデータが利用可能かどうかのフラグ
                 }
-              }))
+              })),
+              token: instagramToken,
+              last_updated: new Date().toISOString()
             };
             
-            setInstagramData(transformedData);
+            // 複数アカウント対応 - 既存アカウントを更新または新規追加
+            setInstagramAccounts(prevAccounts => {
+              const existingIndex = prevAccounts.findIndex(acc => acc.profile.user_id === instagramProfile.user_id);
+              if (existingIndex >= 0) {
+                // 既存アカウントを更新
+                const updatedAccounts = [...prevAccounts];
+                updatedAccounts[existingIndex] = transformedData;
+                return updatedAccounts;
+              } else {
+                // 新規アカウントを追加 - プラン制限チェック
+                const maxAccounts = userPlan === 'basic' ? 1 : userPlan === 'pro' ? 5 : Infinity;
+                if (prevAccounts.length >= maxAccounts) {
+                  console.warn(`⚠️ Account limit reached for ${userPlan} plan (${maxAccounts === Infinity ? '無制限' : maxAccounts} accounts)`);
+                  const limitText = maxAccounts === Infinity ? '無制限' : `${maxAccounts}`;
+                  alert(`${userPlan}プランでは最大${limitText}アカウントまでしか管理できません。プランをアップグレードするか、既存のアカウントを削除してください。`);
+                  return prevAccounts; // 追加せずに既存の配列を返す
+                }
+                return [...prevAccounts, transformedData];
+              }
+            });
+            
             setShowSampleData(false);
-            console.log('✅ Set real Instagram data with', transformedData.posts.length, 'posts');
+            console.log('✅ Set real Instagram data:', {
+              username: instagramProfile.username,
+              account_type: accountType,
+              posts_count: transformedData.posts.length,
+              followers: instagramProfile.followers_count
+            });
           } else {
             // サーバーサイドエラーまたはデータなし
             console.error('❌ Server-side Instagram API failed:', responseData);
@@ -122,13 +184,14 @@ export default function DashboardPage() {
             // Instagram連携成功だが投稿データが取得できない場合
             if (responseData.error === 'No Instagram account found') {
               // 連携成功だが設定不完全の状態として表示
-              setInstagramData({
+              const incompleteAccountData = {
                 connected: true,
                 setup_incomplete: true,
                 profile: responseData.profile,
                 error_message: responseData.suggestion,
                 posts: []
-              });
+              };
+              setInstagramAccounts([incompleteAccountData]);
               setShowSampleData(false);
               console.log('⚠️ Instagram connected but setup incomplete');
             } else {
@@ -158,8 +221,11 @@ export default function DashboardPage() {
               const transformedData = {
                 connected: true,
                 profile: {
-                  username: responseData.profile.name,
-                  user_id: responseData.profile.id
+                  username: responseData.profile.instagram_username || responseData.profile.username || responseData.profile.name,
+                  user_id: responseData.profile.id,
+                  followers_count: responseData.profile.followers_count || 0,
+                  media_count: responseData.profile.media_count || 0,
+                  account_type: responseData.profile.account_type || 'PERSONAL'
                 },
                 posts: responseData.data.data.map(item => ({
                   id: item.id,
@@ -170,15 +236,18 @@ export default function DashboardPage() {
                   timestamp: item.timestamp,
                   permalink: item.permalink,
                   insights: {
-                    reach: Math.floor(Math.random() * 2000) + 500,
-                    likes: Math.floor(Math.random() * 100) + 20,
-                    saves: Math.floor(Math.random() * 50) + 5,
-                    comments: Math.floor(Math.random() * 20) + 2
+                    reach: item.insights?.reach || 0, // 実データが無い場合は0
+                    impressions: item.insights?.impressions || 0,
+                    saves: item.insights?.saves || 0,
+                    profile_views: item.insights?.profile_views || 0,
+                    website_clicks: item.insights?.website_clicks || 0,
+                    engagement: (item.like_count || 0) + (item.comments_count || 0),
+                    data_available: !!item.insights // インサイトデータが利用可能かどうかのフラグ
                   }
                 }))
               };
               
-              setInstagramData(transformedData);
+              setInstagramAccounts([transformedData]);
               setShowSampleData(false);
               console.log('✅ Loaded Instagram data from stored token via server API');
             } else {
@@ -369,7 +438,22 @@ export default function DashboardPage() {
     return postDate >= cutoffDate;
   });
 
-  // 重要4指標の計算（修正版 - 整合性確保）
+  // ホーム数推定関数
+  const estimateHomeImpressions = (impressions, media_type) => {
+    if (!impressions) return 0;
+    
+    // 投稿タイプで比率を決める
+    let homeRatio;
+    if (media_type === 'VIDEO' || media_type === 'REELS') {
+      homeRatio = 0.25;  // リール：25%がホーム
+    } else {
+      homeRatio = 0.45;  // 通常投稿：45%がホーム
+    }
+    
+    return Math.round(impressions * homeRatio);
+  };
+
+  // 重要4指標の計算（修正版 - ホーム率推定値対応）
   const calculateMetrics = (post) => {
     if (hasRealData && post.insights) {
       // 実データの場合
@@ -378,10 +462,14 @@ export default function DashboardPage() {
       const profile_views = post.insights.profile_views || 0;
       const website_clicks = post.insights.website_clicks || 0;
       const currentFollowers = instagramData?.profile?.followers_count || 1;
+      const impressions = post.insights.impressions || reach; // impressionsが無い場合はreachを使用
+      
+      // ホーム数の推定値を計算
+      const estimatedHomeImpressions = estimateHomeImpressions(impressions, post.media_type);
       
       // 分母が0の場合は0.0を返す
       const saves_rate = reach > 0 ? ((saves / reach) * 100).toFixed(1) : '0.0';
-      const home_rate = currentFollowers > 0 ? Math.min(((reach * 0.7) / currentFollowers * 100), 100).toFixed(1) : '0.0';
+      const home_rate = currentFollowers > 0 ? ((estimatedHomeImpressions / currentFollowers) * 100).toFixed(1) : '0.0';
       const profile_access_rate = reach > 0 ? ((profile_views / reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = profile_views > 0 ? ((website_clicks / profile_views) * 100).toFixed(1) : '0.0';
       
@@ -390,7 +478,8 @@ export default function DashboardPage() {
       // サンプルデータの場合
       const data = post.data_7d;
       const saves_rate = data.reach > 0 ? ((data.saves / data.reach) * 100).toFixed(1) : '0.0';
-      const home_rate = Math.min(((data.reach * 0.7) / 8634 * 100), 100).toFixed(1);
+      const estimatedHomeImpressions = estimateHomeImpressions(data.reach, post.media_type || 'IMAGE');
+      const home_rate = estimatedHomeImpressions > 0 ? ((estimatedHomeImpressions / 8634) * 100).toFixed(1) : '0.0';
       const profile_access_rate = data.reach > 0 ? ((data.profile_views / data.reach) * 100).toFixed(1) : '0.0';
       const follower_conversion_rate = data.profile_views > 0 ? ((data.follows / data.profile_views) * 100).toFixed(1) : '0.0';
       
@@ -470,16 +559,7 @@ export default function DashboardPage() {
       }
     });
 
-    const suggestions = [];
-    if (savesRate < 3.0) {
-      suggestions.push('保存率向上のため、実用的なカルーセル投稿を週2回投稿することをお勧めします');
-    }
-    if (profileRate < 5.0) {
-      suggestions.push('プロフィールアクセス率を高めるため、キャプションでプロフィールリンクへの誘導を強化しましょう');
-    }
-    if (conversionRate < 8.0) {
-      suggestions.push('ウェブサイトクリック率向上のため、プロフィールページの魅力度向上に取り組みましょう');
-    }
+    const suggestions = []; // 改善提案は無効化
 
     const bestPostTitle = bestPost ? (hasRealData ? (bestPost.caption?.substring(0, 30) + '...' || '投稿') : bestPost.title) : '';
     const bestMetrics = bestPost ? calculateMetrics(bestPost) : null;
@@ -528,12 +608,12 @@ export default function DashboardPage() {
   const dateRangeText = `${days28Ago.toLocaleDateString('ja-JP')} - ${today.toLocaleDateString('ja-JP')}`;
 
   // フォロワー統計
-  const currentFollowers = instagramData?.profile?.followers_count || 8634;
+  const currentFollowers = instagramData?.profile?.followers_count || 0; // リアルデータのみ、無い場合は0
   const followersIncrease = hasFollowerData && followerData && followerData.length > 1 ? 
-    followerData[followerData.length - 1].followers - followerData[0].followers : 214;
+    followerData[followerData.length - 1].followers - followerData[0].followers : 0; // リアルデータのみ、無い場合は0
   const dailyAverageIncrease = Math.round(followersIncrease / 28);
   const pastFollowers = currentFollowers - followersIncrease;
-  const growthRate = pastFollowers > 0 ? ((followersIncrease / pastFollowers) * 100).toFixed(1) : '2.5';
+  const growthRate = pastFollowers > 0 ? ((followersIncrease / pastFollowers) * 100).toFixed(1) : '0.0'; // リアルデータのみ、無い場合は0.0
 
   // SVGパス生成
   const generatePath = (data) => {
@@ -699,17 +779,47 @@ export default function DashboardPage() {
                   @
                 </div>
                 <div>
-                  <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
-                    @{hasRealData ? instagramData.profile?.username : 'sample_account'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
-                    <span style={{ 
-                      color: hasRealData ? '#22c55e' : '#f59e0b', 
-                      fontSize: '14px', 
-                      marginLeft: '8px',
-                      fontWeight: '600'
-                    }}>
-                      {hasRealData ? '✅ リアルデータ' : '📋 サンプルデータ'}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <p style={{ fontSize: '16px', color: '#666', margin: 0 }}>
+                      @{hasRealData ? instagramData.profile?.username : 'sample_account'} • {dateRangeText} • {filteredPosts.length}件の投稿を分析
+                      <span style={{ 
+                        color: hasRealData ? '#22c55e' : '#f59e0b', 
+                        fontSize: '14px', 
+                        marginLeft: '8px',
+                        fontWeight: '600'
+                      }}>
+                        {hasRealData ? '✅ リアルデータ' : '📋 サンプルデータ'}
+                      </span>
+                    </p>
+                    
+                    {/* アカウント切り替えドロップダウン（複数アカウントがある場合のみ表示） */}
+                    {instagramAccounts.length > 1 && (
+                      <select 
+                        value={activeAccountIndex} 
+                        onChange={(e) => setActiveAccountIndex(parseInt(e.target.value))}
+                        style={{
+                          padding: '4px 8px',
+                          borderRadius: '6px',
+                          border: '1px solid #ddd',
+                          fontSize: '14px',
+                          background: '#fff',
+                          color: '#666',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {instagramAccounts.map((account, index) => (
+                          <option key={index} value={index}>
+                            @{account.profile?.username || `Account ${index + 1}`}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    
+                    {/* プラン制限の表示 */}
+                    <span style={{ fontSize: '12px', color: '#999' }}>
+                      ({instagramAccounts.length}/{userPlan === 'basic' ? 1 : userPlan === 'pro' ? 5 : '無制限'}アカウント)
                     </span>
-                  </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -959,8 +1069,11 @@ export default function DashboardPage() {
               border: '1px solid rgba(199, 154, 66, 0.2)'
             }}>
               <h3 style={{ fontSize: '16px', fontWeight: '600', margin: '0 0 8px 0', color: '#5d4e37' }}>ホーム率</h3>
-              <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
                 ホーム表示 ÷ フォロワー数
+              </div>
+              <div style={{ fontSize: '10px', color: '#999', marginBottom: '8px', fontStyle: 'italic' }}>
+                ※ホーム数は推定値（APIで取得できないため）
               </div>
               <div style={{ fontSize: '28px', fontWeight: '700', color: '#5d4e37', marginBottom: '8px' }}>
                 {averages.home_rate}%
@@ -1239,7 +1352,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* AI総合評価と改善提案 */}
+        {/* AI総合評価と改善提案 - 無効化
+        
         <div style={{
           background: 'rgba(255, 255, 255, 0.9)',
           borderRadius: '16px',
@@ -1254,7 +1368,6 @@ export default function DashboardPage() {
             marginBottom: '24px', 
             color: '#5d4e37'
           }}>
-            総合評価と改善提案
           </h2>
           
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
@@ -1324,7 +1437,6 @@ export default function DashboardPage() {
 
           {aiComments.suggestions && aiComments.suggestions.length > 0 && (
             <div style={{ marginBottom: '24px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '16px', color: '#5d4e37' }}>具体的な改善提案</h3>
               <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
                 {aiComments.suggestions.map((suggestion, index) => (
                   <li key={index} style={{ 
@@ -1350,6 +1462,7 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+        */}
 
         {/* Instagram連携状況の表示 */}
         {instagramData && instagramData.setup_incomplete ? (
@@ -1475,7 +1588,7 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

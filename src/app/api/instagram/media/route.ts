@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Dynamic routeに設定
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -84,40 +87,86 @@ export async function GET(request: NextRequest) {
     
     if (!instagramPage) {
       console.log('⚠️ No Instagram Business Account found in pages');
-      console.log('🔍 Checking if this is an Instagram-scoped token...');
+      console.log('🔍 Running diagnosis to understand the issue...');
       
       // トークンがInstagram用か確認
       const scopesFromDebug = debugData?.data?.scopes || [];
       console.log('Token scopes:', scopesFromDebug);
       
-      // 直接Instagram APIを試す（個人アカウントの場合）
-      console.log('🎯 Trying direct Instagram Graph API...');
-      const instagramResponse = await fetch(
-        `https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,thumbnail_url,timestamp,permalink&limit=10&access_token=${accessToken}`
-      );
+      // 2024年以降の必須権限をチェック
+      const requiredScopes2024 = ['business_management', 'instagram_basic', 'pages_show_list'];
+      const missingScopes = requiredScopes2024.filter(scope => !scopesFromDebug.includes(scope));
       
-      if (instagramResponse.ok) {
-        const instagramData = await instagramResponse.json();
-        console.log('✅ Instagram personal media data:', instagramData);
-        
-        return NextResponse.json({
-          success: true,
-          data: instagramData,
-          profile: { id: userData.id, name: userData.name },
-          account_type: 'personal'
-        });
-      } else {
-        const instagramError = await instagramResponse.json();
-        console.error('❌ Instagram personal API error:', instagramError);
-        
+      if (missingScopes.length > 0) {
+        console.log('❌ Missing required scopes for 2024+:', missingScopes);
         return NextResponse.json({
           success: false,
-          error: 'No Instagram account found',
-          details: instagramError,
+          error: 'Missing required permissions',
+          details: {
+            missing_scopes: missingScopes,
+            granted_scopes: scopesFromDebug,
+            migration_note: 'Instagram Basic Display API was deprecated in December 2024'
+          },
           profile: { id: userData.id, name: userData.name },
-          suggestion: 'Please connect a Facebook Page with an Instagram Business Account, or ensure your personal Instagram account has proper permissions.'
+          troubleshooting: {
+            title: 'Instagram Graph API v23 権限不足',
+            steps: [
+              '1. business_management権限が2024年以降に作成されたアカウントで必須です',
+              '2. Instagram Basic Display APIは2024年12月4日に廃止されました',
+              '3. 新しい認証URLで必要な権限を再取得してください',
+              '4. Instagramアカウントがビジネスアカウントであることを確認してください'
+            ],
+            reauth_required: true
+          }
         }, { status: 400 });
       }
+      
+      // アカウントタイプの詳細診断
+      console.log('🔬 Detailed account analysis...');
+      const accountAnalysis = {
+        has_facebook_pages: pagesData.data && pagesData.data.length > 0,
+        facebook_pages_count: pagesData.data?.length || 0,
+        pages_with_instagram: 0,
+        page_details: pagesData.data?.map(page => ({
+          id: page.id,
+          name: page.name,
+          has_instagram: !!page.instagram_business_account,
+          instagram_id: page.instagram_business_account?.id || null
+        })) || []
+      };
+      
+      accountAnalysis.pages_with_instagram = accountAnalysis.page_details.filter(p => p.has_instagram).length;
+      
+      console.log('📊 Account analysis:', accountAnalysis);
+      
+      return NextResponse.json({
+        success: false,
+        error: 'Instagram Business Account setup incomplete',
+        details: accountAnalysis,
+        profile: { id: userData.id, name: userData.name },
+        troubleshooting: {
+          title: 'Instagram Business Account設定が必要です',
+          current_status: {
+            has_facebook_pages: accountAnalysis.has_facebook_pages,
+            facebook_pages_count: accountAnalysis.facebook_pages_count,
+            pages_with_instagram: accountAnalysis.pages_with_instagram
+          },
+          steps: [
+            accountAnalysis.has_facebook_pages ? 
+              '✅ Facebookページは存在します' : 
+              '❌ Facebookページを作成してください: https://www.facebook.com/pages/create',
+            '📱 Instagramアカウントをビジネスアカウントに変換してください',
+            '🔗 FacebookページとInstagramビジネスアカウントを連携してください',
+            '📋 Facebook Business Managerで設定を確認してください',
+            '⏰ 新しい設定の場合、24-48時間待ってから再試行してください'
+          ],
+          links: {
+            create_page: 'https://www.facebook.com/pages/create',
+            business_manager: 'https://business.facebook.com',
+            instagram_business: 'https://business.instagram.com'
+          }
+        }
+      }, { status: 400 });
     }
 
     // Step 3: Instagram Business Accountのメディアを取得

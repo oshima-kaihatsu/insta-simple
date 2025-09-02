@@ -33,8 +33,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 本番環境で確実にHTTPSのURLを使用
-    // InstagramアプリのIDを使用
-    const clientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
+    // Facebook App IDを使用（Instagram Graph API v23では Facebook App IDが必要）
+    const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID || '1776291423096614';
     const baseUrl = process.env.NEXTAUTH_URL || 'https://insta-simple.thorsync.com';
     const redirectUri = `${baseUrl}/api/instagram/callback`;
 
@@ -45,10 +45,26 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
-    // 新しいInstagram Graph APIスコープ（Instagram Basic Display APIは廃止）
-    const scope = 'pages_show_list,pages_read_engagement,instagram_basic,instagram_manage_insights';
+    // Instagram Graph API v23の必須権限（2024年以降のbusiness_management含む）
+    const scope = 'business_management,pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights';
     
-    const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&response_type=code&state=instagram`;
+    // Instagram連携のための特別なextrasパラメータ
+    const extras = JSON.stringify({
+      setup: {
+        channel: 'IG_API_ONBOARDING'
+      }
+    });
+    
+    const authParams = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: redirectUri,
+      scope: scope,
+      response_type: 'code',
+      state: 'instagram',
+      extras: extras
+    });
+    
+    const authUrl = `https://www.facebook.com/v23.0/dialog/oauth?${authParams.toString()}`;
     
     console.log('Scope used:', scope);
 
