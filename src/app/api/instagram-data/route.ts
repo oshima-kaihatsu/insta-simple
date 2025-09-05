@@ -267,6 +267,14 @@ export async function GET(request: NextRequest) {
         });
       }
 
+      // インサイトデータから個別のメトリクスを抽出
+      const reach = insights.reach || 0;
+      const impressions = insights.impressions || 0;
+      const saves = insights.saved || 0;
+      const plays = insights.plays || 0;
+      const likes = post.like_count || 0;
+      const engagement = impressions > 0 ? Math.round((likes + (post.comments_count || 0) + saves) * 100 / impressions) : 0;
+
       // デバッグ: 取得できたインサイトを確認
       if (index < 3) { // 最初の3投稿のみログ出力
         console.log(`Post ${post.id} processed insights:`, {
