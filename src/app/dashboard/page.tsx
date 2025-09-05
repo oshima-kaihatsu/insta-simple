@@ -115,7 +115,7 @@ export default function DashboardPage() {
             
             // 複数アカウント対応 - 既存アカウントを更新または新規追加
             setInstagramAccounts(prevAccounts => {
-              const existingIndex = prevAccounts.findIndex(acc => acc.profile.user_id === responseData.profile.id);
+              const existingIndex = prevAccounts.findIndex(acc => acc.profile?.user_id === responseData.profile?.id);
               if (existingIndex >= 0) {
                 // 既存アカウントを更新
                 const updatedAccounts = [...prevAccounts];
@@ -136,10 +136,11 @@ export default function DashboardPage() {
             
             setShowSampleData(false);
             console.log('✅ Set real Instagram data:', {
-              username: instagramProfile.username,
-              account_type: accountType,
+              username: responseData.profile?.username || 'Unknown',
+              account_type: responseData.profile?.account_type || 'Unknown',
               posts_count: transformedData.posts.length,
-              followers: instagramProfile.followers_count
+              followers: responseData.profile?.followers_count || 0,
+              debug: responseData.debug || false
             });
           } else {
             // サーバーサイドエラーまたはデータなし
