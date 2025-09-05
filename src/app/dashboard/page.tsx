@@ -164,11 +164,13 @@ export default function DashboardPage() {
               console.log('⚠️ Instagram connected but setup incomplete');
             } else {
               setShowSampleData(true);
+              setInstagramAccounts([]); // アカウントデータをクリア
             }
           }
         } catch (error) {
           console.error('📊 Error fetching Instagram data:', error);
           setShowSampleData(true); // エラー時はサンプルに戻す
+          setInstagramAccounts([]); // アカウントデータをクリア
         } finally {
           setLoading(false);
         }
@@ -251,14 +253,16 @@ export default function DashboardPage() {
               localStorage.removeItem('instagram_token');
               localStorage.removeItem('instagram_user_id');
               localStorage.removeItem('instagram_username');
-              setShowSampleData(true);
+              setShowSampleData(true); // サンプルデータを表示
+              setInstagramAccounts([]); // アカウントデータをクリア
             }
           } catch (error) {
             console.error('Error with stored token:', error);
             localStorage.removeItem('instagram_token');
             localStorage.removeItem('instagram_user_id');
             localStorage.removeItem('instagram_username');
-            setShowSampleData(true);
+            setShowSampleData(true); // サンプルデータを表示
+            setInstagramAccounts([]); // アカウントデータをクリア
           } finally {
             setLoading(false);
           }
