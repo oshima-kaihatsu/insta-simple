@@ -338,9 +338,10 @@ export async function GET(request: NextRequest) {
     const followerHistory = await getFollowerHistory(igBusinessId, profileData.followers_count).catch(historyError => {
       console.warn('⚠️ Follower history fetch failed:', historyError.message);
       console.warn('⚠️ Using fallback single data point');
+      const safeFallbackFollowers = Math.max(0, parseInt(profileData.followers_count) || 0);
       return [{
         date: new Date().toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
-        followers: profileData.followers_count || 0
+        followers: safeFallbackFollowers
       }];
     });
     console.log('✅ Follower history result:', followerHistory.length, 'records');
@@ -535,7 +536,7 @@ async function getFollowerHistory(instagramUserId: string, currentFollowers: num
           console.log(`Found ${history.length} follower history records`);
           return history.map(h => ({
             date: new Date(h.date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
-            followers: h.follower_count
+            followers: Math.max(0, parseInt(h.follower_count) || 0) // NaN防止
           }));
         }
       }
@@ -545,8 +546,9 @@ async function getFollowerHistory(instagramUserId: string, currentFollowers: num
   }
   
   // フォールバック: 現在の値のみ
+  const safeFollowers = Math.max(0, parseInt(currentFollowers) || 0);
   return [{
     date: new Date().toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
-    followers: currentFollowers
+    followers: safeFollowers
   }];
 }
