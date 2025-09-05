@@ -330,14 +330,22 @@ export async function GET(request: NextRequest) {
       const engagement = reach > 0 ? Math.round((likes + comments + saves) * 100 / reach) : 0;
 
       // デバッグ: 取得できたインサイトを確認
-      if (index < 3) { // 最初の3投稿のみログ出力
-        console.log(`Post ${post.id} processed insights:`, {
+      if (index < 10) { // 最初の10投稿のみログ出力
+        console.log(`🔍 Post ${post.id} processed insights:`, {
           raw_insights: insights,
           reach: reach,
           saves: saves,
           likes: likes,
           comments: comments,
-          engagement: engagement
+          engagement: engagement,
+          final_data_structure: {
+            insights: {
+              reach: reach,
+              saved: saves,
+              likes: likes,
+              comments: comments
+            }
+          }
         });
       }
 
@@ -369,7 +377,8 @@ export async function GET(request: NextRequest) {
         // 実際のインサイトデータ（v23対応）
         insights: {
           reach: reach,
-          saved: saves,
+          saves: saves,  // フロントエンドは 'saves' を参照
+          saved: saves,  // 後方互換性のため 'saved' も含める
           likes: likes,
           comments: comments,
           engagement: engagement,
