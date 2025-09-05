@@ -18,6 +18,32 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // 段階的デバッグ: 最初に基本レスポンスをテスト
+    console.log('🔍 DEBUG: Starting API execution...');
+    console.log('🔍 DEBUG: Access token length:', accessToken?.length || 0);
+    console.log('🔍 DEBUG: User ID:', instagramUserId);
+    
+    // まず簡単なFacebook Graph APIテストを実行
+    console.log('🔍 Step 0: Testing basic Facebook Graph API connection...');
+    const basicTestResponse = await fetch(
+      `https://graph.facebook.com/v23.0/me?access_token=${accessToken}`
+    );
+    console.log('🔍 Basic test response status:', basicTestResponse.status);
+    
+    if (!basicTestResponse.ok) {
+      const errorData = await basicTestResponse.json();
+      console.error('❌ Basic Facebook API test failed:', errorData);
+      return NextResponse.json({
+        connected: false,
+        error: 'FACEBOOK_API_TEST_FAILED',
+        message: `Facebook APIの基本テストに失敗: ${errorData.error?.message || 'Unknown error'}`,
+        details: errorData
+      }, { status: 500 });
+    }
+    
+    const basicUserData = await basicTestResponse.json();
+    console.log('✅ Basic test successful, user:', basicUserData.name);
+    
     // Facebook Graph API を使用（Instagram Business Account用）
     console.log('🔍 Step 1: Fetching Facebook Pages...');
     
@@ -359,6 +385,7 @@ export async function GET(request: NextRequest) {
       message: 'APIエラーが発生しました',
       details: error instanceof Error ? error.message : String(error),
       errorType: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
       debugInfo: {
         hasToken: !!accessToken,
         hasUserId: !!instagramUserId,
