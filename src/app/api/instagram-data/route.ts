@@ -414,7 +414,9 @@ function calculateRankings(post: any, allPosts: any[], insights: any) {
   const savesRank = sortedBySaves.findIndex(p => p.id === post.id) + 1;
 
   // 保存率でランキング
-  const savesRate = insights.reach > 0 ? (insights.saved / insights.reach) * 100 : 0;
+  const reach = insights.reach || 0;
+  const saved = insights.saved || 0;
+  const savesRate = reach > 0 ? (saved / reach) * 100 : 0;
   const sortedBySavesRate = [...allPosts].sort((a, b) => {
     const aReach = a.insights?.data?.find((m: any) => m.name === 'reach')?.values?.[0]?.value || 1;
     const aSaves = a.insights?.data?.find((m: any) => m.name === 'saved')?.values?.[0]?.value || 0;
