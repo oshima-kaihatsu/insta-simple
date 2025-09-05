@@ -336,12 +336,20 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('❌ API Error:', error);
+    console.error('❌ Instagram Data API Error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      cause: error instanceof Error ? error.cause : undefined
+    });
+    
     return NextResponse.json({
       connected: false,
       error: 'API_ERROR',
       message: 'APIエラーが発生しました',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.name : 'Unknown'
     }, { status: 500 });
   }
 }
@@ -447,17 +455,27 @@ async function getFollowerHistory(instagramUserId: string, currentFollowers: num
   // データベースから履歴を取得（Supabase利用時）
   try {
     if (typeof window === 'undefined') { // サーバーサイドでのみ実行
-      const { supabase } = await import('@/lib/supabase');
+      console.log('Attempting to fetch follower history from database...');
       
-      if (supabase) {
-        const { data: history } = await supabase
+      // Supabaseインポートを安全に試行
+      const supabaseModule = await import('@/lib/supabase').catch((importError) => {
+        console.warn('Supabase import failed:', importError.message);
+        return null;
+      });
+      
+      if (supabaseModule?.supabase) {
+        console.log('Supabase connection available, querying follower history...');
+        const { data: history, error } = await supabaseModule.supabase
           .from('follower_history')
           .select('date, follower_count')
           .eq('instagram_user_id', instagramUserId)
           .order('date', { ascending: true })
           .limit(30);
           
-        if (history && history.length > 0) {
+        if (error) {
+          console.warn('Supabase query error:', error);
+        } else if (history && history.length > 0) {
+          console.log(`Found ${history.length} follower history records`);
           return history.map(h => ({
             date: new Date(h.date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
             followers: h.follower_count
@@ -466,7 +484,7 @@ async function getFollowerHistory(instagramUserId: string, currentFollowers: num
       }
     }
   } catch (error) {
-    console.log('Could not fetch follower history from database, using current value only');
+    console.warn('Could not fetch follower history from database:', error instanceof Error ? error.message : 'Unknown error');
   }
   
   // フォールバック: 現在の値のみ
