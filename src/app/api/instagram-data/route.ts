@@ -223,18 +223,36 @@ export async function GET(request: NextRequest) {
           metricsToFetch = 'impressions,reach,saved,plays';
         }
         
-        const insightsResponse = await fetch(
-          `https://graph.facebook.com/v23.0/${post.id}/insights?metric=${metricsToFetch}&access_token=${pageAccessToken}`
-        );
+        const insightsUrl = `https://graph.facebook.com/v23.0/${post.id}/insights?metric=${metricsToFetch}&access_token=${pageAccessToken}`;
+        console.log(`🔍 Fetching insights for post ${post.id}:`);
+        console.log(`   URL: ${insightsUrl.replace(pageAccessToken, 'TOKEN_HIDDEN')}`);
+        console.log(`   Metrics: ${metricsToFetch}`);
+        console.log(`   Media Type: ${post.media_type}`);
+        
+        const insightsResponse = await fetch(insightsUrl);
+        console.log(`📊 Insights response status: ${insightsResponse.status} ${insightsResponse.statusText}`);
+        
         const insightsData = await insightsResponse.json();
         
-        console.log(`  Insights response for ${post.id}:`, {
+        if (insightsData.error) {
+          console.error(`❌ Insights API Error for post ${post.id}:`, {
+            code: insightsData.error.code,
+            message: insightsData.error.message,
+            type: insightsData.error.type,
+            fbtrace_id: insightsData.error.fbtrace_id
+          });
+        }
+        
+        console.log(`📈 Insights response for ${post.id}:`, {
           hasData: !!insightsData.data,
           dataLength: insightsData.data?.length || 0,
           error: insightsData.error,
           metrics: insightsData.data?.map(d => ({
             name: d.name,
-            value: d.values?.[0]?.value
+            hasValues: !!d.values,
+            valueCount: d.values?.length || 0,
+            firstValue: d.values?.[0]?.value,
+            period: d.period
           })) || []
         });
         
@@ -301,20 +319,15 @@ export async function GET(request: NextRequest) {
         like_count: likes,
         comments_count: post.comments_count || 0,
         
-        // 実際のデータのみ使用（推定値は使用しない）
-        data_24h: {
+        // Instagram Graph APIの制限により、期間別データは利用できません
+        // 実際のlifetimeデータのみ提供します
+        lifetime_data: {
           reach: reach,
           likes: likes,
           saves: saves,
           impressions: impressions,
-          engagement: engagement
-        },
-        data_7d: {
-          reach: reach,
-          likes: likes,
-          saves: saves,
-          impressions: impressions,
-          engagement: engagement
+          engagement: engagement,
+          note: "Instagram Graph APIでは投稿の累計データのみ提供されます"
         },
         
         // 実際のインサイトデータ
