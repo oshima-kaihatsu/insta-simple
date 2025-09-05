@@ -27,7 +27,7 @@ export default function DashboardPage() {
   const [showSampleData, setShowSampleData] = useState(true);
   const [aiComments, setAiComments] = useState({});
   const [postsDataSource, setPostsDataSource] = useState('7d');
-  const [postsPeriod, setPostsPeriod] = useState('28d');
+  // Period removed - showing lifetime data only to avoid misleading users
   const [userPlan, setUserPlan] = useState('basic'); // basic, pro, enterprise
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
@@ -455,24 +455,8 @@ export default function DashboardPage() {
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
   
-  // 期間フィルタリング処理
-  const [filteredPosts, setFilteredPosts] = useState([]);
-  
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const filtered = postsData.filter((post) => {
-        if (postsPeriod === 'all') return true;
-        
-        const postDate = hasRealData ? new Date(post.timestamp) : new Date(post.date);
-        const now = new Date();
-        const daysAgo = parseInt(postsPeriod);
-        const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
-        
-        return postDate >= cutoffDate;
-      });
-      setFilteredPosts(filtered);
-    }
-  }, [postsData, postsPeriod, hasRealData]);
+  // Show all posts - no period filtering to avoid misleading users
+  const filteredPosts = postsData;
 
   // ホーム数推定関数
   const estimateHomeImpressions = (impressions, media_type) => {
@@ -807,7 +791,7 @@ export default function DashboardPage() {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
-                過去28日間のアカウント分析
+アカウント分析（ライフタイム）
               </h1>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '8px' }}>
                 <div style={{
@@ -960,7 +944,7 @@ export default function DashboardPage() {
                   <div style={{ fontSize: '32px', fontWeight: '700', color: followersIncrease >= 0 ? '#22c55e' : '#ef4444', marginBottom: '4px' }}>
                     {followersIncrease >= 0 ? '+' : ''}{followersIncrease}
                   </div>
-                  <div style={{ fontSize: '14px', color: '#666' }}>28日間増減</div>
+                  <div style={{ fontSize: '14px', color: '#666' }}>総フォロワー数</div>
                 </div>
                 <div style={{ textAlign: 'center', padding: '16px' }}>
                   <div style={{ fontSize: '32px', fontWeight: '700', color: dailyAverageIncrease >= 0 ? '#c79a42' : '#ef4444', marginBottom: '4px' }}>
@@ -1204,32 +1188,21 @@ export default function DashboardPage() {
             </h2>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {/* 期間ソートボタン */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {['7', '14', '28', 'all'].map((period) => (
-                  <button
-                    key={period}
-                    onClick={() => setPostsPeriod(period)}
-                    style={{
-                      padding: '8px 16px',
-                      border: 'none',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s',
-                      background: postsPeriod === period 
-                        ? 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)'
-                        : 'rgba(199, 154, 66, 0.1)',
-                      color: postsPeriod === period ? '#fcfbf8' : '#5d4e37',
-                      boxShadow: postsPeriod === period 
-                        ? '0 2px 8px rgba(199, 154, 66, 0.3)' 
-                        : 'none'
-                    }}
-                  >
-                    {period === 'all' ? '全期間' : `${period}日間`}
-                  </button>
-                ))}
+              {/* API制限の説明 */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px',
+                padding: '8px 16px',
+                backgroundColor: 'rgba(199, 154, 66, 0.1)',
+                borderRadius: '6px',
+                fontSize: '14px',
+                color: '#5d4e37'
+              }}>
+                <span style={{ fontWeight: '600' }}>📊 ライフタイムデータ</span>
+                <span style={{ fontSize: '12px', color: '#666' }}>
+                  (Instagram APIの制限により、投稿ごとの期間別データは取得できません)
+                </span>
               </div>
               
               <button 
@@ -1261,15 +1234,13 @@ export default function DashboardPage() {
               <thead>
                 <tr style={{ background: 'linear-gradient(135deg, #fcfbf8 0%, #e7e6e4 100%)' }}>
                   <th style={{ padding: '16px 12px', textAlign: 'left', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>投稿</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>24時間後</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>1週間後</th>
-                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>重要4指標ランキング（28日間中）</th>
+                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>ライフタイムインサイト</th>
+                  <th style={{ padding: '16px 12px', textAlign: 'center', fontWeight: '600', color: '#5d4e37', borderBottom: '2px solid #c79a42' }}>重要4指標</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPosts.map((post, index) => {
-                  const metrics24h = hasRealData ? calculateMetrics(post) : calculateMetrics({ data_7d: post.data_24h });
-                  const metrics7d = calculateMetrics(post);
+                  const metrics = calculateMetrics(post);
                   const title = hasRealData ? (post.caption?.substring(0, 50) + '...' || '投稿') : post.title;
                   const date = hasRealData ? new Date(post.timestamp).toLocaleDateString('ja-JP') : post.date;
                   
@@ -1283,57 +1254,32 @@ export default function DashboardPage() {
                         <div style={{ fontSize: '12px', color: '#666' }}>{date}</div>
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                          {hasRealData ? (
-                            <>
-                              <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
-                              <div>いいね: {post.like_count || 0}</div>
-                              <div>保存: {post.insights?.saves || 0}</div>
-                              <div>プロフ: {post.insights?.profile_views || 0}</div>
-                              <div>ウェブ: {post.insights?.website_clicks || 0}</div>
-                            </>
-                          ) : (
-                            <>
-                              <div>リーチ: {post.data_24h.reach.toLocaleString()}</div>
-                              <div>いいね: {post.data_24h.likes}</div>
-                              <div>保存: {post.data_24h.saves}</div>
-                              <div>プロフ: {post.data_24h.profile_views}</div>
-                              <div>フォロー: {post.data_24h.follows}</div>
-                            </>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          <div style={{ color: parseFloat(metrics24h.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics24h.saves_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics24h.home_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics24h.profile_access_rate}%</div>
-                          <div style={{ color: parseFloat(metrics24h.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics24h.follower_conversion_rate}%</div>
-                        </div>
-                      </td>
-                      <td style={{ padding: '16px 12px', textAlign: 'center' }}>
-                        <div style={{ fontSize: '12px', marginBottom: '8px' }}>
-                          {hasRealData ? (
-                            <>
-                              <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
-                              <div>いいね: {post.like_count || 0}</div>
-                              <div>保存: {post.insights?.saves || 0}</div>
-                              <div>プロフ: {post.insights?.profile_views || 0}</div>
-                              <div>ウェブ: {post.insights?.website_clicks || 0}</div>
-                            </>
-                          ) : (
-                            <>
-                              <div>リーチ: {post.data_7d.reach.toLocaleString()}</div>
-                              <div>いいね: {post.data_7d.likes}</div>
-                              <div>保存: {post.data_7d.saves}</div>
-                              <div>プロフ: {post.data_7d.profile_views}</div>
-                              <div>フォロー: {post.data_7d.follows}</div>
-                            </>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '11px', color: '#666' }}>
-                          <div style={{ color: parseFloat(metrics7d.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics7d.saves_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics7d.home_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics7d.profile_access_rate}%</div>
-                          <div style={{ color: parseFloat(metrics7d.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics7d.follower_conversion_rate}%</div>
+                        <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                          <div style={{ fontSize: '12px' }}>
+                            {hasRealData ? (
+                              <>
+                                <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
+                                <div>いいね: {post.like_count || 0}</div>
+                                <div>保存: {post.insights?.saves || 0}</div>
+                                <div>プロフ: {post.insights?.profile_views || 0}</div>
+                                <div>ウェブ: {post.insights?.website_clicks || 0}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div>リーチ: {post.data_7d.reach.toLocaleString()}</div>
+                                <div>いいね: {post.data_7d.likes}</div>
+                                <div>保存: {post.data_7d.saves}</div>
+                                <div>プロフ: {post.data_7d.profile_views}</div>
+                                <div>フォロー: {post.data_7d.follows}</div>
+                              </>
+                            )}
+                          </div>
+                          <div style={{ fontSize: '11px', color: '#666' }}>
+                            <div style={{ color: parseFloat(metrics.saves_rate) >= 3.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>保存率: {metrics.saves_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.home_rate) >= 50.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>ホーム率: {metrics.home_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.profile_access_rate) >= 5.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>プロフィールアクセス率: {metrics.profile_access_rate}%</div>
+                            <div style={{ color: parseFloat(metrics.follower_conversion_rate) >= 8.0 ? '#22c55e' : '#ef4444', fontWeight: '600' }}>フォロワー転換率: {metrics.follower_conversion_rate}%</div>
+                          </div>
                         </div>
                       </td>
                       <td style={{ padding: '16px 12px', textAlign: 'center' }}>
