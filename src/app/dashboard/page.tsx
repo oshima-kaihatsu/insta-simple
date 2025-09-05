@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [postsDataSource, setPostsDataSource] = useState('7d');
   const [postsPeriod, setPostsPeriod] = useState('28d');
   const [userPlan, setUserPlan] = useState('basic'); // basic, pro, enterprise
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
   // アクティブなInstagramアカウントデータ
   const instagramData = instagramAccounts[activeAccountIndex] || null;
@@ -78,76 +79,43 @@ export default function DashboardPage() {
           // Instagram Basic Display API から取得を試行
           console.log('🚀 Attempting Instagram Basic Display API call...');
           
-          // 🚀 サーバーサイドAPIでInstagramデータを取得（CORS回避）
-          console.log('🚀 Using server-side Instagram API...');
-          const response = await fetch(`/api/instagram/media?access_token=${instagramToken}`);
+          // 🚀 サーバーサイドAPIでInstagramデータを取得（インサイト含む）
+          console.log('🚀 Using Instagram data API with insights...');
+          const response = await fetch(`/api/instagram-data?access_token=${instagramToken}&instagram_user_id=${instagramUserId || 'me'}`);
           console.log('Response status:', response.status);
           
           console.log('Server API response status:', response.status);
           const responseData = await response.json();
           console.log('Server API response:', responseData);
           
-          if (response.ok && responseData.success && responseData.data?.data) {
-            // サーバーサイドから成功レスポンス - Instagram Graph APIデータを正しく変換
-            const accountType = responseData.account_type || 'business';
-            
-            // Instagram用の正しいプロファイル情報を取得
-            let instagramProfile = {};
-            if (responseData.profile?.instagram_account_id) {
-              // ビジネスアカウントの場合
-              instagramProfile = {
-                username: instagramUsername || responseData.instagram_username || responseData.profile.instagram_username || responseData.profile.page_name || `user_${responseData.profile.instagram_account_id}`,
-                user_id: responseData.profile.instagram_account_id,
-                account_type: accountType,
-                followers_count: responseData.followers_count || 0,
-                media_count: responseData.media_count || responseData.data.data.length,
-                profile_picture_url: responseData.profile_picture_url || null
-              };
-            } else {
-              // 個人アカウントまたは基本情報の場合
-              instagramProfile = {
-                username: instagramUsername || responseData.instagram_username || responseData.profile.instagram_username || `user_${responseData.profile.id}`, // URLパラメータのInstagram名を最優先
-                user_id: responseData.profile.id,
-                account_type: accountType,
-                followers_count: responseData.followers_count || 0,
-                media_count: responseData.media_count || responseData.data.data.length,
-                profile_picture_url: responseData.profile_picture_url || null
-              };
-            }
+          if (response.ok && responseData.connected) {
+            // instagram-dataエンドポイントからの完全なデータ
+            console.log('✅ Got Instagram data with insights:', {
+              hasProfile: !!responseData.profile,
+              postsCount: responseData.posts?.length || 0,
+              firstPostInsights: responseData.posts?.[0]?.insights,
+              firstThreePosts: responseData.posts?.slice(0, 3).map(p => ({
+                id: p.id,
+                insights: p.insights,
+                data_24h: p.data_24h,
+                data_7d: p.data_7d
+              }))
+            });
 
             const transformedData = {
               connected: true,
-              account_type: accountType,
-              profile: instagramProfile,
+              profile: responseData.profile,
               raw_profile: responseData.profile, // デバッグ用
-              posts: responseData.data.data.map(item => ({
-                id: item.id,
-                caption: item.caption || 'キャプションなし',
-                media_type: item.media_type,
-                media_url: item.media_url,
-                thumbnail_url: item.thumbnail_url,
-                timestamp: item.timestamp,
-                permalink: item.permalink,
-                like_count: item.like_count || 0,
-                comments_count: item.comments_count || 0,
-                // 実際のインサイトデータ（取得できない場合は推定値）
-                insights: {
-                  reach: item.insights?.reach || 0, // 実データが無い場合は0
-                  impressions: item.insights?.impressions || 0,
-                  saves: item.insights?.saves || 0,
-                  profile_views: item.insights?.profile_views || 0,
-                  website_clicks: item.insights?.website_clicks || 0,
-                  engagement: item.like_count + (item.comments_count || 0),
-                  data_available: !!item.insights // インサイトデータが利用可能かどうかのフラグ
-                }
-              })),
+              posts: responseData.posts || [],
+              follower_history: responseData.follower_history,
+              insights_summary: responseData.insights_summary,
               token: instagramToken,
-              last_updated: new Date().toISOString()
+              last_updated: new Date().toISOString() // クライアントサイドでのみ実行
             };
             
             // 複数アカウント対応 - 既存アカウントを更新または新規追加
             setInstagramAccounts(prevAccounts => {
-              const existingIndex = prevAccounts.findIndex(acc => acc.profile.user_id === instagramProfile.user_id);
+              const existingIndex = prevAccounts.findIndex(acc => acc.profile.user_id === responseData.profile.id);
               if (existingIndex >= 0) {
                 // 既存アカウントを更新
                 const updatedAccounts = [...prevAccounts];
@@ -213,38 +181,33 @@ export default function DashboardPage() {
           setShowSampleData(false);
           
           try {
-            // サーバーサイドAPIでメディアを取得
-            const response = await fetch(`/api/instagram/media?access_token=${storedToken}`);
+            // InstagramユーザーIDを取得
+            const storedUserId = localStorage.getItem('instagram_user_id');
+            
+            // インサイトを含む完全なデータを取得するエンドポイントを使用
+            const response = await fetch(`/api/instagram-data?access_token=${storedToken}&instagram_user_id=${storedUserId || 'me'}`);
             const responseData = await response.json();
             
-            if (response.ok && responseData.success && responseData.data?.data) {
+            if (response.ok && responseData.connected) {
+              // instagram-dataエンドポイントからのレスポンスを処理
+              console.log('✨ Instagram data response from stored token:', {
+                hasProfile: !!responseData.profile,
+                postsCount: responseData.posts?.length || 0,
+                hasInsights: responseData.posts?.[0]?.insights || null,
+                firstPostData: responseData.posts?.[0] ? {
+                  id: responseData.posts[0].id,
+                  insights: responseData.posts[0].insights,
+                  data_24h: responseData.posts[0].data_24h,
+                  data_7d: responseData.posts[0].data_7d
+                } : null
+              });
+              
               const transformedData = {
                 connected: true,
-                profile: {
-                  username: responseData.instagram_username || responseData.profile.instagram_username || responseData.profile.username || `user_${responseData.profile.id}`,
-                  user_id: responseData.profile.id,
-                  followers_count: responseData.profile.followers_count || 0,
-                  media_count: responseData.profile.media_count || 0,
-                  account_type: responseData.profile.account_type || 'PERSONAL'
-                },
-                posts: responseData.data.data.map(item => ({
-                  id: item.id,
-                  caption: item.caption || 'No caption',
-                  media_type: item.media_type,
-                  media_url: item.media_url,
-                  thumbnail_url: item.thumbnail_url,
-                  timestamp: item.timestamp,
-                  permalink: item.permalink,
-                  insights: {
-                    reach: item.insights?.reach || 0, // 実データが無い場合は0
-                    impressions: item.insights?.impressions || 0,
-                    saves: item.insights?.saves || 0,
-                    profile_views: item.insights?.profile_views || 0,
-                    website_clicks: item.insights?.website_clicks || 0,
-                    engagement: (item.like_count || 0) + (item.comments_count || 0),
-                    data_available: !!item.insights // インサイトデータが利用可能かどうかのフラグ
-                  }
-                }))
+                profile: responseData.profile,
+                posts: responseData.posts || [],
+                follower_history: responseData.follower_history,
+                insights_summary: responseData.insights_summary
               };
               
               setInstagramAccounts([transformedData]);
@@ -427,16 +390,23 @@ export default function DashboardPage() {
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
   
   // 期間フィルタリング処理
-  const filteredPosts = postsData.filter((post) => {
-    if (postsPeriod === 'all') return true;
-    
-    const postDate = hasRealData ? new Date(post.timestamp) : new Date(post.date);
-    const now = new Date();
-    const daysAgo = parseInt(postsPeriod);
-    const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
-    
-    return postDate >= cutoffDate;
-  });
+  const [filteredPosts, setFilteredPosts] = useState([]);
+  
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const filtered = postsData.filter((post) => {
+        if (postsPeriod === 'all') return true;
+        
+        const postDate = hasRealData ? new Date(post.timestamp) : new Date(post.date);
+        const now = new Date();
+        const daysAgo = parseInt(postsPeriod);
+        const cutoffDate = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+        
+        return postDate >= cutoffDate;
+      });
+      setFilteredPosts(filtered);
+    }
+  }, [postsData, postsPeriod, hasRealData]);
 
   // ホーム数推定関数
   const estimateHomeImpressions = (impressions, media_type) => {
@@ -602,10 +572,18 @@ export default function DashboardPage() {
     return '#ef4444';
   };
 
-  // 日付範囲
-  const today = new Date();
-  const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
-  const dateRangeText = `${days28Ago.toLocaleDateString('ja-JP')} - ${today.toLocaleDateString('ja-JP')}`;
+  // 日付範囲の設定
+  useEffect(() => {
+    const today = new Date();
+    const days28Ago = new Date(today.getTime() - (28 * 24 * 60 * 60 * 1000));
+    setDateRange({
+      start: days28Ago.toLocaleDateString('ja-JP'),
+      end: today.toLocaleDateString('ja-JP')
+    });
+  }, []);
+  
+  const dateRangeText = dateRange.start && dateRange.end ? 
+    `${dateRange.start} - ${dateRange.end}` : '';
 
   // フォロワー統計
   const currentFollowers = instagramData?.profile?.followers_count || 0; // リアルデータのみ、無い場合は0

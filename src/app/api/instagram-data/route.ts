@@ -163,8 +163,9 @@ export async function GET(request: NextRequest) {
     // Step 3: 最新の投稿とインサイトを取得
     console.log('📈 Step 3: Fetching posts with insights...');
     
+    // まず投稿の基本情報を取得
     const mediaResponse = await fetch(
-      `https://graph.facebook.com/v23.0/${igBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count,insights.metric(reach,impressions,saved,engagement,shares,plays,total_interactions)&limit=28&access_token=${pageAccessToken}`
+      `https://graph.facebook.com/v23.0/${igBusinessId}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count&limit=28&access_token=${pageAccessToken}`
     );
     const mediaData = await mediaResponse.json();
     
@@ -181,15 +182,64 @@ export async function GET(request: NextRequest) {
     }
 
     console.log('✅ Found', mediaData.data?.length || 0, 'posts');
+    
+    // 各投稿のインサイトを個別に取得
+    const postsWithInsights = [];
+    for (const post of (mediaData.data || [])) {
+      try {
+        console.log(`📊 Fetching insights for post ${post.id}...`);
+        
+        // インサイトを個別に取得（メディアタイプに応じて適切なメトリクスを使用）
+        let metricsToFetch = 'impressions,reach,saved';
+        
+        // Reelsの場合は再生回数も取得
+        if (post.media_type === 'VIDEO' || post.media_type === 'REELS') {
+          metricsToFetch = 'impressions,reach,saved,plays';
+        }
+        
+        const insightsResponse = await fetch(
+          `https://graph.facebook.com/v23.0/${post.id}/insights?metric=${metricsToFetch}&access_token=${pageAccessToken}`
+        );
+        const insightsData = await insightsResponse.json();
+        
+        console.log(`  Insights response for ${post.id}:`, {
+          hasData: !!insightsData.data,
+          dataLength: insightsData.data?.length || 0,
+          error: insightsData.error
+        });
+        
+        // インサイトデータをpostオブジェクトに追加
+        post.insights = insightsData;
+        postsWithInsights.push(post);
+        
+      } catch (insightError) {
+        console.error(`Failed to fetch insights for post ${post.id}:`, insightError);
+        // インサイトが取得できない場合も投稿自体は含める
+        post.insights = { data: [] };
+        postsWithInsights.push(post);
+      }
+    }
+    
+    console.log('✅ Processed', postsWithInsights.length, 'posts with insights');
 
     // Step 4: データを整形
-    const posts = (mediaData.data || []).map((post: any, index: number) => {
+    const posts = postsWithInsights.map((post: any, index: number) => {
       // インサイトデータを抽出
       const insights: any = {};
       if (post.insights?.data) {
         post.insights.data.forEach((metric: any) => {
-          insights[metric.name] = metric.values?.[0]?.value || 0;
+          // メトリクスによっては期間別のデータがある場合がある
+          if (metric.values && metric.values.length > 0) {
+            insights[metric.name] = metric.values[0].value || 0;
+          } else {
+            insights[metric.name] = 0;
+          }
         });
+      }
+
+      // デバッグ: 取得できたインサイトを確認
+      if (index < 3) { // 最初の3投稿のみログ出力
+        console.log(`Post ${post.id} insights:`, insights);
       }
 
       // 24時間と7日間のデータ（実際は同じデータを使用、APIの制限）
@@ -197,7 +247,9 @@ export async function GET(request: NextRequest) {
       const likes = post.like_count || 0;
       const saves = insights.saved || 0;
       const impressions = insights.impressions || 0;
-      const engagement = insights.engagement || 0;
+      const plays = insights.plays || 0;
+      // engagementは like + comment + save + share の合計として計算
+      const engagement = likes + (post.comments_count || 0) + saves;
       
       return {
         id: post.id,
@@ -235,12 +287,12 @@ export async function GET(request: NextRequest) {
           saved: saves,
           engagement: engagement,
           shares: insights.shares || 0,
-          plays: insights.plays || 0,
-          total_interactions: insights.total_interactions || engagement
+          plays: plays,
+          total_interactions: engagement
         },
         
         // パフォーマンスランキング（実際のデータに基づく）
-        rankings: calculateRankings(post, mediaData.data, insights)
+        rankings: calculateRankings(post, postsWithInsights, insights)
       };
     });
 
