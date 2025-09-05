@@ -175,18 +175,43 @@ export default function DashboardPage() {
       } else {
         // URLパラメータがない場合、ローカルストレージから確認
         const storedToken = localStorage.getItem('instagram_token');
+        const storedUserId = localStorage.getItem('instagram_user_id');
+        const storedUsername = localStorage.getItem('instagram_username');
+        
+        console.log('🔍 Local Storage Check:', {
+          hasToken: !!storedToken,
+          tokenPreview: storedToken ? `${storedToken.substring(0, 20)}...` : null,
+          userId: storedUserId,
+          username: storedUsername
+        });
+        
         if (storedToken) {
           console.log('🔄 Found stored Instagram token, fetching data...');
           setLoading(true);
           setShowSampleData(false);
           
           try {
-            // InstagramユーザーIDを取得
-            const storedUserId = localStorage.getItem('instagram_user_id');
+            // InstagramユーザーIDを取得（既に上で取得済み）
             
             // インサイトを含む完全なデータを取得するエンドポイントを使用
-            const response = await fetch(`/api/instagram-data?access_token=${storedToken}&instagram_user_id=${storedUserId || 'me'}`);
+            const apiUrl = `/api/instagram-data?access_token=${storedToken}&instagram_user_id=${storedUserId || 'me'}`;
+            console.log('🚀 API Request URL:', apiUrl.replace(/access_token=[^&]+/, 'access_token=***'));
+            
+            const response = await fetch(apiUrl);
             const responseData = await response.json();
+            
+            console.log('📊 Raw API Response:', {
+              status: response.status,
+              statusText: response.statusText,
+              ok: response.ok,
+              responsePreview: {
+                connected: responseData.connected,
+                error: responseData.error,
+                message: responseData.message,
+                hasProfile: !!responseData.profile,
+                postsCount: responseData.posts?.length || 0
+              }
+            });
             
             if (response.ok && responseData.connected) {
               // instagram-dataエンドポイントからのレスポンスを処理
@@ -214,6 +239,14 @@ export default function DashboardPage() {
               setShowSampleData(false);
               console.log('✅ Loaded Instagram data from stored token via server API');
             } else {
+              console.error('❌ API Response Details:', {
+                status: response.status,
+                ok: response.ok,
+                connected: responseData.connected,
+                error: responseData.error,
+                message: responseData.message,
+                fullResponse: responseData
+              });
               console.error('Stored token invalid or no data, clearing and showing sample data');
               localStorage.removeItem('instagram_token');
               localStorage.removeItem('instagram_user_id');
