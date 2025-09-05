@@ -300,7 +300,16 @@ export async function GET(request: NextRequest) {
     });
 
     // Step 5: フォロワー推移（データベースから取得、なければ現在値のみ）
-    const followerHistory = await getFollowerHistory(igBusinessId, profileData.followers_count);
+    console.log('🔍 Attempting to get follower history...');
+    const followerHistory = await getFollowerHistory(igBusinessId, profileData.followers_count).catch(historyError => {
+      console.warn('⚠️ Follower history fetch failed:', historyError.message);
+      console.warn('⚠️ Using fallback single data point');
+      return [{
+        date: new Date().toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
+        followers: profileData.followers_count || 0
+      }];
+    });
+    console.log('✅ Follower history result:', followerHistory.length, 'records');
 
     // 成功レスポンス
     return NextResponse.json({
@@ -349,7 +358,13 @@ export async function GET(request: NextRequest) {
       error: 'API_ERROR',
       message: 'APIエラーが発生しました',
       details: error instanceof Error ? error.message : String(error),
-      errorType: error instanceof Error ? error.name : 'Unknown'
+      errorType: error instanceof Error ? error.name : 'Unknown',
+      debugInfo: {
+        hasToken: !!accessToken,
+        hasUserId: !!instagramUserId,
+        timestamp: new Date().toISOString(),
+        errorLocation: 'main_catch_block'
+      }
     }, { status: 500 });
   }
 }
@@ -458,8 +473,13 @@ async function getFollowerHistory(instagramUserId: string, currentFollowers: num
       console.log('Attempting to fetch follower history from database...');
       
       // Supabaseインポートを安全に試行
+      console.log('🔍 Attempting to import Supabase module...');
       const supabaseModule = await import('@/lib/supabase').catch((importError) => {
-        console.warn('Supabase import failed:', importError.message);
+        console.warn('⚠️ Supabase import failed:', importError.message);
+        console.warn('⚠️ Import error details:', {
+          name: importError.name,
+          stack: importError.stack?.substring(0, 500)
+        });
         return null;
       });
       
