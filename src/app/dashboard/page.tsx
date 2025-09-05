@@ -423,7 +423,13 @@ export default function DashboardPage() {
 
   // 使用するデータの決定
   const postsData = instagramData?.posts || (showSampleData ? samplePosts : []);
-  const followerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
+  const rawFollowerData = instagramData?.follower_history?.data || (showSampleData ? sampleFollowerData : null);
+  
+  // フォロワーデータの安全な処理
+  const followerData = rawFollowerData ? rawFollowerData.map(point => ({
+    date: point.date || '',
+    followers: isNaN(parseInt(point.followers)) ? 0 : Math.max(0, parseInt(point.followers))
+  })) : null;
   const hasRealData = instagramData !== null;
   const hasFollowerData = instagramData?.follower_history?.hasData || showSampleData;
   
@@ -639,7 +645,7 @@ export default function DashboardPage() {
     const height = 200;
     const padding = 40;
     
-    const xStep = (width - 2 * padding) / (data.length - 1);
+    const xStep = data.length > 1 ? (width - 2 * padding) / (data.length - 1) : 0;
     const safeFollowers = data.map(d => Math.max(0, parseInt(d.followers) || 0));
     const minValue = Math.min(...safeFollowers);
     const maxValue = Math.max(...safeFollowers);
@@ -647,7 +653,7 @@ export default function DashboardPage() {
     
     let path = '';
     data.forEach((point, index) => {
-      const x = padding + index * xStep;
+      const x = data.length > 1 ? padding + index * xStep : width / 2;
       const safePointFollowers = Math.max(0, parseInt(point.followers) || 0);
       const y = height - padding - ((safePointFollowers - minValue) / valueRange) * (height - 2 * padding);
       
@@ -985,7 +991,9 @@ export default function DashboardPage() {
                   />
                   
                   {followerData && followerData.map((point, index) => {
-                    const x = 40 + index * ((chartWidth - 80) / (followerData.length - 1));
+                    const x = followerData.length > 1 
+                      ? 40 + index * ((chartWidth - 80) / (followerData.length - 1))
+                      : chartWidth / 2; // 単一データポイントの場合は中央に配置
                     const safeFollowers = followerData.map(d => Math.max(0, parseInt(d.followers) || 0));
                     const minValue = Math.min(...safeFollowers);
                     const maxValue = Math.max(...safeFollowers);
