@@ -31,12 +31,24 @@ export async function GET(request: NextRequest) {
   try {
     const baseUrl = process.env.NEXTAUTH_URL || 'https://insta-simple.thorsync.com';
     const redirectUri = `${baseUrl}/api/instagram/callback`;
+    
+    // 開発環境の検出（RefererヘッダーまたはOriginヘッダーから判断）
+    const referer = request.headers.get('referer') || '';
+    const origin = request.headers.get('origin') || '';
+    const isLocalDev = referer.includes('localhost') || origin.includes('localhost') || request.nextUrl.searchParams.get('dev') === 'true';
+    
     console.log('Using Redirect URI:', redirectUri);
+    console.log('Is Local Dev:', isLocalDev);
+    console.log('Referer:', referer);
 
     // Step 1: アクセストークン取得（Facebook Graph API）
     const tokenUrl = 'https://graph.facebook.com/v23.0/oauth/access_token';
-    // Facebook App IDを使用（Instagram Graph API v23）
-    const clientId = process.env.INSTAGRAM_CLIENT_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '751149554491226';
+    
+    // 開発環境では開発用App ID、本番環境では本番用App IDを使用
+    const devClientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '1776291423096614';
+    const prodClientId = process.env.INSTAGRAM_CLIENT_ID || '751149554491226';
+    const clientId = isLocalDev ? devClientId : prodClientId;
+    
     const clientSecret = process.env.INSTAGRAM_CLIENT_SECRET || '5692721c3f74c29d859469b5de348d1a';
     
     const tokenParams = new URLSearchParams({

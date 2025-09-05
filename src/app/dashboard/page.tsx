@@ -81,7 +81,21 @@ export default function DashboardPage() {
           
           // 🚀 サーバーサイドAPIでInstagramデータを取得（インサイト含む）
           console.log('🚀 Using Instagram data API with insights...');
-          const response = await fetch(`/api/instagram-data?access_token=${instagramToken}&instagram_user_id=${instagramUserId || 'me'}`);
+          
+          // 環境別API呼び出し - ローカル開発時はローカルAPI、本番時は本番APIを使用
+          const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+          const apiBaseUrl = isLocalhost ? `http://localhost:${window.location.port || 3001}` : '';
+          const apiUrl = `${apiBaseUrl}/api/instagram-data?access_token=${instagramToken}&instagram_user_id=${instagramUserId || 'me'}`;
+          
+          console.log('🔍 Environment Detection:', {
+            isLocalhost,
+            currentHostname: window.location.hostname,
+            currentPort: window.location.port,
+            apiBaseUrl,
+            apiUrl: apiUrl.replace(instagramToken, 'TOKEN_HIDDEN')
+          });
+          
+          const response = await fetch(apiUrl);
           console.log('Response status:', response.status);
           
           console.log('Server API response status:', response.status);
@@ -101,6 +115,14 @@ export default function DashboardPage() {
                 data_7d: p.data_7d
               }))
             });
+            
+            // 🔍 デバッグ情報をログ出力（OAuth error 190問題の調査）
+            if (responseData.debug) {
+              console.log('🔍 API Debug Info:', responseData.debug);
+              console.log('🔑 Token Info:', responseData.debug.tokenInfo);
+              console.log('📊 First Post Insights Debug:', responseData.debug.firstPostInsights);
+              console.log('🏢 API Info:', responseData.debug.apiInfo);
+            }
 
             const transformedData = {
               connected: true,

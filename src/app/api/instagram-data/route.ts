@@ -134,7 +134,13 @@ export async function GET(request: NextRequest) {
     const page = pagesData.data[0];
     const pageAccessToken = page.access_token;
     
-    console.log('📄 Using page:', page.name);
+    console.log('📄 Page Details:', {
+      pageId: page.id,
+      pageName: page.name,
+      hasPageToken: !!pageAccessToken,
+      pageTokenPreview: pageAccessToken ? `${pageAccessToken.substring(0, 15)}...` : 'none',
+      userTokenPreview: accessToken ? `${accessToken.substring(0, 15)}...` : 'none'
+    });
 
     // Instagram Business Accountを取得
     console.log('🔍 Step 2: Checking Instagram Business Account connection...');
@@ -215,12 +221,14 @@ export async function GET(request: NextRequest) {
       try {
         console.log(`📊 Fetching insights for post ${post.id}...`);
         
-        // インサイトを個別に取得（メディアタイプに応じて適切なメトリクスを使用）
-        let metricsToFetch = 'impressions,reach,saved';
+        // Instagram Graph API v23で利用可能なメトリクスのみ使用
+        let metricsToFetch = 'reach,saved'; // impressions,playsは v22.0以降廃止
         
-        // Reelsの場合は再生回数も取得
+        // メディアタイプ別の追加メトリクス（v23対応）
         if (post.media_type === 'VIDEO' || post.media_type === 'REELS') {
-          metricsToFetch = 'impressions,reach,saved,plays';
+          metricsToFetch = 'reach,saved'; // plays廃止のため削除
+        } else if (post.media_type === 'CAROUSEL_ALBUM') {
+          metricsToFetch = 'reach,saved'; // carousel用
         }
         
         const insightsUrl = `https://graph.facebook.com/v23.0/${post.id}/insights?metric=${metricsToFetch}&access_token=${pageAccessToken}`;
@@ -228,6 +236,33 @@ export async function GET(request: NextRequest) {
         console.log(`   URL: ${insightsUrl.replace(pageAccessToken, 'TOKEN_HIDDEN')}`);
         console.log(`   Metrics: ${metricsToFetch}`);
         console.log(`   Media Type: ${post.media_type}`);
+        console.log(`   🔑 Token Debug Info:`);
+        console.log(`      Page Access Token Length: ${pageAccessToken?.length || 0}`);
+        console.log(`      Token Preview: ${pageAccessToken ? `${pageAccessToken.substring(0, 10)}...${pageAccessToken.substring(pageAccessToken.length - 10)}` : 'undefined'}`);
+        console.log(`      Original Access Token Length: ${accessToken?.length || 0}`);
+        console.log(`      Original Token Preview: ${accessToken ? `${accessToken.substring(0, 10)}...${accessToken.substring(accessToken.length - 10)}` : 'undefined'}`);
+        
+        // 🔍 Token validation before insights call
+        console.log(`   🔍 Validating page access token before insights call...`);
+        try {
+          const debugTokenUrl = `https://graph.facebook.com/debug_token?input_token=${pageAccessToken}&access_token=${pageAccessToken}`;
+          const debugResponse = await fetch(debugTokenUrl);
+          const debugData = await debugResponse.json();
+          
+          if (debugData.error) {
+            console.error(`❌ Page token validation failed:`, debugData.error);
+            console.error(`   Error Code: ${debugData.error.code}`);
+            console.error(`   Error Message: ${debugData.error.message}`);
+          } else if (debugData.data) {
+            console.log(`✅ Page token is valid:`);
+            console.log(`   Valid: ${debugData.data.is_valid}`);
+            console.log(`   App ID: ${debugData.data.app_id}`);
+            console.log(`   Scopes: ${debugData.data.scopes?.join(', ') || 'none'}`);
+            console.log(`   Expires: ${debugData.data.expires_at ? new Date(debugData.data.expires_at * 1000) : 'never'}`);
+          }
+        } catch (debugError) {
+          console.error(`❌ Page token debug failed:`, debugError.message);
+        }
         
         const insightsResponse = await fetch(insightsUrl);
         console.log(`📊 Insights response status: ${insightsResponse.status} ${insightsResponse.statusText}`);
@@ -285,22 +320,23 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // インサイトデータから個別のメトリクスを抽出
+      // インサイトデータから個別のメトリクスを抽出（v23対応）
       const reach = insights.reach || 0;
-      const impressions = insights.impressions || 0;
       const saves = insights.saved || 0;
-      const plays = insights.plays || 0;
       const likes = post.like_count || 0;
-      const engagement = impressions > 0 ? Math.round((likes + (post.comments_count || 0) + saves) * 100 / impressions) : 0;
+      const comments = post.comments_count || 0;
+      
+      // engagementはreach基準で計算（impressionsが廃止されたため）
+      const engagement = reach > 0 ? Math.round((likes + comments + saves) * 100 / reach) : 0;
 
       // デバッグ: 取得できたインサイトを確認
       if (index < 3) { // 最初の3投稿のみログ出力
         console.log(`Post ${post.id} processed insights:`, {
           raw_insights: insights,
           reach: reach,
-          impressions: impressions,
           saves: saves,
-          plays: plays,
+          likes: likes,
+          comments: comments,
           engagement: engagement
         });
       }
@@ -320,25 +356,25 @@ export async function GET(request: NextRequest) {
         comments_count: post.comments_count || 0,
         
         // Instagram Graph APIの制限により、期間別データは利用できません
-        // 実際のlifetimeデータのみ提供します
+        // 実際のlifetimeデータのみ提供します（v23対応）
         lifetime_data: {
           reach: reach,
           likes: likes,
           saves: saves,
-          impressions: impressions,
+          comments: comments,
           engagement: engagement,
-          note: "Instagram Graph APIでは投稿の累計データのみ提供されます"
+          note: "Instagram Graph API v23では reach と saved のみ利用可能です"
         },
         
-        // 実際のインサイトデータ
+        // 実際のインサイトデータ（v23対応）
         insights: {
           reach: reach,
-          impressions: impressions,
           saved: saves,
+          likes: likes,
+          comments: comments,
           engagement: engagement,
           shares: insights.shares || 0,
-          plays: plays,
-          total_interactions: engagement
+          total_interactions: likes + comments + saves
         },
         
         // パフォーマンスランキング（実際のデータに基づく）
@@ -358,6 +394,15 @@ export async function GET(request: NextRequest) {
       }];
     });
     console.log('✅ Follower history result:', followerHistory.length, 'records');
+
+    // デバッグ用: 最初の投稿のインサイト詳細を記録
+    const firstPostDebug = postsWithInsights[0] ? {
+      id: postsWithInsights[0].id,
+      hasInsights: !!postsWithInsights[0].insights,
+      insightsData: postsWithInsights[0].insights?.data?.length || 0,
+      insightsError: postsWithInsights[0].insights?.error,
+      rawInsights: postsWithInsights[0].insights
+    } : null;
 
     // 成功レスポンス
     return NextResponse.json({
@@ -384,12 +429,30 @@ export async function GET(request: NextRequest) {
       },
       insights_summary: {
         total_reach: posts.reduce((sum: number, p: any) => sum + (p.insights.reach || 0), 0),
-        total_impressions: posts.reduce((sum: number, p: any) => sum + (p.insights.impressions || 0), 0),
         total_saves: posts.reduce((sum: number, p: any) => sum + (p.insights.saved || 0), 0),
+        total_likes: posts.reduce((sum: number, p: any) => sum + (p.insights.likes || 0), 0),
+        total_comments: posts.reduce((sum: number, p: any) => sum + (p.insights.comments || 0), 0),
         average_engagement: posts.length > 0 ? 
           posts.reduce((sum: number, p: any) => sum + (p.insights.engagement || 0), 0) / posts.length : 0
       },
-      message: '✅ Instagram Business Accountの実データを取得しました'
+      message: '✅ Instagram Business Accountの実データを取得しました',
+      // デバッグ情報を追加（本番環境でのトラブルシューティング用）
+      debug: {
+        firstPostInsights: firstPostDebug,
+        tokenInfo: {
+          originalTokenLength: accessToken?.length || 0,
+          pageTokenExists: !!pageAccessToken,
+          pageTokenLength: pageAccessToken?.length || 0,
+          tokenPreview: accessToken ? `${accessToken.substring(0, 10)}...` : 'none'
+        },
+        apiInfo: {
+          fbAppId: process.env.INSTAGRAM_CLIENT_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID,
+          pageId: page?.id,
+          igBusinessId: igBusinessId,
+          postsWithInsightsCount: postsWithInsights.length,
+          totalPosts: posts.length
+        }
+      }
     });
 
   } catch (error) {
