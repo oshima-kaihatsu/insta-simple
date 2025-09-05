@@ -17,37 +17,6 @@ export async function GET(request: NextRequest) {
     }, { status: 400 });
   }
 
-  // デバッグ: 最小限のレスポンスでテスト
-  try {
-    console.log('🔍 Testing basic API functionality...');
-    
-    // 簡単なテストレスポンスを返す
-    return NextResponse.json({
-      connected: true,
-      debug: true,
-      message: '✅ API endpoint is working - basic test successful',
-      receivedParams: {
-        hasToken: !!accessToken,
-        tokenPreview: accessToken ? `${accessToken.substring(0, 20)}...` : null,
-        userId: instagramUserId
-      },
-      timestamp: new Date().toISOString()
-    });
-
-  } catch (error) {
-    console.error('❌ Even basic API test failed:', error);
-    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
-    
-    return NextResponse.json({
-      connected: false,
-      error: 'BASIC_API_ERROR',
-      message: 'Basic API functionality test failed',
-      details: error instanceof Error ? error.message : String(error)
-    }, { status: 500 });
-  }
-
-  // 元のコードは一時的にコメントアウト
-  /*
   try {
     // Facebook Graph API を使用（Instagram Business Account用）
     console.log('🔍 Step 1: Fetching Facebook Pages...');
@@ -383,7 +352,6 @@ export async function GET(request: NextRequest) {
       errorType: error instanceof Error ? error.name : 'Unknown'
     }, { status: 500 });
   }
-  */
 }
 
 // ランキング計算（実データベース）
