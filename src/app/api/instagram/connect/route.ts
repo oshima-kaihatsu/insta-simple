@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     // 本番環境で確実にHTTPSのURLを使用
     // Facebook App IDを使用（Instagram Graph API v23では Facebook App IDが必要）
-    const clientId = process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || process.env.INSTAGRAM_CLIENT_ID || '1776291423096614';
+    const clientId = process.env.INSTAGRAM_CLIENT_ID || process.env.NEXT_PUBLIC_INSTAGRAM_CLIENT_ID || '751149554491226';
     const baseUrl = process.env.NEXTAUTH_URL || 'https://insta-simple.thorsync.com';
     const redirectUri = `${baseUrl}/api/instagram/callback`;
 
