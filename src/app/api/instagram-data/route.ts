@@ -205,7 +205,11 @@ export async function GET(request: NextRequest) {
         console.log(`  Insights response for ${post.id}:`, {
           hasData: !!insightsData.data,
           dataLength: insightsData.data?.length || 0,
-          error: insightsData.error
+          error: insightsData.error,
+          metrics: insightsData.data?.map(d => ({
+            name: d.name,
+            value: d.values?.[0]?.value
+          })) || []
         });
         
         // インサイトデータをpostオブジェクトに追加
@@ -239,17 +243,16 @@ export async function GET(request: NextRequest) {
 
       // デバッグ: 取得できたインサイトを確認
       if (index < 3) { // 最初の3投稿のみログ出力
-        console.log(`Post ${post.id} insights:`, insights);
+        console.log(`Post ${post.id} processed insights:`, {
+          raw_insights: insights,
+          reach: reach,
+          impressions: impressions,
+          saves: saves,
+          plays: plays,
+          engagement: engagement
+        });
       }
 
-      // 24時間と7日間のデータ（実際は同じデータを使用、APIの制限）
-      const reach = insights.reach || 0;
-      const likes = post.like_count || 0;
-      const saves = insights.saved || 0;
-      const impressions = insights.impressions || 0;
-      const plays = insights.plays || 0;
-      // engagementは like + comment + save + share の合計として計算
-      const engagement = likes + (post.comments_count || 0) + saves;
       
       return {
         id: post.id,
