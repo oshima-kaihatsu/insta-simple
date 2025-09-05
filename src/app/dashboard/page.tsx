@@ -624,9 +624,9 @@ export default function DashboardPage() {
     `${dateRange.start} - ${dateRange.end}` : '';
 
   // フォロワー統計
-  const currentFollowers = instagramData?.profile?.followers_count || 0; // リアルデータのみ、無い場合は0
+  const currentFollowers = Math.max(0, parseInt(instagramData?.profile?.followers_count) || 0); // リアルデータのみ、無い場合は0
   const followersIncrease = hasFollowerData && followerData && followerData.length > 1 ? 
-    followerData[followerData.length - 1].followers - followerData[0].followers : 0; // リアルデータのみ、無い場合は0
+    Math.max(0, parseInt(followerData[followerData.length - 1].followers) || 0) - Math.max(0, parseInt(followerData[0].followers) || 0) : 0; // リアルデータのみ、無い場合は0
   const dailyAverageIncrease = Math.round(followersIncrease / 28);
   const pastFollowers = currentFollowers - followersIncrease;
   const growthRate = pastFollowers > 0 ? ((followersIncrease / pastFollowers) * 100).toFixed(1) : '0.0'; // リアルデータのみ、無い場合は0.0
@@ -640,14 +640,16 @@ export default function DashboardPage() {
     const padding = 40;
     
     const xStep = (width - 2 * padding) / (data.length - 1);
-    const minValue = Math.min(...data.map(d => d.followers));
-    const maxValue = Math.max(...data.map(d => d.followers));
+    const safeFollowers = data.map(d => Math.max(0, parseInt(d.followers) || 0));
+    const minValue = Math.min(...safeFollowers);
+    const maxValue = Math.max(...safeFollowers);
     const valueRange = maxValue - minValue || 100;
     
     let path = '';
     data.forEach((point, index) => {
       const x = padding + index * xStep;
-      const y = height - padding - ((point.followers - minValue) / valueRange) * (height - 2 * padding);
+      const safePointFollowers = Math.max(0, parseInt(point.followers) || 0);
+      const y = height - padding - ((safePointFollowers - minValue) / valueRange) * (height - 2 * padding);
       
       if (index === 0) {
         path += `M ${x} ${y}`;
@@ -984,10 +986,12 @@ export default function DashboardPage() {
                   
                   {followerData && followerData.map((point, index) => {
                     const x = 40 + index * ((chartWidth - 80) / (followerData.length - 1));
-                    const minValue = Math.min(...followerData.map(d => d.followers));
-                    const maxValue = Math.max(...followerData.map(d => d.followers));
+                    const safeFollowers = followerData.map(d => Math.max(0, parseInt(d.followers) || 0));
+                    const minValue = Math.min(...safeFollowers);
+                    const maxValue = Math.max(...safeFollowers);
                     const valueRange = maxValue - minValue || 100;
-                    const y = chartHeight - 40 - ((point.followers - minValue) / valueRange) * (chartHeight - 80);
+                    const safePointFollowers = Math.max(0, parseInt(point.followers) || 0);
+                    const y = chartHeight - 40 - ((safePointFollowers - minValue) / valueRange) * (chartHeight - 80);
                     
                     return (
                       <g key={index}>
