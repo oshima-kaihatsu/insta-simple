@@ -1,0 +1,25 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#c79a42;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#b8873b;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="15" fill="url(#goldGradient)" stroke="#8b7355" stroke-width="1"/>
+  
+  <!-- Camera body -->
+  <rect x="7" y="11" width="18" height="12" rx="2" fill="#fcfbf8" stroke="#5d4e37" stroke-width="0.5"/>
+  
+  <!-- Camera lens -->
+  <circle cx="16" cy="17" r="4" fill="none" stroke="#5d4e37" stroke-width="1"/>
+  <circle cx="16" cy="17" r="2.5" fill="none" stroke="#5d4e37" stroke-width="0.5"/>
+  <circle cx="16" cy="17" r="1" fill="#5d4e37"/>
+  
+  <!-- Flash -->
+  <rect x="21" y="12.5" width="2" height="1.5" rx="0.5" fill="#5d4e37"/>
+  
+  <!-- Viewfinder -->
+  <rect x="9" y="8" width="14" height="3" rx="1" fill="#fcfbf8" stroke="#5d4e37" stroke-width="0.5"/>
+</svg>
