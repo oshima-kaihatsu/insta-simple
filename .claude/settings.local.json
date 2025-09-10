@@ -9,7 +9,8 @@
       "Bash(npx tsc:*)",
       "Bash(grep:*)",
       "Bash(curl:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,0 +1,32 @@
+name: Daily Follower Collection
+
+on:
+  schedule:
+    # 毎日UTC 1時に実行 (日本時間10時)
+    - cron: '0 1 * * *'
+  # 手動実行も可能
+  workflow_dispatch:
+
+jobs:
+  collect-followers:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Collect Daily Follower Data
+        run: |
+          curl -X POST "${{ secrets.VERCEL_APP_URL }}/api/cron/collect-daily-followers" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -H "Content-Type: application/json" \
+            --fail-with-body \
+            --max-time 300
+        env:
+          VERCEL_APP_URL: ${{ secrets.VERCEL_APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+
+      - name: Log Success
+        if: success()
+        run: echo "✅ Follower data collection completed successfully"
+        
+      - name: Log Failure
+        if: failure()
+        run: echo "❌ Follower data collection failed"

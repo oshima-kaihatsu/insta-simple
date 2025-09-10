@@ -391,6 +391,17 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // 初回データ記録（新規ユーザーの場合）
+    try {
+      const { RealDataManager } = await import('@/lib/dataHistory');
+      await RealDataManager.recordInitialData(igBusinessId, {
+        followers_count: profileData.followers_count,
+        media_count: profileData.media_count
+      });
+    } catch (error) {
+      console.log('Initial data recording failed or skipped:', error);
+    }
+
     // Step 5: フォロワー推移（データベースから取得、なければ現在値のみ）
     console.log('🔍 Attempting to get follower history...');
     const followerHistory = await getFollowerHistory(igBusinessId, profileData.followers_count).catch(historyError => {
@@ -430,11 +441,11 @@ export async function GET(request: NextRequest) {
       },
       posts: posts,
       follower_history: {
-        hasData: true,
+        hasData: followerHistory.length > 1,
         data: followerHistory,
         dataPoints: followerHistory.length,
-        startDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toLocaleDateString('ja-JP'),
-        endDate: new Date().toLocaleDateString('ja-JP')
+        startDate: followerHistory.length > 1 ? followerHistory[0].date : new Date().toLocaleDateString('ja-JP'),
+        endDate: followerHistory.length > 0 ? followerHistory[followerHistory.length - 1].date : new Date().toLocaleDateString('ja-JP')
       },
       insights_summary: {
         total_reach: posts.reduce((sum: number, p: any) => sum + (p.insights.reach || 0), 0),
@@ -588,50 +599,23 @@ function generateSampleFollowerHistory() {
   return history;
 }
 
-// フォロワー履歴取得（データベースから実際のデータを取得）
+// フォロワー履歴取得（RealDataManagerを使用）
 async function getFollowerHistory(instagramUserId: string, currentFollowers: number) {
-  // データベースから履歴を取得（Supabase利用時）
   try {
-    if (typeof window === 'undefined') { // サーバーサイドでのみ実行
-      console.log('Attempting to fetch follower history from database...');
-      
-      // Supabaseインポートを安全に試行
-      console.log('🔍 Attempting to import Supabase module...');
-      const supabaseModule = await import('@/lib/supabase').catch((importError) => {
-        console.warn('⚠️ Supabase import failed:', importError.message);
-        console.warn('⚠️ Import error details:', {
-          name: importError.name,
-          stack: importError.stack?.substring(0, 500)
-        });
-        return null;
-      });
-      
-      if (supabaseModule?.supabase) {
-        console.log('Supabase connection available, querying follower history...');
-        const { data: history, error } = await supabaseModule.supabase
-          .from('follower_history')
-          .select('date, follower_count')
-          .eq('instagram_user_id', instagramUserId)
-          .order('date', { ascending: true })
-          .limit(30);
-          
-        if (error) {
-          console.warn('Supabase query error:', error);
-        } else if (history && history.length > 0) {
-          console.log(`Found ${history.length} follower history records`);
-          return history.map(h => ({
-            date: new Date(h.date).toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
-            followers: Math.max(0, parseInt(h.follower_count) || 0) // NaN防止
-          }));
-        }
-      }
+    const { RealDataManager } = await import('@/lib/dataHistory');
+    const historyResult = await RealDataManager.getFollowerHistory(instagramUserId);
+    
+    if (historyResult.hasData && historyResult.data.length > 0) {
+      console.log(`✅ Found ${historyResult.dataPoints} days of real follower history`);
+      return historyResult.data;
     }
   } catch (error) {
-    console.warn('Could not fetch follower history from database:', error instanceof Error ? error.message : 'Unknown error');
+    console.warn('Could not fetch follower history from RealDataManager:', error instanceof Error ? error.message : 'Unknown error');
   }
   
   // フォールバック: 現在の値のみ
   const safeFollowers = Math.max(0, parseInt(currentFollowers) || 0);
+  console.log(`📊 Using fallback: current followers only (${safeFollowers})`);
   return [{
     date: new Date().toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' }),
     followers: safeFollowers

@@ -31,6 +31,26 @@ export default function DashboardPage() {
   const [userPlan, setUserPlan] = useState('basic'); // basic, pro, enterprise
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
+  // フォロワーデータ記録関数
+  const recordFollowerData = async (instagram_user_id: string) => {
+    if (!instagram_user_id) return;
+    
+    try {
+      const response = await fetch('/api/record-followers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ instagram_user_id })
+      });
+      
+      const result = await response.json();
+      if (result.success && !result.skipped) {
+        console.log('📊 Follower data recorded:', result.followers_count);
+      }
+    } catch (error) {
+      console.log('Failed to record follower data:', error);
+    }
+  };
+
   // アクティブなInstagramアカウントデータ
   const instagramData = instagramAccounts[activeAccountIndex] || null;
 
@@ -115,6 +135,9 @@ export default function DashboardPage() {
                 data_7d: p.data_7d
               }))
             });
+            
+            // フォロワー数を記録（日次データ収集）
+            recordFollowerData(responseData.profile?.id);
             
             // 🔍 デバッグ情報をログ出力（OAuth error 190問題の調査）
             if (responseData.debug) {
@@ -263,6 +286,9 @@ export default function DashboardPage() {
               setInstagramAccounts([transformedData]);
               setShowSampleData(false);
               console.log('✅ Loaded Instagram data from stored token via server API');
+              
+              // フォロワー数を記録（日次データ収集）
+              recordFollowerData(responseData.profile?.id);
             } else {
               console.error('❌ API Response Details:', {
                 status: response.status,

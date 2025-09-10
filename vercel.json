@@ -8,6 +8,9 @@
       },
       "src/app/api/cron/collect-7d/route.ts": {
         "maxDuration": 300
+      },
+      "src/app/api/cron/collect-daily-followers/route.ts": {
+        "maxDuration": 300
       }
     }
   }
