@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { createCustomer, createCheckoutSession } from '@/lib/stripe';
+import { createCustomer, createCheckoutSession, createTrialSession } from '@/lib/stripe';
 import { getUserByEmail, updateUser } from '@/lib/supabase';
 
 export const dynamic = 'force-dynamic';
@@ -13,8 +13,48 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { priceId, planName, trialDays = 14 } = await request.json();
+    const { priceId, planName, isTrial = false } = await request.json();
 
+    // トライアルの場合は別処理
+    if (isTrial) {
+      console.log('Starting free trial for:', session.user.email);
+      
+      // ユーザー情報取得
+      const { data: user, error: userError } = await getUserByEmail(session.user.email);
+      if (userError || !user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+
+      // トライアル開始処理
+      const { trialStart, trialEnd, error: trialError } = await createTrialSession({
+        userEmail: session.user.email,
+        userId: user.id,
+        customerId: user.stripe_customer_id
+      });
+
+      if (trialError) {
+        console.error('Failed to start trial:', trialError);
+        return NextResponse.json({ error: 'Failed to start trial' }, { status: 500 });
+      }
+
+      // ユーザーレコードにトライアル情報を保存
+      await updateUser(user.id, {
+        trial_start: trialStart,
+        trial_end: trialEnd,
+        subscription_status: 'trial'
+      });
+
+      console.log('Trial started:', { trialStart, trialEnd });
+
+      return NextResponse.json({
+        success: true,
+        trialStart,
+        trialEnd,
+        message: 'Free trial started successfully'
+      });
+    }
+
+    // 有料プランの場合
     if (!priceId || !planName) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -52,14 +92,13 @@ export async function POST(request: NextRequest) {
       console.log('Created Stripe customer:', customerId);
     }
 
-    // チェックアウトセッション作成
+    // チェックアウトセッション作成（自動課金なし）
     const { session: checkoutSession, error: sessionError } = await createCheckoutSession({
       priceId,
       planName,
       userEmail: session.user.email,
       userId: user.id,
-      customerId,
-      trialDays
+      customerId
     });
 
     if (sessionError || !checkoutSession) {

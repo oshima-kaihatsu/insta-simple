@@ -45,12 +45,12 @@ export default function HomePage() {
     router.push('/dashboard');
   };
 
-  // Stripe決済処理
+  // 無料トライアル開始処理
   const handleStartTrial = async (priceId: string, planName: string) => {
     setLoading(priceId);
     
     try {
-      console.log('決済開始:', priceId, planName);
+      console.log('無料トライアル開始:', planName);
       
       // まず認証確認
       if (!session) {
@@ -60,9 +60,9 @@ export default function HomePage() {
         return;
       }
 
-      console.log('認証済み、決済API呼び出し');
+      console.log('認証済み、トライアル開始API呼び出し');
       
-      // 決済API呼び出し
+      // 無料トライアル開始API呼び出し
       const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: {
@@ -71,9 +71,7 @@ export default function HomePage() {
         body: JSON.stringify({
           priceId: priceId,
           planName: planName,
-          userId: session.user?.id || session.user?.email,
-          userEmail: session.user?.email,
-          trialDays: 14
+          isTrial: true // 無料トライアルフラグ
         }),
       });
 
@@ -82,21 +80,22 @@ export default function HomePage() {
       if (!response.ok) {
         const errorData = await response.text();
         console.error('API Error Response:', errorData);
-        throw new Error(`決済API呼び出しに失敗しました: ${response.status}`);
+        throw new Error(`トライアル開始に失敗しました: ${response.status}`);
       }
 
       const data = await response.json();
-      console.log('決済データ:', data);
+      console.log('トライアルデータ:', data);
 
-      if (data.url) {
-        console.log('Stripeへリダイレクト:', data.url);
-        window.location.href = data.url;
+      if (data.success) {
+        console.log('トライアル開始成功');
+        alert(`14日間の無料トライアルを開始しました！\n終了日: ${new Date(data.trialEnd).toLocaleDateString('ja-JP')}\n\n期間終了前にメールでお知らせします。`);
+        router.push('/dashboard');
       } else {
-        throw new Error('決済URLが取得できませんでした');
+        throw new Error('トライアル開始に失敗しました');
       }
 
     } catch (error) {
-      console.error('決済エラー:', error);
+      console.error('トライアルエラー:', error);
       alert(`無料トライアル開始中にエラーが発生しました: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(null);

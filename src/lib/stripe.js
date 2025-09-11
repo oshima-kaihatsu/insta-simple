@@ -112,14 +112,37 @@ export async function createCustomer(userEmail, userName) {
   }
 }
 
-// チェックアウトセッション作成
+// チェックアウトセッション作成（無料トライアル用）
+export async function createTrialSession({
+  userEmail,
+  userId,
+  customerId
+}) {
+  if (!stripe) {
+    console.error('Stripe is not configured');
+    return { session: null, error: 'Stripe not configured' };
+  }
+  
+  // 無料トライアル期間を設定（14日間）
+  const trialEndDate = new Date();
+  trialEndDate.setDate(trialEndDate.getDate() + 14);
+  
+  // トライアル期間の記録のみ（課金情報は収集しない）
+  // ユーザーのデータベースにトライアル開始日と終了日を記録する処理を別途実装
+  return { 
+    trialStart: new Date().toISOString(),
+    trialEnd: trialEndDate.toISOString(),
+    error: null 
+  };
+}
+
+// チェックアウトセッション作成（有料プラン用）
 export async function createCheckoutSession({
   priceId,
   planName,
   userEmail,
   userId,
-  customerId,
-  trialDays = 14
+  customerId
 }) {
   if (!stripe) {
     console.error('Stripe is not configured');
@@ -138,13 +161,7 @@ export async function createCheckoutSession({
       mode: 'subscription',
       success_url: `${process.env.NEXTAUTH_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}&success=true`,
       cancel_url: `${process.env.NEXTAUTH_URL}/dashboard?canceled=true`,
-      subscription_data: {
-        trial_period_days: trialDays,
-        metadata: {
-          user_id: userId,
-          plan_name: planName
-        }
-      },
+      // trial_period_daysを削除 - 自動課金を防ぐ
       metadata: {
         user_id: userId,
         plan_name: planName,

@@ -11,6 +11,15 @@
       },
       "src/app/api/cron/collect-daily-followers/route.ts": {
         "maxDuration": 300
+      },
+      "src/app/api/cron/notify-trial-ending/route.ts": {
+        "maxDuration": 60
       }
-    }
+    },
+    "crons": [
+      {
+        "path": "/api/cron/notify-trial-ending",
+        "schedule": "0 10 * * *"
+      }
+    ]
   }
