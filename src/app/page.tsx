@@ -882,8 +882,13 @@ export default function HomePage() {
               marginBottom: '32px',
               flexWrap: 'wrap'
             }}>
-              {['ダッシュボード', '利用規約', 'プライバシーポリシー', 'サポート', '会社概要'].map((link, index) => (
-                <a key={index} href={link === 'ダッシュボード' ? '/dashboard' : '#'} style={{
+              {['ダッシュボード', '利用規約', 'プライバシーポリシー'].map((link, index) => (
+                <a key={index} href={
+                  link === 'ダッシュボード' ? '/dashboard' : 
+                  link === '利用規約' ? '/terms' :
+                  link === 'プライバシーポリシー' ? '/privacy' :
+                  '#'
+                } style={{
                   color: 'rgba(252, 251, 248, 0.8)',
                   textDecoration: 'none',
                   fontSize: '14px',
