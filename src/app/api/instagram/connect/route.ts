@@ -56,8 +56,8 @@ export async function GET(request: NextRequest) {
     console.log('Client IP:', clientIP);
     console.log('Rate limit remaining:', rateLimitResult.remainingRequests);
 
-    // Instagram Graph API v23の必須権限（2024年以降のbusiness_management含む）
-    const scope = 'business_management,pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish,instagram_manage_insights';
+    // Instagram Graph API v23の最小権限（business_management除外で審査通過を目指す）
+    const scope = 'instagram_business_basic,instagram_business_manage_insights,pages_show_list,pages_read_engagement';
     
     // Instagram連携のための特別なextrasパラメータ
     const extras = JSON.stringify({

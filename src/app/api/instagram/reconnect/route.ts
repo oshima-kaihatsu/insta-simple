@@ -14,15 +14,12 @@ export async function GET(request: NextRequest) {
     console.log('Base URL:', baseUrl);
     console.log('Redirect URI:', redirectUri);
     
-    // Instagram Graph API v23で必要な全ての権限
+    // Instagram Graph API v23で必要な最小権限（business_management除外）
     const scopes = [
-      'business_management',        // 2024年以降必須
-      'pages_show_list',           // ページアクセス
-      'pages_read_engagement',     // エンゲージメントデータ
-      'instagram_basic',           // 基本Instagramアクセス
-      'instagram_content_publish', // コンテンツ投稿
-      'instagram_manage_insights', // インサイトデータ
-      'instagram_manage_comments'  // コメント管理（オプション）
+      'instagram_business_basic',      // Instagram Business 基本情報
+      'instagram_business_manage_insights', // Instagram Business インサイト
+      'pages_show_list',               // ページアクセス
+      'pages_read_engagement',         // エンゲージメントデータ
     ];
     
     // Instagram onboarding用のextrasパラメータ（重要）

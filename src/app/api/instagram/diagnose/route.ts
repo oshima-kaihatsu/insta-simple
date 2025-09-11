@@ -48,17 +48,15 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 2. 必須権限の確認
+    // 2. 必須権限の確認（business_management除外で審査通過を目指す）
     const requiredScopes2024 = [
-      'business_management',
-      'instagram_basic',
+      'instagram_business_basic',
+      'instagram_business_manage_insights', 
       'pages_show_list',
-      'instagram_content_publish'
+      'pages_read_engagement'
     ];
     
     const optionalScopes = [
-      'pages_read_engagement',
-      'instagram_manage_insights',
       'instagram_manage_comments'
     ];
     
@@ -73,8 +71,8 @@ export async function GET(request: NextRequest) {
         granted: tokenScopes,
         missing_required: missingRequired,
         missing_optional: missingOptional,
-        note: missingRequired.includes('business_management') ? 
-          '⚠️ business_management権限は2024年以降に作成されたアカウントで必須です' : null
+        note: missingRequired.includes('instagram_business_basic') ? 
+          '⚠️ instagram_business_basic権限は審査承認に必要です' : null
       }
     });
 
@@ -260,8 +258,8 @@ function generateRecommendations(checks) {
           recommendations.push('🔑 アクセストークンが無効です。再度ログインしてください。');
           break;
         case 'Required Permissions (2024+)':
-          if (check.details.missing_required.includes('business_management')) {
-            recommendations.push('🏢 business_management権限が必要です。これは2024年以降に作成されたアカウントで必須です。');
+          if (check.details.missing_required.includes('instagram_business_basic')) {
+            recommendations.push('🏢 instagram_business_basic権限が必要です。これは審査承認に必須の権限です。');
           }
           recommendations.push(`📋 不足している権限: ${check.details.missing_required.join(', ')}`);
           break;

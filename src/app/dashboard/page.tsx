@@ -29,6 +29,9 @@ export default function DashboardPage() {
   const [postsDataSource, setPostsDataSource] = useState('7d');
   const [postsPeriod, setPostsPeriod] = useState('28d');
   const [userPlan, setUserPlan] = useState('basic'); // basic, pro, enterprise
+  const [subscriptionStatus, setSubscriptionStatus] = useState(null);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelLoading, setCancelLoading] = useState(false);
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
   // フォロワーデータ記録関数
@@ -48,6 +51,47 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.log('Failed to record follower data:', error);
+    }
+  };
+
+  // サブスクリプション状態を取得
+  const fetchSubscriptionStatus = async () => {
+    try {
+      const response = await fetch('/api/subscription/status');
+      const data = await response.json();
+      if (response.ok) {
+        setSubscriptionStatus(data);
+        setUserPlan(data.current_plan || 'basic');
+      }
+    } catch (error) {
+      console.error('Failed to fetch subscription status:', error);
+    }
+  };
+
+  // サブスクリプションキャンセル
+  const handleCancelSubscription = async () => {
+    setCancelLoading(true);
+    try {
+      const response = await fetch('/api/subscription/cancel', {
+        method: 'POST'
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        alert(data.immediate ? 
+          'サブスクリプションをキャンセルしました。' : 
+          '現在の課金期間終了時にサブスクリプションがキャンセルされます。'
+        );
+        await fetchSubscriptionStatus(); // 状態を更新
+      } else {
+        alert(`エラー: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Subscription cancellation error:', error);
+      alert('サブスクリプションのキャンセルに失敗しました。');
+    } finally {
+      setCancelLoading(false);
+      setShowCancelModal(false);
     }
   };
 
@@ -324,6 +368,7 @@ export default function DashboardPage() {
     };
 
     checkForRealData();
+    fetchSubscriptionStatus();
   }, []);
 
   const handleBack = () => {
@@ -722,7 +767,7 @@ export default function DashboardPage() {
   // CSV出力
   const downloadCSV = () => {
     const headers = [
-      'タイトル', '日付', 'リーチ数', 'いいね数', '保存数', 'プロフィール表示数', 'フォロー数',
+      'タイトル', '日付', 'リーチ数', 'いいね数', '保存数', 'プロフィール表示数', 'ウェブサイトクリック/フォロー数',
       '保存率', 'ホーム率', 'プロフィールアクセス率', 'フォロワー転換率',
       '保存率ランキング', 'ホーム率ランキング', 'プロフィールアクセス率ランキング', 'フォロワー転換率ランキング'
     ].join(',');
@@ -736,12 +781,12 @@ export default function DashboardPage() {
         likes: post.like_count || 0,
         saves: post.insights?.saves || 0,
         profile_views: post.insights?.profile_views || 0,
-        follows: post.insights?.website_clicks || 0
+        website_clicks: post.insights?.website_clicks || 0
       } : post.data_7d;
       
       return [
         `"${title}"`, date,
-        data.reach, data.likes, data.saves, data.profile_views, data.follows,
+        data.reach, data.likes, data.saves, data.profile_views, data.website_clicks || data.follows || 0,
         metrics.saves_rate, metrics.home_rate, metrics.profile_access_rate, metrics.follower_conversion_rate,
         `${post.rankings?.saves_rate || 0}位/${postsData.length}投稿`,
         `${post.rankings?.home_rate || 0}位/${postsData.length}投稿`,
@@ -866,31 +911,86 @@ export default function DashboardPage() {
                     
                     {/* アカウント切り替えドロップダウン（複数アカウントがある場合のみ表示） */}
                     {instagramAccounts.length > 1 && (
-                      <select 
-                        value={activeAccountIndex} 
-                        onChange={(e) => setActiveAccountIndex(parseInt(e.target.value))}
-                        style={{
-                          padding: '4px 8px',
-                          borderRadius: '6px',
-                          border: '1px solid #ddd',
-                          fontSize: '14px',
-                          background: '#fff',
-                          color: '#666',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {instagramAccounts.map((account, index) => (
-                          <option key={index} value={index}>
-                            @{account.profile?.username || `Account ${index + 1}`}
-                          </option>
-                        ))}
-                      </select>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <select 
+                          value={activeAccountIndex} 
+                          onChange={(e) => setActiveAccountIndex(parseInt(e.target.value))}
+                          style={{
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            border: '1px solid #ddd',
+                            fontSize: '14px',
+                            background: '#fff',
+                            color: '#666',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {instagramAccounts.map((account, index) => (
+                            <option key={index} value={index}>
+                              @{account.profile?.username || `Account ${index + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                        <span style={{ 
+                          fontSize: '12px', 
+                          color: '#888',
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          background: userPlan === 'basic' ? '#fef3c7' : userPlan === 'pro' ? '#dbeafe' : '#d1fae5'
+                        }}>
+                          {instagramAccounts.length}/{userPlan === 'basic' ? 1 : userPlan === 'pro' ? 5 : '∞'}アカウント
+                        </span>
+                      </div>
                     )}
                     
-                    {/* プラン制限の表示 */}
-                    <span style={{ fontSize: '12px', color: '#999' }}>
-                      ({instagramAccounts.length}/{userPlan === 'basic' ? 1 : userPlan === 'pro' ? 5 : '無制限'}アカウント)
-                    </span>
+                    {/* プラン・退会メニュー */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
+                      {subscriptionStatus && (
+                        <div style={{ 
+                          fontSize: '14px', 
+                          color: '#666',
+                          background: subscriptionStatus.subscription_status === 'trial' ? '#fef3c7' : 
+                                     subscriptionStatus.subscription_status === 'active' ? '#d1fae5' :
+                                     subscriptionStatus.subscription_status === 'cancel_at_period_end' ? '#fed7d7' : '#f3f4f6',
+                          padding: '4px 8px',
+                          borderRadius: '6px'
+                        }}>
+                          {subscriptionStatus.subscription_status === 'trial' && subscriptionStatus.trial_days_remaining > 0 && 
+                            `トライアル残り${subscriptionStatus.trial_days_remaining}日`}
+                          {subscriptionStatus.subscription_status === 'active' && `${subscriptionStatus.current_plan}プラン`}
+                          {subscriptionStatus.subscription_status === 'cancel_at_period_end' && 
+                            `キャンセル予定 (${new Date(subscriptionStatus.next_billing_date).toLocaleDateString()}まで)`}
+                          {(!subscriptionStatus.subscription_status || subscriptionStatus.subscription_status === 'canceled') && 'フリープラン'}
+                        </div>
+                      )}
+                      
+                      {subscriptionStatus?.can_cancel && (
+                        <button
+                          onClick={() => setShowCancelModal(true)}
+                          style={{
+                            background: 'none',
+                            border: '1px solid #dc2626',
+                            color: '#dc2626',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            fontWeight: '500',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.backgroundColor = '#dc2626';
+                            e.target.style.color = 'white';
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.backgroundColor = 'transparent';
+                            e.target.style.color = '#dc2626';
+                          }}
+                        >
+                          退会
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1312,19 +1412,23 @@ export default function DashboardPage() {
                         <div style={{ fontSize: '12px', marginBottom: '8px' }}>
                           {hasRealData ? (
                             <>
-                              <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
-                              <div>いいね: {post.like_count || 0}</div>
-                              <div>保存: {post.insights?.saves || 0}</div>
-                              <div>プロフ: {post.insights?.profile_views || 0}</div>
-                              <div>ウェブ: {post.insights?.website_clicks || 0}</div>
+                              <div>リーチ (Reach): {post.insights?.reach?.toLocaleString() || 0}</div>
+                              <div>ビュー数 (Views/formerly Impressions): {post.insights?.reach?.toLocaleString() || 0}</div>
+                              <div>いいね (Likes): {post.like_count || 0}</div>
+                              <div>保存 (Saves): {post.insights?.saves || 0}</div>
+                              <div>エンゲージメント (Engagement): {((post.like_count || 0) + (post.comments_count || 0) + (post.insights?.saves || 0)).toLocaleString()}</div>
+                              <div>プロフ表示 (Profile Views): {post.insights?.profile_views || 0}</div>
+                              <div>ウェブクリック (Website Clicks): {post.insights?.website_clicks || 0}</div>
                             </>
                           ) : (
                             <>
-                              <div>リーチ: {post.data_24h.reach.toLocaleString()}</div>
-                              <div>いいね: {post.data_24h.likes}</div>
-                              <div>保存: {post.data_24h.saves}</div>
-                              <div>プロフ: {post.data_24h.profile_views}</div>
-                              <div>フォロー: {post.data_24h.follows}</div>
+                              <div>リーチ (Reach): {post.data_24h.reach.toLocaleString()}</div>
+                              <div>ビュー数 (Views/formerly Impressions): {post.data_24h.reach.toLocaleString()}</div>
+                              <div>いいね (Likes): {post.data_24h.likes}</div>
+                              <div>保存 (Saves): {post.data_24h.saves}</div>
+                              <div>エンゲージメント (Engagement): {(post.data_24h.likes + post.data_24h.saves).toLocaleString()}</div>
+                              <div>プロフ表示 (Profile Views): {post.data_24h.profile_views}</div>
+                              <div>フォロー (Follows): {post.data_24h.follows}</div>
                             </>
                           )}
                         </div>
@@ -1339,19 +1443,23 @@ export default function DashboardPage() {
                         <div style={{ fontSize: '12px', marginBottom: '8px' }}>
                           {hasRealData ? (
                             <>
-                              <div>リーチ: {post.insights?.reach?.toLocaleString() || 0}</div>
-                              <div>いいね: {post.like_count || 0}</div>
-                              <div>保存: {post.insights?.saves || 0}</div>
-                              <div>プロフ: {post.insights?.profile_views || 0}</div>
-                              <div>ウェブ: {post.insights?.website_clicks || 0}</div>
+                              <div>リーチ (Reach): {post.insights?.reach?.toLocaleString() || 0}</div>
+                              <div>ビュー数 (Views/formerly Impressions): {post.insights?.reach?.toLocaleString() || 0}</div>
+                              <div>いいね (Likes): {post.like_count || 0}</div>
+                              <div>保存 (Saves): {post.insights?.saves || 0}</div>
+                              <div>エンゲージメント (Engagement): {((post.like_count || 0) + (post.comments_count || 0) + (post.insights?.saves || 0)).toLocaleString()}</div>
+                              <div>プロフ表示 (Profile Views): {post.insights?.profile_views || 0}</div>
+                              <div>ウェブクリック (Website Clicks): {post.insights?.website_clicks || 0}</div>
                             </>
                           ) : (
                             <>
-                              <div>リーチ: {post.data_7d.reach.toLocaleString()}</div>
-                              <div>いいね: {post.data_7d.likes}</div>
-                              <div>保存: {post.data_7d.saves}</div>
-                              <div>プロフ: {post.data_7d.profile_views}</div>
-                              <div>フォロー: {post.data_7d.follows}</div>
+                              <div>リーチ (Reach): {post.data_7d.reach.toLocaleString()}</div>
+                              <div>ビュー数 (Views/formerly Impressions): {post.data_7d.reach.toLocaleString()}</div>
+                              <div>いいね (Likes): {post.data_7d.likes}</div>
+                              <div>保存 (Saves): {post.data_7d.saves}</div>
+                              <div>エンゲージメント (Engagement): {(post.data_7d.likes + post.data_7d.saves).toLocaleString()}</div>
+                              <div>プロフ表示 (Profile Views): {post.data_7d.profile_views}</div>
+                              <div>フォロー (Follows): {post.data_7d.follows}</div>
                             </>
                           )}
                         </div>
@@ -1667,6 +1775,105 @@ export default function DashboardPage() {
           </div>
         ) : null}
       </div>
+    </div>
+
+      {/* 退会確認モーダル */}
+      {showCancelModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            padding: '32px',
+            maxWidth: '500px',
+            width: '90%',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+          }}>
+            <h2 style={{
+              fontSize: '24px',
+              fontWeight: '700',
+              color: '#dc2626',
+              margin: '0 0 16px 0',
+              textAlign: 'center'
+            }}>
+              サブスクリプションの退会
+            </h2>
+            
+            <div style={{ marginBottom: '24px', color: '#666', lineHeight: '1.6' }}>
+              <p style={{ margin: '0 0 12px 0' }}>
+                退会すると以下の内容が適用されます：
+              </p>
+              <ul style={{ margin: '0 0 16px 0', paddingLeft: '20px' }}>
+                {subscriptionStatus?.subscription_status === 'trial' ? (
+                  <>
+                    <li>トライアル期間が終了し、すぐに基本プランに変更されます</li>
+                    <li>プレミアム機能へのアクセスが制限されます</li>
+                  </>
+                ) : (
+                  <>
+                    <li>現在の課金期間終了時（{subscriptionStatus?.next_billing_date ? new Date(subscriptionStatus.next_billing_date).toLocaleDateString() : '不明'}）に退会処理されます</li>
+                    <li>それまではプレミアム機能を引き続きご利用いただけます</li>
+                    <li>期間終了後は基本プランに自動的に変更されます</li>
+                  </>
+                )}
+                <li>保存されたデータは引き続きご利用いただけます</li>
+              </ul>
+              <p style={{ 
+                margin: '16px 0 0 0',
+                padding: '12px',
+                backgroundColor: '#fef3c7',
+                borderRadius: '8px',
+                fontSize: '14px'
+              }}>
+                <strong>ご注意：</strong> 退会処理後の再開には新たに申し込みが必要になります。
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: '1px solid #d1d5db',
+                  backgroundColor: 'white',
+                  color: '#374151',
+                  cursor: 'pointer',
+                  fontWeight: '500'
+                }}
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={handleCancelSubscription}
+                disabled={cancelLoading}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  cursor: cancelLoading ? 'not-allowed' : 'pointer',
+                  fontWeight: '500',
+                  opacity: cancelLoading ? 0.7 : 1
+                }}
+              >
+                {cancelLoading ? '処理中...' : '退会する'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
