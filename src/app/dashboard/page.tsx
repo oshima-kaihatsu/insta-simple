@@ -9,6 +9,7 @@ import {
   Heart, 
   Bookmark, 
   UserPlus,
+  User,
   BarChart3,
   Download,
   Calendar,
