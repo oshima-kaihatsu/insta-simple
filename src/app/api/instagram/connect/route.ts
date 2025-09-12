@@ -72,6 +72,8 @@ export async function GET(request: NextRequest) {
       scope: scope,
       response_type: 'code',
       state: 'instagram',
+      display: 'popup',  // Instagram Loginのポップアップ表示
+      auth_type: 'reauthorize',  // 再認証を強制（権限を明確に表示）
       extras: extras
     });
     

@@ -943,6 +943,39 @@ export default function DashboardPage() {
                       </div>
                     )}
                     
+                    {/* Instagram プロファイル管理ボタン */}
+                    {hasRealData && (
+                      <button
+                        onClick={() => router.push('/instagram-profile')}
+                        style={{
+                          background: 'linear-gradient(135deg, #c79a42 0%, #b8873b 100%)',
+                          color: '#fcfbf8',
+                          padding: '8px 16px',
+                          border: 'none',
+                          borderRadius: '6px',
+                          fontSize: '14px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          transition: 'all 0.2s',
+                          boxShadow: '0 2px 8px rgba(199, 154, 66, 0.3)'
+                        }}
+                        onMouseOver={(e) => {
+                          e.target.style.transform = 'translateY(-1px)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(199, 154, 66, 0.4)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 2px 8px rgba(199, 154, 66, 0.3)';
+                        }}
+                      >
+                        <User size={14} />
+                        プロファイル管理
+                      </button>
+                    )}
+                    
                     {/* プラン・退会メニュー */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
                       {subscriptionStatus && (
@@ -1017,32 +1050,61 @@ export default function DashboardPage() {
             <p style={{ fontSize: '16px', marginBottom: '24px', opacity: 0.9, margin: '0 0 24px 0' }}>
               現在はサンプルデータを表示しています。Instagramアカウントを連携して、リアルタイムデータでより精密な分析を体験しましょう。
             </p>
-            <button 
-              onClick={handleInstagramConnect}
-              style={{
-                background: '#fcfbf8',
-                color: '#5d4e37',
-                padding: '16px 32px',
-                border: 'none',
-                borderRadius: '12px',
-                fontSize: '18px',
-                fontWeight: '600',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                transform: 'translateY(0px)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.transform = 'translateY(0px)';
-                e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-              }}
-            >
-              Instagram連携を開始
-            </button>
+            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+              <button 
+                onClick={handleInstagramConnect}
+                style={{
+                  background: '#fcfbf8',
+                  color: '#5d4e37',
+                  padding: '16px 32px',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                  transform: 'translateY(0px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.transform = 'translateY(0px)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                Instagram連携を開始
+              </button>
+              <button 
+                onClick={() => router.push('/instagram-profile')}
+                style={{
+                  background: 'transparent',
+                  color: '#fcfbf8',
+                  padding: '16px 32px',
+                  border: '2px solid #fcfbf8',
+                  borderRadius: '12px',
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  transform: 'translateY(0px)'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#fcfbf8';
+                  e.target.style.color = '#5d4e37';
+                  e.target.style.transform = 'translateY(-2px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.color = '#fcfbf8';
+                  e.target.style.transform = 'translateY(0px)';
+                }}
+              >
+                プロファイル管理
+              </button>
+            </div>
           </div>
         )}
 
